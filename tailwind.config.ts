@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				mathprimary: '#6366f1',
+				mathsecondary: '#4f46e5',
+				mathaccent: '#c7d2fe',
+				mathlight: '#eef2ff',
+				mathdark: '#1e1b4b'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,12 +90,44 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+                'float': {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-10px)' }
+                },
+                'spin-slow': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' }
+                },
+                'fade-in': {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' }
+                },
+                'scale-up': {
+                    '0%': { transform: 'scale(0.8)', opacity: '0' },
+                    '100%': { transform: 'scale(1)', opacity: '1' }
+                },
+                'paper-float': {
+                    '0%': { transform: 'translateY(0) rotate(0deg)' },
+                    '25%': { transform: 'translateY(-15px) rotate(3deg)' },
+                    '50%': { transform: 'translateY(-7px) rotate(-2deg)' },
+                    '75%': { transform: 'translateY(-12px) rotate(1deg)' },
+                    '100%': { transform: 'translateY(0) rotate(0deg)' }
+                }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+				'accordion-up': 'accordion-up 0.2s ease-out',
+                'float': 'float 6s ease-in-out infinite',
+                'spin-slow': 'spin-slow 10s linear infinite',
+                'fade-in': 'fade-in 0.5s ease-in-out',
+                'scale-up': 'scale-up 0.5s ease-in-out',
+                'paper-float': 'paper-float 4s ease-in-out infinite'
+			},
+            fontFamily: {
+                'display': ['Poppins', 'sans-serif'],
+                'body': ['Inter', 'sans-serif']
+            }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
