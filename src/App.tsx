@@ -11,6 +11,7 @@ import ExamsList from "./pages/ExamsList";
 import ExamPage from "./pages/ExamPage";
 import PremiumPage from "./pages/PremiumPage";
 import NotFound from "./pages/NotFound";
+import LoadingAnimation from "./components/LoadingAnimation";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <LoadingAnimation />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/boards" element={<BoardsPage />} />

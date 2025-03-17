@@ -107,16 +107,27 @@ const Index = () => {
                   </div>
                   
                   <div className="mt-6 bg-mathprimary/5 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Award className="h-5 w-5 text-mathprimary" />
-                      <span className="font-medium">Premium Access</span>
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-mathprimary">Pythagoras Theorem</span>
+                        <span className="font-mono text-mathsecondary">a² + b² = c²</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-mathprimary">Quadratic Formula</span>
+                        <span className="font-mono text-mathsecondary">x = (-b ± √(b² - 4ac))/2a</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-mathprimary">Area of Circle</span>
+                        <span className="font-mono text-mathsecondary">A = πr²</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-mathprimary">Binomial Theorem</span>
+                        <span className="font-mono text-mathsecondary">(a + b)ⁿ = ∑ⁿₖ₌₀(ⁿₖ)aⁿ⁻ᵏbᵏ</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Unlock all papers, MCQ exams, and advanced features with our premium plan.
-                    </p>
-                    <Button size="sm" className="w-full" asChild>
-                      <Link to="/premium">Learn More</Link>
-                    </Button>
                   </div>
                 </div>
                 
