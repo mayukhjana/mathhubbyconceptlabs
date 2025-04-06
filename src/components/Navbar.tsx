@@ -10,7 +10,8 @@ import {
   Home, 
   FileText, 
   Award, 
-  LogIn
+  LogIn,
+  Book
 } from "lucide-react";
 
 const Navbar = () => {
@@ -65,6 +66,15 @@ const Navbar = () => {
             >
               <FileText size={18} />
               <span>Practice Exams</span>
+            </Button>
+          </Link>
+          <Link to="/exam-papers">
+            <Button 
+              variant={isActive("/exam-papers") ? "default" : "ghost"} 
+              className="flex items-center gap-2"
+            >
+              <Book size={18} />
+              <span>Exam Papers</span>
             </Button>
           </Link>
           <Link to="/premium">
@@ -125,6 +135,15 @@ const Navbar = () => {
               >
                 <FileText className="mr-3" size={20} />
                 Practice Exams
+              </Button>
+            </Link>
+            <Link to="/exam-papers" onClick={closeMenu}>
+              <Button 
+                variant={isActive("/exam-papers") ? "default" : "ghost"} 
+                className="w-full justify-start text-lg"
+              >
+                <Book className="mr-3" size={20} />
+                Exam Papers
               </Button>
             </Link>
             <Link to="/premium" onClick={closeMenu}>

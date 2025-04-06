@@ -9,6 +9,7 @@ import BoardsPage from "./pages/BoardsPage";
 import BoardDetail from "./pages/BoardDetail";
 import ExamsList from "./pages/ExamsList";
 import ExamPage from "./pages/ExamPage";
+import ExamPapersPage from "./pages/ExamPapersPage";
 import PremiumPage from "./pages/PremiumPage";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/boards/:boardId" element={<BoardDetail />} />
           <Route path="/exams" element={<ExamsList />} />
           <Route path="/exams/:examId" element={<ExamPage />} />
+          <Route path="/exam-papers" element={<ExamPapersPage />} />
           <Route path="/premium" element={<PremiumPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
