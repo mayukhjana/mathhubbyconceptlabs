@@ -30,43 +30,43 @@ interface ExamPaper {
   filePath?: string; // Path in Supabase storage
 }
 
-// Mock data structure to map to storage files
+// Updated file paths that don't use slashes in folder names
 const examPapersList = {
   wbjee: [
-    { id: 1, year: "2023", title: "WBJEE 2023", filePath: "wbjee/2023/paper.pdf" },
-    { id: 2, year: "2022", title: "WBJEE 2022", filePath: "wbjee/2022/paper.pdf" },
-    { id: 3, year: "2021", title: "WBJEE 2021", filePath: "wbjee/2021/paper.pdf" },
-    { id: 4, year: "2020", title: "WBJEE 2020", filePath: "wbjee/2020/paper.pdf" },
-    { id: 5, year: "2019", title: "WBJEE 2019", filePath: "wbjee/2019/paper.pdf" },
-    { id: 6, year: "2018", title: "WBJEE 2018", filePath: "wbjee/2018/paper.pdf" },
-    { id: 7, year: "2017", title: "WBJEE 2017", filePath: "wbjee/2017/paper.pdf" },
-    { id: 8, year: "2016", title: "WBJEE 2016", filePath: "wbjee/2016/paper.pdf" },
-    { id: 9, year: "2015", title: "WBJEE 2015", filePath: "wbjee/2015/paper.pdf" },
-    { id: 10, year: "2014", title: "WBJEE 2014", filePath: "wbjee/2014/paper.pdf" }
+    { id: 1, year: "2023", title: "WBJEE 2023", filePath: "wbjee_2023_paper.pdf" },
+    { id: 2, year: "2022", title: "WBJEE 2022", filePath: "wbjee_2022_paper.pdf" },
+    { id: 3, year: "2021", title: "WBJEE 2021", filePath: "wbjee_2021_paper.pdf" },
+    { id: 4, year: "2020", title: "WBJEE 2020", filePath: "wbjee_2020_paper.pdf" },
+    { id: 5, year: "2019", title: "WBJEE 2019", filePath: "wbjee_2019_paper.pdf" },
+    { id: 6, year: "2018", title: "WBJEE 2018", filePath: "wbjee_2018_paper.pdf" },
+    { id: 7, year: "2017", title: "WBJEE 2017", filePath: "wbjee_2017_paper.pdf" },
+    { id: 8, year: "2016", title: "WBJEE 2016", filePath: "wbjee_2016_paper.pdf" },
+    { id: 9, year: "2015", title: "WBJEE 2015", filePath: "wbjee_2015_paper.pdf" },
+    { id: 10, year: "2014", title: "WBJEE 2014", filePath: "wbjee_2014_paper.pdf" }
   ],
   jeeMains: [
-    { id: 1, year: "2023", title: "JEE Mains 2023", filePath: "jee_mains/2023/paper.pdf" },
-    { id: 2, year: "2022", title: "JEE Mains 2022", filePath: "jee_mains/2022/paper.pdf" },
-    { id: 3, year: "2021", title: "JEE Mains 2021", filePath: "jee_mains/2021/paper.pdf" },
-    { id: 4, year: "2020", title: "JEE Mains 2020", filePath: "jee_mains/2020/paper.pdf" },
-    { id: 5, year: "2019", title: "JEE Mains 2019", filePath: "jee_mains/2019/paper.pdf" },
-    { id: 6, year: "2018", title: "JEE Mains 2018", filePath: "jee_mains/2018/paper.pdf" },
-    { id: 7, year: "2017", title: "JEE Mains 2017", filePath: "jee_mains/2017/paper.pdf" },
-    { id: 8, year: "2016", title: "JEE Mains 2016", filePath: "jee_mains/2016/paper.pdf" },
-    { id: 9, year: "2015", title: "JEE Mains 2015", filePath: "jee_mains/2015/paper.pdf" },
-    { id: 10, year: "2014", title: "JEE Mains 2014", filePath: "jee_mains/2014/paper.pdf" }
+    { id: 1, year: "2023", title: "JEE Mains 2023", filePath: "jee_mains_2023_paper.pdf" },
+    { id: 2, year: "2022", title: "JEE Mains 2022", filePath: "jee_mains_2022_paper.pdf" },
+    { id: 3, year: "2021", title: "JEE Mains 2021", filePath: "jee_mains_2021_paper.pdf" },
+    { id: 4, year: "2020", title: "JEE Mains 2020", filePath: "jee_mains_2020_paper.pdf" },
+    { id: 5, year: "2019", title: "JEE Mains 2019", filePath: "jee_mains_2019_paper.pdf" },
+    { id: 6, year: "2018", title: "JEE Mains 2018", filePath: "jee_mains_2018_paper.pdf" },
+    { id: 7, year: "2017", title: "JEE Mains 2017", filePath: "jee_mains_2017_paper.pdf" },
+    { id: 8, year: "2016", title: "JEE Mains 2016", filePath: "jee_mains_2016_paper.pdf" },
+    { id: 9, year: "2015", title: "JEE Mains 2015", filePath: "jee_mains_2015_paper.pdf" },
+    { id: 10, year: "2014", title: "JEE Mains 2014", filePath: "jee_mains_2014_paper.pdf" }
   ],
   jeeAdvanced: [
-    { id: 1, year: "2023", title: "JEE Advanced 2023", filePath: "jee_advanced/2023/paper.pdf" },
-    { id: 2, year: "2022", title: "JEE Advanced 2022", filePath: "jee_advanced/2022/paper.pdf" },
-    { id: 3, year: "2021", title: "JEE Advanced 2021", filePath: "jee_advanced/2021/paper.pdf" },
-    { id: 4, year: "2020", title: "JEE Advanced 2020", filePath: "jee_advanced/2020/paper.pdf" },
-    { id: 5, year: "2019", title: "JEE Advanced 2019", filePath: "jee_advanced/2019/paper.pdf" },
-    { id: 6, year: "2018", title: "JEE Advanced 2018", filePath: "jee_advanced/2018/paper.pdf" },
-    { id: 7, year: "2017", title: "JEE Advanced 2017", filePath: "jee_advanced/2017/paper.pdf" },
-    { id: 8, year: "2016", title: "JEE Advanced 2016", filePath: "jee_advanced/2016/paper.pdf" },
-    { id: 9, year: "2015", title: "JEE Advanced 2015", filePath: "jee_advanced/2015/paper.pdf" },
-    { id: 10, year: "2014", title: "JEE Advanced 2014", filePath: "jee_advanced/2014/paper.pdf" }
+    { id: 1, year: "2023", title: "JEE Advanced 2023", filePath: "jee_advanced_2023_paper.pdf" },
+    { id: 2, year: "2022", title: "JEE Advanced 2022", filePath: "jee_advanced_2022_paper.pdf" },
+    { id: 3, year: "2021", title: "JEE Advanced 2021", filePath: "jee_advanced_2021_paper.pdf" },
+    { id: 4, year: "2020", title: "JEE Advanced 2020", filePath: "jee_advanced_2020_paper.pdf" },
+    { id: 5, year: "2019", title: "JEE Advanced 2019", filePath: "jee_advanced_2019_paper.pdf" },
+    { id: 6, year: "2018", title: "JEE Advanced 2018", filePath: "jee_advanced_2018_paper.pdf" },
+    { id: 7, year: "2017", title: "JEE Advanced 2017", filePath: "jee_advanced_2017_paper.pdf" },
+    { id: 8, year: "2016", title: "JEE Advanced 2016", filePath: "jee_advanced_2016_paper.pdf" },
+    { id: 9, year: "2015", title: "JEE Advanced 2015", filePath: "jee_advanced_2015_paper.pdf" },
+    { id: 10, year: "2014", title: "JEE Advanced 2014", filePath: "jee_advanced_2014_paper.pdf" }
   ]
 };
 
