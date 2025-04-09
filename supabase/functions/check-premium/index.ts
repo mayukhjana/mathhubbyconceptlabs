@@ -14,12 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Checking premium status");
-    
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error("No authorization header provided");
       throw new Error('No authorization header');
     }
 
@@ -34,18 +31,14 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError || !userData.user) {
-      console.error("Invalid user token:", userError?.message);
       throw new Error('Invalid user token');
     }
-    
-    const userId = userData.user.id;
-    console.log(`Checking premium status for user ${userId}`);
     
     // Check premium status in database
     const { data: premiumData, error: premiumError } = await supabaseClient
       .from('user_premium')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', userData.user.id)
       .eq('is_active', true)
       .maybeSingle();
     
@@ -58,24 +51,17 @@ serve(async (req) => {
     const isPremium = premiumData && 
       (premiumData.expires_at === null || new Date(premiumData.expires_at) > new Date());
     
-    console.log(`Premium status for user ${userId}: ${isPremium ? 'active' : 'inactive'}`);
-    if (isPremium) {
-      console.log(`Premium expires at: ${premiumData?.expires_at || 'never'}`);
-    }
-    
     return new Response(
       JSON.stringify({ 
         isPremium: Boolean(isPremium),
-        expiresAt: premiumData?.expires_at || null,
-        paymentProvider: premiumData?.payment_provider || null,
-        paymentId: premiumData?.payment_id || null,
+        expiresAt: premiumData?.expires_at || null
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

@@ -37,12 +37,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
     
-    console.log("Received webhook event:", event.type);
-    
     // Handle specific event types
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      console.log("Checkout session completed:", session.id);
       
       // Get customer details
       const customer = await stripe.customers.retrieve(session.customer as string);
@@ -54,9 +51,6 @@ serve(async (req) => {
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
       const subscriptionId = subscription.id;
       const customerId = subscription.customer as string;
-      const subscriptionStatus = subscription.status;
-      
-      console.log(`Processing subscription ${subscriptionId} for customer ${customerId} with status ${subscriptionStatus}`);
       
       // Get user data from customer email
       const { data: userData, error: userError } = await supabaseClient
@@ -71,63 +65,26 @@ serve(async (req) => {
         const user = authUsers.users.find(u => u.email === customer.email);
         
         if (!user) {
-          console.error("User not found for email:", customer.email);
           throw new Error('User not found');
         }
         
         // Calculate subscription end date
         const periodEnd = new Date(subscription.current_period_end * 1000);
-        console.log(`Setting up premium subscription until ${periodEnd.toISOString()}`);
 
         // Insert or update premium status
-        const { data: premiumData, error: premiumError } = await supabaseClient
+        await supabaseClient
           .from("user_premium")
           .upsert({
             user_id: user.id,
             payment_id: subscriptionId,
             payment_provider: 'stripe',
-            is_active: subscriptionStatus === 'active',
+            is_active: true,
             starts_at: new Date().toISOString(),
             expires_at: periodEnd.toISOString(),
-          }, { onConflict: 'user_id' })
-          .select();
-          
-        if (premiumError) {
-          console.error("Error updating premium status:", premiumError);
-          throw new Error(`Error updating premium status: ${premiumError.message}`);
-        }
-        
-        console.log("Premium status updated successfully:", premiumData);
-      } else {
-        // User found in profiles table
-        const userId = userData.id;
-        const periodEnd = new Date(subscription.current_period_end * 1000);
-        
-        console.log(`User found in profiles. Setting up premium for user ${userId} until ${periodEnd.toISOString()}`);
-        
-        // Insert or update premium status
-        const { data: premiumData, error: premiumError } = await supabaseClient
-          .from("user_premium")
-          .upsert({
-            user_id: userId,
-            payment_id: subscriptionId,
-            payment_provider: 'stripe',
-            is_active: subscriptionStatus === 'active',
-            starts_at: new Date().toISOString(),
-            expires_at: periodEnd.toISOString(),
-          }, { onConflict: 'user_id' })
-          .select();
-          
-        if (premiumError) {
-          console.error("Error updating premium status:", premiumError);
-          throw new Error(`Error updating premium status: ${premiumError.message}`);
-        }
-        
-        console.log("Premium status updated successfully:", premiumData);
+          });
       }
     } else if (event.type === 'customer.subscription.updated') {
       const subscription = event.data.object;
-      console.log("Subscription updated:", subscription.id);
       
       // Get customer
       const customer = await stripe.customers.retrieve(subscription.customer as string);
@@ -140,75 +97,31 @@ serve(async (req) => {
       const user = authUsers.users.find(u => u.email === customer.email);
       
       if (!user) {
-        console.error("User not found for email:", customer.email);
         throw new Error('User not found');
       }
-      
-      console.log(`Processing subscription update for user ${user.id}`);
       
       // Check subscription status
       if (subscription.status === 'active') {
         const periodEnd = new Date(subscription.current_period_end * 1000);
-        console.log(`Updating premium status: active until ${periodEnd.toISOString()}`);
         
         // Update premium status
-        const { data: premiumData, error: premiumError } = await supabaseClient
+        await supabaseClient
           .from("user_premium")
           .upsert({
             user_id: user.id,
             payment_id: subscription.id,
             payment_provider: 'stripe',
             is_active: true,
-            starts_at: new Date().toISOString(),
             expires_at: periodEnd.toISOString(),
-          }, { onConflict: 'user_id' })
-          .select();
-          
-        if (premiumError) {
-          console.error("Error updating premium status:", premiumError);
-          throw new Error(`Error updating premium status: ${premiumError.message}`);
-        }
-        
-        console.log("Premium status updated successfully:", premiumData);
-      } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-        console.log(`Subscription ${subscription.id} is ${subscription.status}, marking as inactive`);
-        
+          });
+      } else if (subscription.status === 'canceled') {
         // Handle cancellation
-        const { error: updateError } = await supabaseClient
+        await supabaseClient
           .from("user_premium")
-          .update({ 
-            is_active: false,
-            expires_at: new Date(subscription.canceled_at ? subscription.canceled_at * 1000 : Date.now()).toISOString()
-          })
+          .update({ is_active: false })
           .eq('user_id', user.id)
           .eq('payment_id', subscription.id);
-          
-        if (updateError) {
-          console.error("Error marking subscription as inactive:", updateError);
-          throw new Error(`Error marking subscription as inactive: ${updateError.message}`);
-        }
-        
-        console.log("Subscription marked as inactive successfully");
       }
-    } else if (event.type === 'customer.subscription.deleted') {
-      const subscription = event.data.object;
-      console.log("Subscription deleted:", subscription.id);
-      
-      // Mark subscription as inactive in database
-      const { error: deleteError } = await supabaseClient
-        .from("user_premium")
-        .update({ 
-          is_active: false,
-          expires_at: new Date().toISOString()
-        })
-        .eq('payment_id', subscription.id);
-        
-      if (deleteError) {
-        console.error("Error handling subscription deletion:", deleteError);
-        throw new Error(`Error handling subscription deletion: ${deleteError.message}`);
-      }
-      
-      console.log("Subscription marked as inactive due to deletion");
     }
     
     // Return success

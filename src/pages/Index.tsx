@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -15,22 +14,22 @@ import Footer from "@/components/Footer";
 
 const features = [
   {
-    icon: <BookOpen className="h-6 w-6 text-mathprimary dark:text-mathprimary" />,
+    icon: <BookOpen className="h-6 w-6 text-mathprimary" />,
     title: "Extensive Paper Collection",
     description: "Access thousands of previous year papers from ICSE, CBSE, and West Bengal boards organized by chapter."
   },
   {
-    icon: <FileText className="h-6 w-6 text-mathprimary dark:text-mathprimary" />,
+    icon: <FileText className="h-6 w-6 text-mathprimary" />,
     title: "Practice with MCQs",
     description: "Test your knowledge with our interactive MCQ exams and get instant feedback on your performance."
   },
   {
-    icon: <GraduationCap className="h-6 w-6 text-mathprimary dark:text-mathprimary" />,
+    icon: <GraduationCap className="h-6 w-6 text-mathprimary" />,
     title: "Chapter-wise Organization",
     description: "Find papers organized by chapters for targeted preparation and focused learning."
   },
   {
-    icon: <Users className="h-6 w-6 text-mathprimary dark:text-mathprimary" />,
+    icon: <Users className="h-6 w-6 text-mathprimary" />,
     title: "Multiple Boards Support",
     description: "One platform for all major educational boards, with specialized content for each curriculum."
   },
@@ -56,18 +55,18 @@ const testimonials = [
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-mathlight to-white dark:from-gray-800 dark:to-gray-900 pt-16 pb-24 md:pt-24 md:pb-32">
+      <section className="bg-gradient-to-b from-mathlight to-white pt-16 pb-24 md:pt-24 md:pb-32">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 md:pr-12 mb-10 md:mb-0">
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight text-mathdark dark:text-white mb-6">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight text-mathdark mb-6">
                 Your Path to Math Excellence Starts Here
               </h1>
-              <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
+              <p className="text-lg text-gray-700 mb-8">
                 Access thousands of previous year math papers from ICSE, CBSE, and West Bengal boards. Practice with our interactive exams and take your math preparation to the next level.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -82,36 +81,36 @@ const Index = () => {
             </div>
             <div className="md:w-1/2 relative">
               <div className="relative">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 z-10 relative">
+                <div className="bg-white rounded-xl shadow-xl p-6 z-10 relative">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-4 flex flex-col items-center text-center">
+                    <div className="bg-mathlight rounded-lg p-4 flex flex-col items-center text-center">
                       <BookOpen className="h-8 w-8 text-mathprimary mb-2" />
-                      <span className="font-medium dark:text-white">3000+</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Papers</span>
+                      <span className="font-medium">3000+</span>
+                      <span className="text-sm text-gray-600">Papers</span>
                     </div>
-                    <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-4 flex flex-col items-center text-center">
+                    <div className="bg-mathlight rounded-lg p-4 flex flex-col items-center text-center">
                       <FileText className="h-8 w-8 text-mathprimary mb-2" />
-                      <span className="font-medium dark:text-white">120+</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Chapters</span>
+                      <span className="font-medium">120+</span>
+                      <span className="text-sm text-gray-600">Chapters</span>
                     </div>
-                    <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-4 flex flex-col items-center text-center">
+                    <div className="bg-mathlight rounded-lg p-4 flex flex-col items-center text-center">
                       <Users className="h-8 w-8 text-mathprimary mb-2" />
-                      <span className="font-medium dark:text-white">50K+</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Students</span>
+                      <span className="font-medium">50K+</span>
+                      <span className="text-sm text-gray-600">Students</span>
                     </div>
-                    <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-4 flex flex-col items-center text-center">
+                    <div className="bg-mathlight rounded-lg p-4 flex flex-col items-center text-center">
                       <GraduationCap className="h-8 w-8 text-mathprimary mb-2" />
-                      <span className="font-medium dark:text-white">3</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Boards</span>
+                      <span className="font-medium">3</span>
+                      <span className="text-sm text-gray-600">Boards</span>
                     </div>
                   </div>
                   
-                  <div className="mt-6 bg-mathprimary/5 dark:bg-mathprimary/20 rounded-lg p-4">
+                  <div className="mt-6 bg-mathprimary/5 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Award className="h-5 w-5 text-mathprimary" />
-                      <span className="font-medium dark:text-white">Premium Access</span>
+                      <span className="font-medium">Premium Access</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                    <p className="text-sm text-gray-600 mb-3">
                       Unlock all papers, MCQ exams, and advanced features with our premium plan.
                     </p>
                     <Button size="sm" className="w-full" asChild>
@@ -121,8 +120,8 @@ const Index = () => {
                 </div>
                 
                 {/* Decorative elements */}
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-mathaccent/30 dark:bg-mathprimary/30 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-mathprimary/20 dark:bg-mathprimary/10 rounded-full blur-3xl"></div>
+                <div className="absolute -top-6 -right-6 w-32 h-32 bg-mathaccent/30 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-mathprimary/20 rounded-full blur-3xl"></div>
               </div>
             </div>
           </div>
@@ -130,11 +129,11 @@ const Index = () => {
       </section>
       
       {/* Features Section */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-mathdark dark:text-white mb-4">Why Choose MathHub?</h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-mathdark mb-4">Why Choose MathHub?</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
               Designed by math educators and students, MathHub offers everything you need to excel in your mathematics exams.
             </p>
           </div>
@@ -143,13 +142,13 @@ const Index = () => {
             {features.map((feature, index) => (
               <div 
                 key={index} 
-                className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition-shadow"
+                className="bg-white border rounded-xl p-6 hover:shadow-md transition-shadow"
               >
-                <div className="bg-mathlight dark:bg-gray-700 inline-flex rounded-full p-3 mb-4">
+                <div className="bg-mathlight inline-flex rounded-full p-3 mb-4">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold mb-3 dark:text-white">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
+                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -157,22 +156,22 @@ const Index = () => {
       </section>
       
       {/* Boards Section */}
-      <section className="py-20 bg-mathlight/50 dark:bg-gray-800/50">
+      <section className="py-20 bg-mathlight/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-mathdark dark:text-white mb-4">Explore By Board</h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-mathdark mb-4">Explore By Board</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
               We offer comprehensive resources for all major educational boards. Choose your board to get started.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+            <div className="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-shadow">
               <div className="h-48 bg-gradient-to-r from-mathprimary to-mathsecondary flex items-center justify-center">
                 <h3 className="text-3xl font-bold text-white">ICSE</h3>
               </div>
               <div className="p-6">
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-gray-600 mb-4">
                   Access ICSE board papers from the past 10 years organized by chapters.
                 </p>
                 <Button asChild className="w-full">
@@ -181,12 +180,12 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+            <div className="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-shadow">
               <div className="h-48 bg-gradient-to-r from-mathsecondary to-mathprimary flex items-center justify-center">
                 <h3 className="text-3xl font-bold text-white">CBSE</h3>
               </div>
               <div className="p-6">
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-gray-600 mb-4">
                   Comprehensive collection of CBSE math papers with solutions.
                 </p>
                 <Button asChild className="w-full">
@@ -195,12 +194,12 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+            <div className="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-shadow">
               <div className="h-48 bg-gradient-to-br from-mathdark via-mathprimary to-mathsecondary flex items-center justify-center">
                 <h3 className="text-3xl font-bold text-white">West Bengal</h3>
               </div>
               <div className="p-6">
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-gray-600 mb-4">
                   All West Bengal board math papers sorted by year and chapter.
                 </p>
                 <Button asChild className="w-full">
@@ -292,7 +291,7 @@ const Index = () => {
                   ))}
                 </div>
                 
-                <Button className="w-full bg-mathprimary hover:bg-mathsecondary text-white" size="lg" asChild>
+                <Button className="w-full" size="lg" asChild>
                   <Link to="/premium">Get Premium</Link>
                 </Button>
                 
@@ -306,25 +305,25 @@ const Index = () => {
       </section>
       
       {/* Testimonials */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-mathdark dark:text-white mb-4">Student Success Stories</h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-mathdark mb-4">Student Success Stories</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
               Hear from students who improved their math scores with MathHub.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-mathlight dark:bg-gray-800 p-8 rounded-xl relative">
+              <div key={index} className="bg-mathlight p-8 rounded-xl relative">
                 <div className="text-6xl text-mathprimary/20 absolute top-4 left-4">"</div>
-                <p className="text-gray-700 dark:text-gray-300 mb-6 relative z-10">
+                <p className="text-gray-700 mb-6 relative z-10">
                   {testimonial.content}
                 </p>
-                <div className="border-t border-mathprimary/20 dark:border-mathprimary/10 pt-4">
-                  <div className="font-medium dark:text-white">{testimonial.name}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role}</div>
+                <div className="border-t border-mathprimary/20 pt-4">
+                  <div className="font-medium">{testimonial.name}</div>
+                  <div className="text-sm text-gray-600">{testimonial.role}</div>
                 </div>
               </div>
             ))}
@@ -356,3 +355,4 @@ const Index = () => {
 };
 
 export default Index;
+

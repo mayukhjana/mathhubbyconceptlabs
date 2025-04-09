@@ -32,31 +32,6 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Check if the user already has an active premium subscription
-    const { data: premiumData, error: premiumError } = await supabaseClient
-      .from('user_premium')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .maybeSingle();
-    
-    if (premiumError) {
-      console.error('Error checking existing premium status:', premiumError);
-    } else if (premiumData && 
-              premiumData.expires_at && 
-              new Date(premiumData.expires_at) > new Date()) {
-      // User already has an active subscription
-      return new Response(
-        JSON.stringify({ 
-          error: "You already have an active premium subscription" 
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
-
     // Check if an existing Stripe customer record exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
@@ -71,10 +46,6 @@ serve(async (req) => {
     const priceId = subscriptionType === "annual" 
       ? Deno.env.get("STRIPE_ANNUAL_PRICE_ID") 
       : Deno.env.get("STRIPE_MONTHLY_PRICE_ID");
-      
-    if (!priceId) {
-      throw new Error(`Price ID for ${subscriptionType} subscription not configured`);
-    }
 
     // Create a subscription session
     const session = await stripe.checkout.sessions.create({
@@ -89,19 +60,13 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/premium-success`,
       cancel_url: `${req.headers.get("origin")}/premium`,
-      allow_promotion_codes: true,
-      billing_address_collection: "auto",
-      metadata: {
-        user_id: user.id,
-        subscription_type: subscriptionType
-      }
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating checkout session:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

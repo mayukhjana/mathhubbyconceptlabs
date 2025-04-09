@@ -1,105 +1,202 @@
 
-import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import UserProfileMenu from '@/components/UserProfileMenu';
-import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
-import { Menu, X, BookOpen, Star } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { DarkModeToggle } from './DarkModeToggle';
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { 
+  BookOpen, 
+  GraduationCap, 
+  Menu, 
+  X, 
+  Home, 
+  FileText, 
+  Award, 
+  LogIn,
+  Book
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import UserProfileMenu from "@/components/UserProfileMenu";
 
-interface NavbarProps {
-  className?: string;
-}
-
-const Navbar = ({ className }: NavbarProps) => {
+const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location]);
-
+  const { isAuthenticated } = useAuth();
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-
+  
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+  
   return (
-    <nav className={cn("bg-white dark:bg-gray-900 border-b dark:border-gray-800 py-4 sticky top-0 z-50", className)}>
-      <div className="container mx-auto px-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl text-mathdark dark:text-white">
-          <BookOpen className="h-6 w-6 text-mathprimary" />
-          MathHub
+    <header className="sticky top-0 w-full bg-background/95 backdrop-blur-sm border-b z-40">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center space-x-2">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mathprimary to-mathsecondary flex items-center justify-center text-white">
+            <GraduationCap size={24} />
+          </div>
+          <span className="text-xl font-display font-bold text-mathdark">MathHub</span>
         </Link>
-
-        {/* Mobile Menu Button */}
-        {isMobile && (
-          <Button variant="ghost" size="icon" onClick={toggleMenu}>
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
-        )}
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
-          <Link to="/boards" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
-            Boards
+        
+        <nav className="hidden md:flex items-center space-x-1">
+          <Link to="/">
+            <Button 
+              variant={isActive("/") ? "default" : "ghost"} 
+              className="flex items-center gap-2"
+            >
+              <Home size={18} />
+              <span>Home</span>
+            </Button>
           </Link>
-          <Link to="/exams" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
-            Exams
+          <Link to="/boards">
+            <Button 
+              variant={isActive("/boards") ? "default" : "ghost"} 
+              className="flex items-center gap-2"
+            >
+              <BookOpen size={18} />
+              <span>Papers</span>
+            </Button>
           </Link>
-          <Link to="/exam-papers" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
-            Exam Papers
+          <Link to="/exams">
+            <Button 
+              variant={isActive("/exams") ? "default" : "ghost"} 
+              className="flex items-center gap-2"
+            >
+              <FileText size={18} />
+              <span>Practice Exams</span>
+            </Button>
           </Link>
-          {isAuthenticated && (
-            <Link to="/results" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
-              Results
-            </Link>
-          )}
-          <Link to="/premium" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
-            Premium
+          <Link to="/exam-papers">
+            <Button 
+              variant={isActive("/exam-papers") ? "default" : "ghost"} 
+              className="flex items-center gap-2"
+            >
+              <Book size={18} />
+              <span>Exam Papers</span>
+            </Button>
           </Link>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <DarkModeToggle />
+          <Link to="/premium">
+            <Button 
+              variant={isActive("/premium") ? "default" : "ghost"} 
+              className="flex items-center gap-2"
+            >
+              <Award size={18} />
+              <span>Premium</span>
+            </Button>
+          </Link>
+        </nav>
+        
+        <div className="hidden md:flex items-center space-x-2">
           {isAuthenticated ? (
             <UserProfileMenu />
           ) : (
-            <Button asChild>
-              <Link to="/auth">Sign In</Link>
-            </Button>
+            <>
+              <Button variant="outline" className="flex items-center gap-2" asChild>
+                <Link to="/auth">
+                  <LogIn size={18} />
+                  <span>Sign In</span>
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/auth?tab=register">Get Started</Link>
+              </Button>
+            </>
           )}
         </div>
+        
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="md:hidden"
+          onClick={toggleMenu}
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </Button>
       </div>
-
-      {/* Mobile Menu Content */}
-      {isMobile && isMenuOpen && (
-        <div className="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700 py-2 px-4">
-          <div className="flex flex-col gap-4">
-            <Link to="/boards" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
-              Boards
+      
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 top-16 z-50 bg-background h-[calc(100vh-4rem)]">
+          <div className="container mx-auto px-4 py-8 flex flex-col space-y-6">
+            <Link to="/" onClick={closeMenu}>
+              <Button 
+                variant={isActive("/") ? "default" : "ghost"} 
+                className="w-full justify-start text-lg"
+              >
+                <Home className="mr-3" size={20} />
+                Home
+              </Button>
             </Link>
-            <Link to="/exams" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
-              Exams
+            <Link to="/boards" onClick={closeMenu}>
+              <Button 
+                variant={isActive("/boards") ? "default" : "ghost"} 
+                className="w-full justify-start text-lg"
+              >
+                <BookOpen className="mr-3" size={20} />
+                Papers
+              </Button>
             </Link>
-            <Link to="/exam-papers" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
-              Exam Papers
+            <Link to="/exams" onClick={closeMenu}>
+              <Button 
+                variant={isActive("/exams") ? "default" : "ghost"} 
+                className="w-full justify-start text-lg"
+              >
+                <FileText className="mr-3" size={20} />
+                Practice Exams
+              </Button>
             </Link>
-            {isAuthenticated && (
-              <Link to="/results" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
-                Results
-              </Link>
-            )}
-            <Link to="/premium" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
-              Premium
+            <Link to="/exam-papers" onClick={closeMenu}>
+              <Button 
+                variant={isActive("/exam-papers") ? "default" : "ghost"} 
+                className="w-full justify-start text-lg"
+              >
+                <Book className="mr-3" size={20} />
+                Exam Papers
+              </Button>
             </Link>
+            <Link to="/premium" onClick={closeMenu}>
+              <Button 
+                variant={isActive("/premium") ? "default" : "ghost"} 
+                className="w-full justify-start text-lg"
+              >
+                <Award className="mr-3" size={20} />
+                Premium
+              </Button>
+            </Link>
+            
+            <div className="pt-6 flex flex-col space-y-4">
+              {isAuthenticated ? (
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={() => {
+                    const { signOut } = useAuth();
+                    signOut();
+                    closeMenu();
+                  }}
+                >
+                  Sign Out
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/auth" onClick={closeMenu}>Sign In</Link>
+                  </Button>
+                  <Button className="w-full" asChild>
+                    <Link to="/auth?tab=register" onClick={closeMenu}>Get Started</Link>
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 
