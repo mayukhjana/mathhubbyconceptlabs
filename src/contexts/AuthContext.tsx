@@ -1,56 +1,89 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
 
-type AuthContextType = {
+interface AuthContextType {
+  isLoading: boolean;
+  isAuthenticated: boolean;
   user: User | null;
   session: Session | null;
-  isLoading: boolean;
-  signUp: (email: string, password: string, metadata?: { full_name?: string; username?: string }) => Promise<{ error: any | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: any | null }>;
-  signOut: () => Promise<void>;
-  isAuthenticated: boolean;
   isPremium: boolean;
   premiumExpiresAt: string | null;
+  signIn: (email: string, password: string) => Promise<{
+    error: any;
+  }>;
+  signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<{
+    error: any;
+  }>;
+  signOut: () => Promise<void>;
   refreshPremiumStatus: () => Promise<void>;
-};
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  isLoading: true,
+  isAuthenticated: false,
+  user: null,
+  session: null,
+  isPremium: false,
+  premiumExpiresAt: null,
+  signIn: async () => ({ error: null }),
+  signUp: async () => ({ error: null }),
+  signOut: async () => {},
+  refreshPremiumStatus: async () => {},
+});
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [premiumExpiresAt, setPremiumExpiresAt] = useState<string | null>(null);
 
-  const refreshPremiumStatus = async () => {
-    if (!user) {
+  // Check if the user has a premium subscription
+  const checkPremiumStatus = async (sessionToken: string | undefined) => {
+    if (!sessionToken) {
       setIsPremium(false);
       setPremiumExpiresAt(null);
-      // For demo, save to localStorage so PaperCard component can access it
-      localStorage.setItem("userIsPremium", "false");
       return;
     }
-
+    
     try {
-      const { data: premiumResponse, error } = await supabase.functions.invoke("check-premium");
+      const { data, error } = await supabase.functions.invoke('check-premium');
       
       if (error) {
-        console.error("Error checking premium status:", error);
+        console.error('Error checking premium status:', error);
         setIsPremium(false);
+        setPremiumExpiresAt(null);
         return;
       }
-
-      setIsPremium(premiumResponse.isPremium);
-      setPremiumExpiresAt(premiumResponse.expiresAt);
-
-      // For demo, save to localStorage so PaperCard component can access it
-      localStorage.setItem("userIsPremium", premiumResponse.isPremium ? "true" : "false");
-    } catch (error) {
-      console.error("Failed to check premium status:", error);
+      
+      setIsPremium(data.isPremium || false);
+      setPremiumExpiresAt(data.expiresAt || null);
+      
+      console.log('Premium status:', data.isPremium ? 'Active' : 'Inactive');
+      if (data.isPremium && data.expiresAt) {
+        console.log('Premium expires at:', new Date(data.expiresAt).toLocaleString());
+      }
+    } catch (err) {
+      console.error('Failed to check premium status:', err);
       setIsPremium(false);
+      setPremiumExpiresAt(null);
+    }
+  };
+  
+  // Manually refresh premium status (e.g., after purchase)
+  const refreshPremiumStatus = async () => {
+    if (!session?.access_token) return;
+    
+    try {
+      await checkPremiumStatus(session.access_token);
+    } catch (err) {
+      console.error('Failed to refresh premium status:', err);
     }
   };
 
@@ -60,18 +93,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        setIsLoading(false);
         
-        // Check premium status after auth state changes
-        setTimeout(() => {
-          if (currentSession?.user) {
-            refreshPremiumStatus();
-          } else {
-            setIsPremium(false);
-            setPremiumExpiresAt(null);
-            localStorage.setItem("userIsPremium", "false");
-          }
-        }, 0);
+        // Check premium status when session changes
+        if (currentSession?.access_token) {
+          // Use setTimeout to avoid potential deadlock with the auth state listener
+          setTimeout(() => {
+            checkPremiumStatus(currentSession.access_token);
+          }, 0);
+        } else {
+          setIsPremium(false);
+          setPremiumExpiresAt(null);
+        }
+        
+        setIsLoading(false);
       }
     );
 
@@ -79,27 +113,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      setIsLoading(false);
       
       // Check premium status for existing session
-      setTimeout(() => {
-        if (currentSession?.user) {
-          refreshPremiumStatus();
-        }
-      }, 0);
+      if (currentSession?.access_token) {
+        checkPremiumStatus(currentSession.access_token);
+      }
+      
+      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const signUp = async (
-    email: string,
-    password: string,
-    metadata?: { full_name?: string; username?: string }
-  ) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error };
+    } catch (error) {
+      return { error };
+    }
+  };
+  
+  const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
+    try {
+      const { error } = await supabase.auth.signUp({ 
+        email, 
         password,
         options: {
           data: metadata
@@ -111,36 +151,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
+      await supabase.auth.signOut();
     } catch (error) {
-      return { error };
+      console.error('Error signing out:', error);
     }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const value = {
-    user,
-    session,
-    isLoading,
-    signUp,
-    signIn,
-    signOut,
-    isAuthenticated: !!user,
-    isPremium,
-    premiumExpiresAt,
-    refreshPremiumStatus,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        isLoading,
+        isAuthenticated: !!user,
+        user,
+        session,
+        isPremium,
+        premiumExpiresAt,
+        signIn,
+        signUp,
+        signOut,
+        refreshPremiumStatus,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

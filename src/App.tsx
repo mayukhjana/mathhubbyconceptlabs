@@ -15,6 +15,7 @@ import ExamPapersPage from "./pages/ExamPapersPage";
 import PremiumPage from "./pages/PremiumPage";
 import PremiumSuccessPage from "./pages/PremiumSuccessPage";
 import ProfilePage from "./pages/ProfilePage";
+import UserResultsPage from "./pages/UserResultsPage";
 import AdminUploadPage from "./pages/AdminUploadPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,11 @@ const App = () => (
             <Route path="/profile" element={
               <AuthGuard>
                 <ProfilePage />
+              </AuthGuard>
+            } />
+            <Route path="/results" element={
+              <AuthGuard>
+                <UserResultsPage />
               </AuthGuard>
             } />
             <Route path="/admin/upload" element={
