@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -43,6 +42,13 @@ interface ExamData {
   year: string;
   duration: number;
   is_premium: boolean;
+}
+
+// Define interface for the exam database record
+interface ExamRecord extends ExamData {
+  id: string;
+  created_at?: string;
+  created_by?: string;
 }
 
 const AdminUploadPage = () => {
@@ -163,7 +169,7 @@ const AdminUploadPage = () => {
       }, 300);
       
       // Prepare exam data
-      const examData: ExamData = {
+      const examPayload: ExamData = {
         title: examTitle,
         board: selectedBoard,
         class: selectedClass,
@@ -174,9 +180,9 @@ const AdminUploadPage = () => {
       };
       
       // Insert exam
-      const { data: examData, error: examError } = await supabase
+      const { data: insertedExam, error: examError } = await supabase
         .from('exams')
-        .insert(examData)
+        .insert(examPayload)
         .select()
         .single();
       
@@ -184,10 +190,14 @@ const AdminUploadPage = () => {
         throw new Error(`Error creating exam: ${examError.message}`);
       }
       
+      if (!insertedExam) {
+        throw new Error("Failed to create exam: No data returned from insert operation");
+      }
+      
       // Insert questions
       const questionsWithExamId = questions.map(question => ({
         ...question,
-        exam_id: examData.id
+        exam_id: insertedExam.id
       }));
       
       const { error: questionsError } = await supabase
@@ -201,12 +211,12 @@ const AdminUploadPage = () => {
       // Add to recent uploads
       setRecentUploads(prev => [
         {
-          id: examData.id,
-          name: examData.title,
-          board: examData.board,
-          class: examData.class,
-          year: examData.year,
-          url: `/exams/${examData.id}`
+          id: insertedExam.id,
+          name: insertedExam.title,
+          board: insertedExam.board,
+          class: insertedExam.class,
+          year: insertedExam.year,
+          url: `/exams/${insertedExam.id}`
         },
         ...prev.slice(0, 4) // Keep only 5 most recent
       ]);
@@ -298,7 +308,7 @@ const AdminUploadPage = () => {
       setUploadProgress(0);
     }
   };
-  
+
   return (
     <AuthGuard>
       <div className="min-h-screen flex flex-col">
