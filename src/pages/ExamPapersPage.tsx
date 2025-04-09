@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -33,16 +32,16 @@ interface ExamPaper {
 // Updated file paths that don't use slashes in folder names
 const examPapersList = {
   wbjee: [
-    { id: 1, year: "2023", title: "WBJEE 2023", filePath: "wbjee_2023_paper.pdf" },
-    { id: 2, year: "2022", title: "WBJEE 2022", filePath: "wbjee_2022_paper.pdf" },
-    { id: 3, year: "2021", title: "WBJEE 2021", filePath: "wbjee_2021_paper.pdf" },
-    { id: 4, year: "2020", title: "WBJEE 2020", filePath: "wbjee_2020_paper.pdf" },
-    { id: 5, year: "2019", title: "WBJEE 2019", filePath: "wbjee_2019_paper.pdf" },
-    { id: 6, year: "2018", title: "WBJEE 2018", filePath: "wbjee_2018_paper.pdf" },
-    { id: 7, year: "2017", title: "WBJEE 2017", filePath: "wbjee_2017_paper.pdf" },
-    { id: 8, year: "2016", title: "WBJEE 2016", filePath: "wbjee_2016_paper.pdf" },
-    { id: 9, year: "2015", title: "WBJEE 2015", filePath: "wbjee_2015_paper.pdf" },
-    { id: 10, year: "2014", title: "WBJEE 2014", filePath: "wbjee_2014_paper.pdf" }
+    { id: 1, year: "2025", title: "WBJEE 2025", filePath: "wbjee_2025_paper.pdf" },
+    { id: 2, year: "2024", title: "WBJEE 2024", filePath: "wbjee_2024_paper.pdf" },
+    { id: 3, year: "2023", title: "WBJEE 2023", filePath: "wbjee_2023_paper.pdf" },
+    { id: 4, year: "2022", title: "WBJEE 2022", filePath: "wbjee_2022_paper.pdf" },
+    { id: 5, year: "2021", title: "WBJEE 2021", filePath: "wbjee_2021_paper.pdf" },
+    { id: 6, year: "2020", title: "WBJEE 2020", filePath: "wbjee_2020_paper.pdf" },
+    { id: 7, year: "2019", title: "WBJEE 2019", filePath: "wbjee_2019_paper.pdf" },
+    { id: 8, year: "2018", title: "WBJEE 2018", filePath: "wbjee_2018_paper.pdf" },
+    { id: 9, year: "2017", title: "WBJEE 2017", filePath: "wbjee_2017_paper.pdf" },
+    { id: 10, year: "2016", title: "WBJEE 2016", filePath: "wbjee_2016_paper.pdf" }
   ],
   jeeMains: [
     { id: 1, year: "2023", title: "JEE Mains 2023", filePath: "jee_mains_2023_paper.pdf" },

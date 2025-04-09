@@ -13,10 +13,13 @@ import {
   LogIn,
   Book
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import UserProfileMenu from "@/components/UserProfileMenu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -89,11 +92,21 @@ const Navbar = () => {
         </nav>
         
         <div className="hidden md:flex items-center space-x-2">
-          <Button variant="outline" className="flex items-center gap-2">
-            <LogIn size={18} />
-            <span>Sign In</span>
-          </Button>
-          <Button>Get Started</Button>
+          {isAuthenticated ? (
+            <UserProfileMenu />
+          ) : (
+            <>
+              <Button variant="outline" className="flex items-center gap-2" asChild>
+                <Link to="/auth">
+                  <LogIn size={18} />
+                  <span>Sign In</span>
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/auth?tab=register">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
         
         <Button 
@@ -157,8 +170,28 @@ const Navbar = () => {
             </Link>
             
             <div className="pt-6 flex flex-col space-y-4">
-              <Button variant="outline" className="w-full">Sign In</Button>
-              <Button className="w-full">Get Started</Button>
+              {isAuthenticated ? (
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={() => {
+                    const { signOut } = useAuth();
+                    signOut();
+                    closeMenu();
+                  }}
+                >
+                  Sign Out
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/auth" onClick={closeMenu}>Sign In</Link>
+                  </Button>
+                  <Button className="w-full" asChild>
+                    <Link to="/auth?tab=register" onClick={closeMenu}>Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
