@@ -1,11 +1,12 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { UserProfileMenu } from '@/components/UserProfileMenu';
+import UserProfileMenu from '@/components/UserProfileMenu';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Menu, X, BookOpen, Star } from 'lucide-react';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DarkModeToggle } from './DarkModeToggle';
 
 interface NavbarProps {
@@ -16,7 +17,7 @@ const Navbar = ({ className }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setIsMenuOpen(false);
