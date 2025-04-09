@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChapterAccordion, { Chapter } from "@/components/ChapterAccordion";
@@ -9,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Star, Shield } from "lucide-react";
 import { toast } from "sonner";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import BoardNavigation from "@/components/BoardNavigation";
 
-// Mock data
 const boardsInfo = {
   "icse": {
     name: "ICSE Board",
@@ -254,6 +253,7 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
 const BoardDetail = () => {
   const { boardId } = useParams<{ boardId: string }>();
   const [userIsPremium, setUserIsPremium] = useState(false);
+  const navigate = useNavigate();
   
   const boardInfo = boardId ? boardsInfo[boardId as keyof typeof boardsInfo] : null;
   const chapters = boardId ? chaptersByBoard[boardId as keyof typeof chaptersByBoard] : null;
@@ -263,13 +263,7 @@ const BoardDetail = () => {
   };
   
   useEffect(() => {
-    // This would normally check if user has premium
-    const checkPremiumStatus = () => {
-      // Mocked - would check from auth/subscription service
-      return false;
-    };
-    
-    setUserIsPremium(checkPremiumStatus());
+    setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
   }, []);
   
   if (!boardInfo || !chapters) {
@@ -324,39 +318,177 @@ const BoardDetail = () => {
         
         {/* Content */}
         <div className="container mx-auto px-4 py-8">
-          <Tabs defaultValue="class10">
-            <div className="flex items-center justify-between mb-6">
-              <TabsList>
-                <TabsTrigger value="class10">Class 10</TabsTrigger>
-                <TabsTrigger value="class12">Class 12</TabsTrigger>
-              </TabsList>
-              
-              {userIsPremium && (
-                <div className="flex items-center gap-2 text-sm bg-mathprimary/10 px-3 py-1.5 rounded-full">
-                  <Shield className="h-4 w-4 text-mathprimary" />
-                  <span className="font-medium text-mathprimary">Premium Active</span>
-                </div>
-              )}
-            </div>
-            
-            <TabsContent value="class10">
-              <ChapterAccordion
-                chapters={chapters.class10 || []}
-                userIsPremium={userIsPremium}
-              />
-            </TabsContent>
-            
-            <TabsContent value="class12">
-              <ChapterAccordion
-                chapters={chapters.class12 || []}
-                userIsPremium={userIsPremium}
-              />
-            </TabsContent>
-          </Tabs>
+          {/* Show the board navigation options */}
+          <BoardNavigation boardId={boardId} boardName={boardInfo.name} />
+          
+          {/* This section will be shown in child routes */}
+          <Routes>
+            <Route 
+              path="papers" 
+              element={
+                <PapersList 
+                  boardId={boardId} 
+                  userIsPremium={userIsPremium} 
+                />
+              } 
+            />
+            <Route 
+              path="chapters" 
+              element={
+                <ChaptersList 
+                  boardId={boardId}
+                  chapters={chapters}
+                  userIsPremium={userIsPremium}
+                />
+              } 
+            />
+          </Routes>
         </div>
       </main>
       
       <Footer />
+    </div>
+  );
+};
+
+const PapersList = ({ boardId, userIsPremium }: { boardId: string; userIsPremium: boolean }) => {
+  return (
+    <div className="mt-8">
+      <h2 className="text-2xl font-bold mb-6">Full Mock Test Papers</h2>
+      <Tabs defaultValue="class10">
+        <div className="flex items-center justify-between mb-6">
+          <TabsList>
+            <TabsTrigger value="class10">Class 10</TabsTrigger>
+            <TabsTrigger value="class12">Class 12</TabsTrigger>
+          </TabsList>
+          
+          {userIsPremium && (
+            <div className="flex items-center gap-2 text-sm bg-mathprimary/10 px-3 py-1.5 rounded-full">
+              <Shield className="h-4 w-4 text-mathprimary" />
+              <span className="font-medium text-mathprimary">Premium Active</span>
+            </div>
+          )}
+        </div>
+        
+        <TabsContent value="class10">
+          <PapersGrid 
+            papers={Array.from({ length: 6 }, (_, i) => ({
+              id: `${boardId}-class10-${2025 - i}`,
+              title: `${boardId.toUpperCase()} Class 10 Paper ${2025 - i}`,
+              description: `Complete mock test paper from ${2025 - i}`,
+              year: (2025 - i).toString(),
+              isPremium: i >= 2, // Make only 2020-2021 free, rest premium
+              downloadUrl: `/download/${boardId}-class10-${2025 - i}`,
+              practiceUrl: `/exams/${boardId}-class10-${2025 - i}`
+            }))}
+            userIsPremium={userIsPremium}
+          />
+        </TabsContent>
+        
+        <TabsContent value="class12">
+          <PapersGrid 
+            papers={Array.from({ length: 6 }, (_, i) => ({
+              id: `${boardId}-class12-${2025 - i}`,
+              title: `${boardId.toUpperCase()} Class 12 Paper ${2025 - i}`,
+              description: `Complete mock test paper from ${2025 - i}`,
+              year: (2025 - i).toString(),
+              isPremium: i >= 2, // Make only 2020-2021 free, rest premium
+              downloadUrl: `/download/${boardId}-class12-${2025 - i}`,
+              practiceUrl: `/exams/${boardId}-class12-${2025 - i}`
+            }))}
+            userIsPremium={userIsPremium}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+const PapersGrid = ({ papers, userIsPremium }: { 
+  papers: {
+    id: string;
+    title: string;
+    description: string;
+    year: string;
+    isPremium: boolean;
+    downloadUrl?: string;
+    practiceUrl?: string;
+  }[]; 
+  userIsPremium: boolean;
+}) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {papers.map((paper) => (
+        <PaperCard
+          key={paper.id}
+          title={paper.title}
+          description={paper.description}
+          year={paper.year}
+          isPremium={paper.isPremium}
+          userIsPremium={userIsPremium}
+          downloadUrl={paper.downloadUrl}
+          practiceUrl={paper.practiceUrl}
+        />
+      ))}
+    </div>
+  );
+};
+
+const ChaptersList = ({ boardId, chapters, userIsPremium }: { 
+  boardId: string;
+  chapters: Record<string, Chapter[]>;
+  userIsPremium: boolean;
+}) => {
+  return (
+    <div className="mt-8">
+      <h2 className="text-2xl font-bold mb-6">Practice by Chapters</h2>
+      <Tabs defaultValue="class10">
+        <div className="flex items-center justify-between mb-6">
+          <TabsList>
+            <TabsTrigger value="class10">Class 10</TabsTrigger>
+            <TabsTrigger value="class12">Class 12</TabsTrigger>
+          </TabsList>
+          
+          {userIsPremium && (
+            <div className="flex items-center gap-2 text-sm bg-mathprimary/10 px-3 py-1.5 rounded-full">
+              <Shield className="h-4 w-4 text-mathprimary" />
+              <span className="font-medium text-mathprimary">Premium Active</span>
+            </div>
+          )}
+        </div>
+        
+        <TabsContent value="class10">
+          <ChapterAccordion
+            chapters={chapters.class10.map(chapter => {
+              // Mark first 2 papers in each chapter as free, rest as premium
+              return {
+                ...chapter,
+                papers: chapter.papers.map((paper, index) => ({
+                  ...paper,
+                  isPremium: index >= 2
+                }))
+              };
+            })}
+            userIsPremium={userIsPremium}
+          />
+        </TabsContent>
+        
+        <TabsContent value="class12">
+          <ChapterAccordion
+            chapters={chapters.class12.map(chapter => {
+              // Mark first 2 papers in each chapter as free, rest as premium
+              return {
+                ...chapter,
+                papers: chapter.papers.map((paper, index) => ({
+                  ...paper,
+                  isPremium: index >= 2
+                }))
+              };
+            })}
+            userIsPremium={userIsPremium}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

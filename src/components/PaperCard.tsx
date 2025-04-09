@@ -1,6 +1,6 @@
 
 import { Download, Lock, File } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -38,9 +38,17 @@ const PaperCard = ({
   practiceUrl
 }: PaperCardProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [localUserIsPremium, setLocalUserIsPremium] = useState(userIsPremium);
+  
+  useEffect(() => {
+    // For demo purposes, check premium status from localStorage
+    // In a real app, this would come from context or a subscription service
+    const premiumStatus = localStorage.getItem("userIsPremium") === "true";
+    setLocalUserIsPremium(premiumStatus);
+  }, []);
   
   const handleDownload = () => {
-    if (isPremium && !userIsPremium) {
+    if (isPremium && !localUserIsPremium) {
       toast.error("This is a premium paper. Please upgrade to access it.", {
         action: {
           label: "Upgrade",
@@ -68,7 +76,7 @@ const PaperCard = ({
             <CardTitle className="text-lg">{title}</CardTitle>
             <CardDescription className="mt-1">{description}</CardDescription>
           </div>
-          {isPremium && (
+          {isPremium && !localUserIsPremium && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -95,7 +103,7 @@ const PaperCard = ({
           variant="outline" 
           size="sm"
           onClick={handleDownload}
-          disabled={isDownloading}
+          disabled={isDownloading || (isPremium && !localUserIsPremium)}
           className="flex gap-2 items-center"
         >
           <Download size={14} />
@@ -105,9 +113,22 @@ const PaperCard = ({
         {practiceUrl && (
           <Button 
             size="sm"
-            asChild
+            disabled={isPremium && !localUserIsPremium}
+            asChild={!(isPremium && !localUserIsPremium)}
+            onClick={isPremium && !localUserIsPremium ? () => {
+              toast.error("This is a premium paper. Please upgrade to access it.", {
+                action: {
+                  label: "Upgrade",
+                  onClick: () => window.location.href = "/premium"
+                }
+              });
+            } : undefined}
           >
-            <a href={practiceUrl}>Practice</a>
+            {!(isPremium && !localUserIsPremium) ? (
+              <a href={practiceUrl}>Practice</a>
+            ) : (
+              "Practice"
+            )}
           </Button>
         )}
       </CardFooter>

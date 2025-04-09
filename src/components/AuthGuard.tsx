@@ -6,17 +6,29 @@ import { useAuth } from '@/contexts/AuthContext';
 type AuthGuardProps = {
   children: ReactNode;
   redirectTo?: string;
+  requirePremium?: boolean;
 };
 
-export const AuthGuard = ({ children, redirectTo = '/auth' }: AuthGuardProps) => {
+export const AuthGuard = ({ 
+  children, 
+  redirectTo = '/auth',
+  requirePremium = false
+}: AuthGuardProps) => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-
+  
+  // For demo purposes, check premium status from localStorage
+  const isPremium = localStorage.getItem("userIsPremium") === "true";
+  
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate(redirectTo);
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        navigate(redirectTo);
+      } else if (requirePremium && !isPremium) {
+        navigate('/premium');
+      }
     }
-  }, [isAuthenticated, isLoading, navigate, redirectTo]);
+  }, [isAuthenticated, isLoading, navigate, redirectTo, requirePremium, isPremium]);
 
   if (isLoading) {
     return (
@@ -24,6 +36,10 @@ export const AuthGuard = ({ children, redirectTo = '/auth' }: AuthGuardProps) =>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mathprimary"></div>
       </div>
     );
+  }
+  
+  if (requirePremium && !isPremium) {
+    return null;
   }
 
   return isAuthenticated ? <>{children}</> : null;

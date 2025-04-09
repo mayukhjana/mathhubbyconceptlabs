@@ -10,12 +10,20 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
+  const [userIsPremium, setUserIsPremium] = useState(false);
+  
+  useEffect(() => {
+    // In a real app, this would fetch premium status from a subscription service
+    // For demo, we're using localStorage
+    setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
+  }, []);
   
   if (!isAuthenticated) {
     return null;
@@ -41,6 +49,11 @@ const UserProfileMenu = () => {
               {getInitials()}
             </AvatarFallback>
           </Avatar>
+          {userIsPremium && (
+            <div className="absolute -top-1 -right-1 bg-yellow-500 text-white rounded-full p-0.5">
+              <Crown size={12} />
+            </div>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
