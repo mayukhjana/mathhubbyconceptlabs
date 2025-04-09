@@ -14,11 +14,8 @@ export const AuthGuard = ({
   redirectTo = '/auth',
   requirePremium = false
 }: AuthGuardProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isPremium } = useAuth();
   const navigate = useNavigate();
-  
-  // For demo purposes, check premium status from localStorage
-  const isPremium = localStorage.getItem("userIsPremium") === "true";
   
   useEffect(() => {
     if (!isLoading) {

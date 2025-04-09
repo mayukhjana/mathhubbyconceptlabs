@@ -13,6 +13,7 @@ import ExamsList from "./pages/ExamsList";
 import ExamPage from "./pages/ExamPage";
 import ExamPapersPage from "./pages/ExamPapersPage";
 import PremiumPage from "./pages/PremiumPage";
+import PremiumSuccessPage from "./pages/PremiumSuccessPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminUploadPage from "./pages/AdminUploadPage";
 import AuthPage from "./pages/AuthPage";
@@ -37,6 +38,11 @@ const App = () => (
             <Route path="/premium" element={
               <AuthGuard>
                 <PremiumPage />
+              </AuthGuard>
+            } />
+            <Route path="/premium-success" element={
+              <AuthGuard>
+                <PremiumSuccessPage />
               </AuthGuard>
             } />
             <Route path="/profile" element={

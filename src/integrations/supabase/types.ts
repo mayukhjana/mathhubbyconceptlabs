@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      exams: {
+        Row: {
+          board: string
+          chapter: string | null
+          class: string
+          created_at: string | null
+          created_by: string | null
+          duration: number
+          id: string
+          is_premium: boolean
+          title: string
+          year: string
+        }
+        Insert: {
+          board: string
+          chapter?: string | null
+          class: string
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number
+          id?: string
+          is_premium?: boolean
+          title: string
+          year: string
+        }
+        Update: {
+          board?: string
+          chapter?: string | null
+          class?: string
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number
+          id?: string
+          is_premium?: boolean
+          title?: string
+          year?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -36,15 +75,157 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          exam_id: string
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          order_number: number
+          question_text: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          exam_id: string
+          id?: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          order_number: number
+          question_text: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          exam_id?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          order_number?: number
+          question_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_premium: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          payment_id: string | null
+          payment_provider: string | null
+          starts_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          payment_id?: string | null
+          payment_provider?: string | null
+          starts_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          payment_id?: string | null
+          payment_provider?: string | null
+          starts_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_results: {
+        Row: {
+          completed_at: string | null
+          exam_id: string
+          id: string
+          score: number
+          time_taken: number | null
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          exam_id: string
+          id?: string
+          score: number
+          time_taken?: number | null
+          total_questions: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          exam_id?: string
+          id?: string
+          score?: number
+          time_taken?: number | null
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -159,6 +340,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
