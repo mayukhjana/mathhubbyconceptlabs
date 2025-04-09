@@ -50,6 +50,9 @@ const Navbar = ({ className }: NavbarProps) => {
           <Link to="/exams" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
             Exams
           </Link>
+          <Link to="/exam-papers" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
+            Exam Papers
+          </Link>
           {isAuthenticated && (
             <Link to="/results" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors">
               Results
@@ -81,6 +84,9 @@ const Navbar = ({ className }: NavbarProps) => {
             </Link>
             <Link to="/exams" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
               Exams
+            </Link>
+            <Link to="/exam-papers" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
+              Exam Papers
             </Link>
             {isAuthenticated && (
               <Link to="/results" className="text-gray-600 hover:text-mathprimary dark:text-gray-300 dark:hover:text-mathprimary transition-colors block">
