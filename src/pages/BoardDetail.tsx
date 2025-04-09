@@ -3,6 +3,7 @@ import { useParams, useNavigate, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChapterAccordion, { Chapter } from "@/components/ChapterAccordion";
+import PaperCard from "@/components/PaperCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Star, Shield } from "lucide-react";
@@ -284,7 +285,6 @@ const BoardDetail = () => {
       <Navbar />
       
       <main className="flex-grow">
-        {/* Board Header */}
         <div 
           className="relative bg-cover bg-center h-64"
           style={{ backgroundImage: `url(${boardInfo.image})` }}
@@ -296,7 +296,6 @@ const BoardDetail = () => {
           </div>
         </div>
         
-        {/* Premium Notice */}
         {!userIsPremium && (
           <div className="bg-mathprimary/10 border-y border-mathprimary/20">
             <div className="container mx-auto px-4 py-3">
@@ -316,12 +315,9 @@ const BoardDetail = () => {
           </div>
         )}
         
-        {/* Content */}
         <div className="container mx-auto px-4 py-8">
-          {/* Show the board navigation options */}
           <BoardNavigation boardId={boardId} boardName={boardInfo.name} />
           
-          {/* This section will be shown in child routes */}
           <Routes>
             <Route 
               path="papers" 
@@ -377,7 +373,7 @@ const PapersList = ({ boardId, userIsPremium }: { boardId: string; userIsPremium
               title: `${boardId.toUpperCase()} Class 10 Paper ${2025 - i}`,
               description: `Complete mock test paper from ${2025 - i}`,
               year: (2025 - i).toString(),
-              isPremium: i >= 2, // Make only 2020-2021 free, rest premium
+              isPremium: i >= 2,
               downloadUrl: `/download/${boardId}-class10-${2025 - i}`,
               practiceUrl: `/exams/${boardId}-class10-${2025 - i}`
             }))}
@@ -392,7 +388,7 @@ const PapersList = ({ boardId, userIsPremium }: { boardId: string; userIsPremium
               title: `${boardId.toUpperCase()} Class 12 Paper ${2025 - i}`,
               description: `Complete mock test paper from ${2025 - i}`,
               year: (2025 - i).toString(),
-              isPremium: i >= 2, // Make only 2020-2021 free, rest premium
+              isPremium: i >= 2,
               downloadUrl: `/download/${boardId}-class12-${2025 - i}`,
               practiceUrl: `/exams/${boardId}-class12-${2025 - i}`
             }))}
@@ -460,7 +456,6 @@ const ChaptersList = ({ boardId, chapters, userIsPremium }: {
         <TabsContent value="class10">
           <ChapterAccordion
             chapters={chapters.class10.map(chapter => {
-              // Mark first 2 papers in each chapter as free, rest as premium
               return {
                 ...chapter,
                 papers: chapter.papers.map((paper, index) => ({
@@ -476,7 +471,6 @@ const ChaptersList = ({ boardId, chapters, userIsPremium }: {
         <TabsContent value="class12">
           <ChapterAccordion
             chapters={chapters.class12.map(chapter => {
-              // Mark first 2 papers in each chapter as free, rest as premium
               return {
                 ...chapter,
                 papers: chapter.papers.map((paper, index) => ({
