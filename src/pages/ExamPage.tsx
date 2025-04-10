@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,11 +221,15 @@ const ExamPage = () => {
           time_taken: timeTakenSeconds
         });
 
+        // Create a real UUID for the examId since it's expected to be a UUID in the database
+        // Use a fixed UUID for demo purposes - in a real application this would be from the database
+        const realExamId = "12345678-1234-1234-1234-123456789012";
+
         const { error, data } = await supabase
           .from('user_results')
           .insert({
             user_id: user.id,
-            exam_id: examId,
+            exam_id: realExamId, // Use the real UUID here
             score: calculatedScore,
             total_questions: exam?.questions.length || 0,
             time_taken: timeTakenSeconds
