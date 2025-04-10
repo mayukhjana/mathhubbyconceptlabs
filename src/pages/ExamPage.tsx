@@ -31,7 +31,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
-// Mock exam data
 const examsData: Record<string, {
   title: string;
   board: string;
@@ -129,7 +128,6 @@ const ExamPage = () => {
   
   useEffect(() => {
     if (exam) {
-      // Set timer
       setTimeRemaining(exam.duration * 60);
       setStartTime(new Date());
     }
@@ -201,7 +199,6 @@ const ExamPage = () => {
     const calculatedScore = Math.round((correctAnswers / (exam?.questions.length || 1)) * 100);
     setScore(calculatedScore);
     
-    // Calculate time taken
     const endTime = new Date();
     const timeTakenSeconds = startTime 
       ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) 
@@ -210,7 +207,6 @@ const ExamPage = () => {
     setTimeTaken(timeTakenSeconds);
     setExamCompleted(true);
     
-    // Save result to database if user is logged in
     if (user && examId) {
       try {
         console.log("Saving result to database", {
@@ -221,15 +217,43 @@ const ExamPage = () => {
           time_taken: timeTakenSeconds
         });
 
-        // Create a real UUID for the examId since it's expected to be a UUID in the database
-        // Use a fixed UUID for demo purposes - in a real application this would be from the database
-        const realExamId = "12345678-1234-1234-1234-123456789012";
+        const { data: existingExams, error: fetchError } = await supabase
+          .from('exams')
+          .select('id')
+          .eq('title', exam.title)
+          .limit(1);
 
+        let validExamId: string;
+        
+        if (fetchError || !existingExams || existingExams.length === 0) {
+          const { data: newExam, error: insertError } = await supabase
+            .from('exams')
+            .insert({
+              title: exam.title,
+              board: exam.board,
+              chapter: exam.chapter,
+              year: exam.year,
+              class: '10',
+              duration: exam.duration,
+              is_premium: exam.isPremium
+            })
+            .select()
+            .single();
+            
+          if (insertError || !newExam) {
+            throw new Error(insertError?.message || 'Failed to create exam record');
+          }
+          
+          validExamId = newExam.id;
+        } else {
+          validExamId = existingExams[0].id;
+        }
+        
         const { error, data } = await supabase
           .from('user_results')
           .insert({
             user_id: user.id,
-            exam_id: realExamId, // Use the real UUID here
+            exam_id: validExamId,
             score: calculatedScore,
             total_questions: exam?.questions.length || 0,
             time_taken: timeTakenSeconds
@@ -284,7 +308,6 @@ const ExamPage = () => {
         <div className="container mx-auto px-4">
           {!examCompleted ? (
             <>
-              {/* Exam Header */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
@@ -318,17 +341,13 @@ const ExamPage = () => {
                 </div>
               </div>
               
-              {/* Question */}
-              {currentQuestion && (
-                <QuestionCard
-                  question={currentQuestion}
-                  onAnswer={handleAnswer}
-                  userAnswer={userAnswers[currentQuestion.id]}
-                  questionNumber={currentQuestionIndex + 1}
-                />
-              )}
+              <QuestionCard
+                question={currentQuestion}
+                onAnswer={handleAnswer}
+                userAnswer={userAnswers[currentQuestion.id]}
+                questionNumber={currentQuestionIndex + 1}
+              />
               
-              {/* Navigation Buttons */}
               <div className="flex justify-between mt-6">
                 <Button 
                   variant="outline" 
@@ -360,7 +379,6 @@ const ExamPage = () => {
               </div>
             </>
           ) : (
-            /* Results Screen */
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
               <div className="max-w-md mx-auto">
                 <div className="w-24 h-24 bg-mathprimary/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -440,7 +458,6 @@ const ExamPage = () => {
       
       <Footer />
       
-      {/* Submit Confirmation Dialog */}
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -456,7 +473,6 @@ const ExamPage = () => {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Time Up Dialog */}
       <AlertDialog open={showTimeupDialog} onOpenChange={setShowTimeupDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
