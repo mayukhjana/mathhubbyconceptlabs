@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -19,8 +19,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { BookOpen, FileText, ClockIcon, Search, Lock } from "lucide-react";
+import { BookOpen, FileText, ClockIcon, Search, Lock, CheckCircle } from "lucide-react";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock exam data
 const examsData = [
@@ -119,6 +121,47 @@ const ExamsList = () => {
   const [boardFilter, setBoardFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
   const [userIsPremium] = useState(false); // Would come from auth context
+  const [completedExamIds, setCompletedExamIds] = useState<string[]>([]);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Load completed exams from localStorage or fetch fresh from database
+    const loadCompletedExams = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from("user_results")
+          .select('exam_id')
+          .eq("user_id", user.id);
+        
+        if (error) throw error;
+        
+        if (data) {
+          const examIds = data.map(result => result.exam_id);
+          setCompletedExamIds(examIds);
+          localStorage.setItem('completedExamIds', JSON.stringify(examIds));
+        }
+      } catch (err) {
+        console.error("Error loading completed exams:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCompletedExams();
+  }, [user]);
+  
+  // Check if an exam is completed
+  const isExamCompleted = (examId: string) => {
+    // For mock data we'll need to map the string ID to a UUID
+    // In a real app, you'd just check if the UUID is in the completedExamIds array
+    return completedExamIds.some(id => id.includes(examId));
+  };
   
   const filteredExams = examsData.filter(exam => {
     const matchesSearch = exam.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -132,9 +175,20 @@ const ExamsList = () => {
   const uniqueBoards = Array.from(new Set(examsData.map(exam => exam.board)));
   const uniqueYears = Array.from(new Set(examsData.map(exam => exam.year)));
   
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <LoadingAnimation />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen flex flex-col">
-      <LoadingAnimation />
       <Navbar />
       
       <main className="flex-grow">
@@ -191,52 +245,64 @@ const ExamsList = () => {
             
             {/* Exams Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExams.map(exam => (
-                <Card key={exam.id} className="paper overflow-hidden hover:shadow-md transition-all duration-300">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{exam.title}</CardTitle>
-                      {exam.isPremium && !userIsPremium && (
-                        <span className="bg-mathprimary text-white p-1.5 rounded-md">
-                          <Lock size={14} />
-                        </span>
+              {filteredExams.map(exam => {
+                const examCompleted = isExamCompleted(exam.id);
+                return (
+                  <Card key={exam.id} className="paper overflow-hidden hover:shadow-md transition-all duration-300">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg">{exam.title}</CardTitle>
+                        {exam.isPremium && !userIsPremium && (
+                          <span className="bg-mathprimary text-white p-1.5 rounded-md">
+                            <Lock size={14} />
+                          </span>
+                        )}
+                        {examCompleted && (
+                          <span className="bg-green-100 text-green-700 p-1.5 rounded-md">
+                            <CheckCircle size={14} />
+                          </span>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <BookOpen size={14} />
+                          <span>{exam.board} Board</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <FileText size={14} />
+                          <span>{exam.chapter}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <ClockIcon size={14} />
+                          <span>{exam.duration} minutes</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {exam.questionCount} Questions
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="border-t pt-4">
+                      {exam.isPremium && !userIsPremium ? (
+                        <Button className="w-full" asChild>
+                          <Link to="/premium">Upgrade to Take</Link>
+                        </Button>
+                      ) : examCompleted ? (
+                        <Button className="w-full" variant="outline" disabled>
+                          Already Completed
+                        </Button>
+                      ) : (
+                        <Button className="w-full" asChild>
+                          <Link to={`/exams/${exam.id}`}>Start Exam</Link>
+                        </Button>
                       )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <BookOpen size={14} />
-                        <span>{exam.board} Board</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <FileText size={14} />
-                        <span>{exam.chapter}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <ClockIcon size={14} />
-                        <span>{exam.duration} minutes</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {exam.questionCount} Questions
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t pt-4">
-                    {exam.isPremium && !userIsPremium ? (
-                      <Button className="w-full" asChild>
-                        <Link to="/premium">Upgrade to Take</Link>
-                      </Button>
-                    ) : (
-                      <Button className="w-full" asChild>
-                        <Link to={`/exams/${exam.id}`}>Start Exam</Link>
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))}
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
             
             {filteredExams.length === 0 && (

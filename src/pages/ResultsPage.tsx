@@ -23,8 +23,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { format } from "date-fns";
-import { BarChart3, Clock, Calendar, Award, FileText, ArrowRight } from "lucide-react";
+import { BarChart3, Clock, Award, FileText, ArrowRight, AlertCircle } from "lucide-react";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { toast } from "sonner";
 
 type ExamResult = {
   id: string;
@@ -46,6 +47,7 @@ const ResultsPage = () => {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [completedExamIds, setCompletedExamIds] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -73,12 +75,23 @@ const ResultsPage = () => {
 
         if (error) throw new Error(error.message);
         
+        console.log("Fetched results:", data);
         setResults(data || []);
+        
+        // Store completed exam IDs for preventing retakes
+        if (data) {
+          const examIds = data.map(result => result.exam_id);
+          setCompletedExamIds(examIds);
+          // Store in localStorage to use in ExamPage
+          localStorage.setItem('completedExamIds', JSON.stringify(examIds));
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error("Error fetching results:", err);
         setError("Failed to load your results. Please try again later.");
         setLoading(false);
+        toast.error("Failed to load your results");
       }
     };
 
@@ -238,10 +251,15 @@ const ResultsPage = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="outline" asChild size="sm">
-                              <Link to={`/exams/${result.exam_id}`}>
-                                Take Again
-                              </Link>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-1.5"
+                              disabled={true}
+                              title="You have already completed this exam"
+                            >
+                              <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                              Already Completed
                             </Button>
                           </TableCell>
                         </TableRow>
