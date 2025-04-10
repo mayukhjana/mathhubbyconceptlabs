@@ -250,9 +250,10 @@ const ResultsPage = () => {
                   </Table>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-        </main>
+            </>
+          )}
+        </div>
+      </main>
       
       <Footer />
     </div>
