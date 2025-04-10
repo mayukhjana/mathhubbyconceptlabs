@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import QuestionCard, { Question } from "@/components/QuestionCard";
@@ -27,6 +28,7 @@ import {
   Home
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
 // Mock exam data
@@ -109,6 +111,7 @@ const examsData: Record<string, {
 const ExamPage = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
@@ -117,6 +120,8 @@ const ExamPage = () => {
   const [score, setScore] = useState(0);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showTimeupDialog, setShowTimeupDialog] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [timeTaken, setTimeTaken] = useState(0);
   
   const exam = examId ? examsData[examId] : null;
   
@@ -124,6 +129,7 @@ const ExamPage = () => {
     if (exam) {
       // Set timer
       setTimeRemaining(exam.duration * 60);
+      setStartTime(new Date());
     }
   }, [exam]);
   
@@ -175,7 +181,7 @@ const ExamPage = () => {
     finishExam();
   };
   
-  const finishExam = () => {
+  const finishExam = async () => {
     let correctAnswers = 0;
     
     exam?.questions.forEach(question => {
@@ -186,10 +192,45 @@ const ExamPage = () => {
     
     const calculatedScore = Math.round((correctAnswers / (exam?.questions.length || 1)) * 100);
     setScore(calculatedScore);
+    
+    // Calculate time taken
+    const endTime = new Date();
+    const timeTakenSeconds = startTime 
+      ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) 
+      : (exam?.duration || 0) * 60 - (timeRemaining || 0);
+    
+    setTimeTaken(timeTakenSeconds);
     setExamCompleted(true);
     
-    // Show toast with score
-    toast.success(`Exam completed! Your score: ${calculatedScore}%`);
+    // Save result to database if user is logged in
+    if (user && examId) {
+      try {
+        const { error } = await supabase
+          .from('user_results')
+          .insert({
+            user_id: user.id,
+            exam_id: examId,
+            score: calculatedScore,
+            total_questions: exam?.questions.length || 0,
+            time_taken: timeTakenSeconds
+          });
+          
+        if (error) {
+          console.error('Error saving exam result:', error);
+          toast.error('Failed to save your result. Please try again.');
+        } else {
+          toast.success(`Exam completed! Your score: ${calculatedScore}% has been saved.`);
+        }
+      } catch (error) {
+        console.error('Error saving exam result:', error);
+        toast.error('Failed to save your result. Please try again.');
+      }
+    } else {
+      toast.success(`Exam completed! Your score: ${calculatedScore}%`);
+      if (!user) {
+        toast.info("Sign in to save your results and track your progress!");
+      }
+    }
   };
   
   const handleTimeup = () => {
@@ -214,7 +255,7 @@ const ExamPage = () => {
   const progress = (answeredCount / exam.questions.length) * 100;
   
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <LoadingAnimation />
       <Navbar />
       
@@ -223,11 +264,11 @@ const ExamPage = () => {
           {!examCompleted ? (
             <>
               {/* Exam Header */}
-              <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
                     <h1 className="text-xl font-bold">{exam.title}</h1>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-1">
                         <BookOpen size={14} />
                         <span>{exam.board} - {exam.chapter}</span>
@@ -239,8 +280,8 @@ const ExamPage = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 bg-mathlight px-4 py-2 rounded-full">
-                    <Clock size={18} className={timeRemaining && timeRemaining < 300 ? "text-red-500 animate-pulse" : "text-mathprimary"} />
+                  <div className="flex items-center gap-2 bg-mathlight dark:bg-gray-700 px-4 py-2 rounded-full">
+                    <Clock size={18} className={timeRemaining && timeRemaining < 300 ? "text-red-500 animate-pulse" : "text-mathprimary dark:text-blue-400"} />
                     <span className={`font-mono font-medium ${timeRemaining && timeRemaining < 300 ? "text-red-500" : ""}`}>
                       {timeRemaining !== null ? formatTime(timeRemaining) : "00:00"}
                     </span>
@@ -248,7 +289,7 @@ const ExamPage = () => {
                 </div>
                 
                 <div className="mt-4">
-                  <div className="flex justify-between text-sm text-gray-500 mb-1">
+                  <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
                     <span>Progress</span>
                     <span>{answeredCount}/{exam.questions.length} Questions</span>
                   </div>
@@ -299,33 +340,33 @@ const ExamPage = () => {
             </>
           ) : (
             /* Results Screen */
-            <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
               <div className="max-w-md mx-auto">
-                <div className="w-24 h-24 bg-mathprimary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Trophy className="w-12 h-12 text-mathprimary" />
+                <div className="w-24 h-24 bg-mathprimary/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Trophy className="w-12 h-12 text-mathprimary dark:text-blue-400" />
                 </div>
                 
                 <h1 className="text-2xl font-bold mb-2">Exam Completed!</h1>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
                   You've completed the {exam.title} exam.
                 </p>
                 
-                <div className="bg-mathlight rounded-lg p-6 mb-8">
+                <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-6 mb-8">
                   <h2 className="text-lg font-medium mb-4">Your Results</h2>
                   
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-gray-600">Score:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Score:</span>
                     <span className="text-xl font-bold">{score}%</span>
                   </div>
                   
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-gray-600">Correct Answers:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Correct Answers:</span>
                     <span className="font-medium">{exam.questions.filter(q => userAnswers[q.id] === q.correctAnswer).length} / {exam.questions.length}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Time Taken:</span>
-                    <span className="font-medium">{formatTime((exam.duration * 60) - (timeRemaining || 0))}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Time Taken:</span>
+                    <span className="font-medium">{formatTime(timeTaken)}</span>
                   </div>
                 </div>
                 
@@ -346,17 +387,17 @@ const ExamPage = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button variant="outline" className="gap-2" asChild>
-                    <a href="/exams">
-                      <ArrowLeft size={16} />
-                      Back to Exams
-                    </a>
+                    <Link to="/results">
+                      <BarChart3 size={16} />
+                      View All Results
+                    </Link>
                   </Button>
                   
                   <Button className="gap-2" asChild>
-                    <a href="/">
-                      <Home size={16} />
-                      Go to Home
-                    </a>
+                    <Link to="/exams">
+                      <ArrowRight size={16} />
+                      More Exams
+                    </Link>
                   </Button>
                 </div>
               </div>
