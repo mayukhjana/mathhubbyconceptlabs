@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -25,7 +25,8 @@ import {
   AlertTriangle,
   Trophy,
   BookOpen,
-  Home
+  Home,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -122,6 +123,8 @@ const ExamPage = () => {
   const [showTimeupDialog, setShowTimeupDialog] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [timeTaken, setTimeTaken] = useState(0);
+  const [resultSaved, setResultSaved] = useState(false);
+  const [questionsWithFeedback, setQuestionsWithFeedback] = useState<Array<Question & { isCorrect?: boolean }>>([]);
   
   const exam = examId ? examsData[examId] : null;
   
@@ -182,13 +185,19 @@ const ExamPage = () => {
   };
   
   const finishExam = async () => {
-    let correctAnswers = 0;
+    if (!exam) return;
     
-    exam?.questions.forEach(question => {
-      if (userAnswers[question.id] === question.correctAnswer) {
-        correctAnswers++;
-      }
+    let correctAnswers = 0;
+    const questionsWithResults = exam.questions.map(question => {
+      const isCorrect = userAnswers[question.id] === question.correctAnswer;
+      if (isCorrect) correctAnswers++;
+      return {
+        ...question,
+        isCorrect
+      };
     });
+    
+    setQuestionsWithFeedback(questionsWithResults);
     
     const calculatedScore = Math.round((correctAnswers / (exam?.questions.length || 1)) * 100);
     setScore(calculatedScore);
@@ -205,7 +214,15 @@ const ExamPage = () => {
     // Save result to database if user is logged in
     if (user && examId) {
       try {
-        const { error } = await supabase
+        console.log("Saving result to database", {
+          user_id: user.id,
+          exam_id: examId,
+          score: calculatedScore,
+          total_questions: exam?.questions.length || 0,
+          time_taken: timeTakenSeconds
+        });
+
+        const { error, data } = await supabase
           .from('user_results')
           .insert({
             user_id: user.id,
@@ -213,17 +230,19 @@ const ExamPage = () => {
             score: calculatedScore,
             total_questions: exam?.questions.length || 0,
             time_taken: timeTakenSeconds
-          });
+          })
+          .select();
           
         if (error) {
-          console.error('Error saving exam result:', error);
-          toast.error('Failed to save your result. Please try again.');
+          throw error;
         } else {
+          console.log("Result saved successfully:", data);
+          setResultSaved(true);
           toast.success(`Exam completed! Your score: ${calculatedScore}% has been saved.`);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error saving exam result:', error);
-        toast.error('Failed to save your result. Please try again.');
+        toast.error(`Failed to save your result: ${error.message}`);
       }
     } else {
       toast.success(`Exam completed! Your score: ${calculatedScore}%`);
@@ -256,7 +275,6 @@ const ExamPage = () => {
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <LoadingAnimation />
       <Navbar />
       
       <main className="flex-grow py-6">
@@ -368,12 +386,23 @@ const ExamPage = () => {
                     <span className="text-gray-600 dark:text-gray-300">Time Taken:</span>
                     <span className="font-medium">{formatTime(timeTaken)}</span>
                   </div>
+
+                  {user && (
+                    <div className="mt-3 pt-3 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-300">Results Saved:</span>
+                        <span className={`font-medium ${resultSaved ? "text-green-500" : "text-red-500"}`}>
+                          {resultSaved ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <h3 className="text-lg font-medium mb-4">Review Your Answers</h3>
                 
                 <div className="space-y-4 max-h-96 overflow-y-auto mb-8">
-                  {exam.questions.map((question, index) => (
+                  {questionsWithFeedback.map((question, index) => (
                     <QuestionCard
                       key={question.id}
                       question={question}

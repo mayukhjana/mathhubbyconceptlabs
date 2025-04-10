@@ -117,7 +117,7 @@ const PremiumPage = () => {
                 </Badge>
                 <h3 className="text-2xl font-bold">Premium Monthly</h3>
                 <div className="mt-4 mb-2">
-                  <span className="text-3xl font-bold">₹299</span>
+                  <span className="text-3xl font-bold">₹149</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <p className="text-muted-foreground">Cancel anytime</p>
@@ -171,10 +171,10 @@ const PremiumPage = () => {
                 </Badge>
                 <h3 className="text-2xl font-bold">Premium Annual</h3>
                 <div className="mt-4 mb-2">
-                  <span className="text-3xl font-bold">₹2,499</span>
+                  <span className="text-3xl font-bold">₹1,499</span>
                   <span className="text-muted-foreground">/year</span>
                 </div>
-                <p className="text-green-600 font-medium">Save 30% compared to monthly</p>
+                <p className="text-green-600 font-medium">Save 16% compared to monthly</p>
               </div>
               
               <div className="flex-grow">

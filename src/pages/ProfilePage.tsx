@@ -71,17 +71,33 @@ const ProfilePage = () => {
       const fileName = `${user!.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
       
+      // Check if avatars bucket exists, if not create it
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const avatarsBucketExists = buckets?.some(b => b.name === 'avatars');
+      
+      if (!avatarsBucketExists) {
+        await supabase.storage.createBucket('avatars', {
+          public: true,
+          fileSizeLimit: 1024 * 1024 * 2 // 2MB
+        });
+      }
+      
       // Upload image to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
         
       if (uploadError) throw uploadError;
       
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data } = await supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
+      
+      const publicUrl = data.publicUrl;
         
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
@@ -94,9 +110,9 @@ const ProfilePage = () => {
       setAvatarUrl(publicUrl);
       toast.success("Avatar updated successfully");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading avatar:", error);
-      toast.error("Failed to upload avatar");
+      toast.error(`Failed to upload avatar: ${error.message}`);
     } finally {
       setUploading(false);
     }
@@ -181,8 +197,8 @@ const ProfilePage = () => {
                   )}
                 </div>
                 
-                <Label htmlFor="avatar-upload" className="cursor-pointer">
-                  <div className="flex items-center gap-2 border rounded-md px-3 py-2 hover:bg-muted">
+                <label htmlFor="avatar-upload" className="w-full">
+                  <div className="flex items-center justify-center gap-2 border rounded-md px-3 py-2 hover:bg-muted cursor-pointer">
                     <Upload size={16} />
                     <span>{uploading ? "Uploading..." : "Upload new image"}</span>
                   </div>
@@ -194,7 +210,7 @@ const ProfilePage = () => {
                     disabled={uploading} 
                     onChange={handleAvatarUpload}
                   />
-                </Label>
+                </label>
               </CardContent>
             </Card>
             
