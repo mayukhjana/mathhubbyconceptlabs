@@ -4,6 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+const adminEmail = "mayukhjana27@gmail.com";
 
 interface SupportTicket {
   subject: string;
@@ -63,6 +64,46 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Failed to submit support ticket' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+    
+    // Send email notification
+    try {
+      const emailBody = `
+        New Support Ticket Submitted
+        
+        User Email: ${user.email}
+        Subject: ${subject}
+        Message: ${message}
+        
+        Ticket ID: ${data[0].id}
+        Submitted at: ${new Date().toISOString()}
+      `;
+      
+      await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${Deno.env.get('SENDGRID_API_KEY')}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          personalizations: [
+            {
+              to: [{ email: adminEmail }]
+            }
+          ],
+          from: { email: "no-reply@mathhub.example.com" },
+          subject: "New Support Ticket Submission",
+          content: [
+            {
+              type: "text/plain",
+              value: emailBody
+            }
+          ]
+        })
+      });
+    } catch (emailError) {
+      console.error("Failed to send email notification:", emailError);
+      // We still return success even if email fails
     }
 
     return new Response(JSON.stringify({ 

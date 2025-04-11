@@ -38,3 +38,4 @@ verify_jwt = true
 
 [functions.sql-execute]
 verify_jwt = true
+

@@ -12,8 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { BrainCircuit, Send, Key, HelpCircle, MessageSquare, History, Sparkles } from "lucide-react";
+import { BrainCircuit, Send, Key, HelpCircle, MessageSquare, History, Sparkles, Image, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
@@ -61,6 +62,12 @@ type SupportTicketData = {
   created_at: string | null;
 };
 
+// File upload type
+type UploadedFile = {
+  file: File;
+  preview: string;
+};
+
 // Generic SQL query response type
 type SqlQueryResponse<T> = {
   data: T[];
@@ -79,6 +86,9 @@ const MathHubAI = () => {
   const [chatHistory, setChatHistory] = useState<HistoryItem[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [activeTab, setActiveTab] = useState("chat");
+  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const supportForm = useForm({
@@ -129,7 +139,7 @@ const MathHubAI = () => {
         return;
       }
 
-      const doubtsData = data?.data as UserAIDoubts[];
+      const doubtsData = data?.data;
       
       if (doubtsData && doubtsData.length > 0) {
         setRemainingDoubts(Math.max(0, 5 - doubtsData[0].total_used));
@@ -156,13 +166,15 @@ const MathHubAI = () => {
         return;
       }
       
-      const chatData = data?.data as AIChatHistory[];
-      setChatHistory(chatData.map(item => ({
-        id: item.id,
-        question: item.question,
-        answer: item.answer,
-        created_at: item.created_at || ''
-      })));
+      const chatData = data?.data;
+      if (chatData) {
+        setChatHistory(chatData.map(item => ({
+          id: item.id,
+          question: item.question,
+          answer: item.answer,
+          created_at: item.created_at || ''
+        })));
+      }
     } catch (error) {
       console.error("Error fetching chat history:", error);
     }
@@ -182,14 +194,16 @@ const MathHubAI = () => {
         return;
       }
       
-      const ticketsData = data?.data as SupportTicketData[];
-      setSupportTickets(ticketsData.map(item => ({
-        id: item.id,
-        subject: item.subject,
-        message: item.message,
-        status: item.status,
-        created_at: item.created_at || ''
-      })));
+      const ticketsData = data?.data;
+      if (ticketsData) {
+        setSupportTickets(ticketsData.map(item => ({
+          id: item.id,
+          subject: item.subject,
+          message: item.message,
+          status: item.status,
+          created_at: item.created_at || ''
+        })));
+      }
     } catch (error) {
       console.error("Error fetching support tickets:", error);
     }
@@ -199,18 +213,74 @@ const MathHubAI = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles: UploadedFile[] = [];
+    
+    Array.from(files).forEach(file => {
+      // Check if file is an image and less than 5MB
+      if (file.type.startsWith("image/") && file.size < 5 * 1024 * 1024) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            newFiles.push({
+              file,
+              preview: e.target.result as string
+            });
+            
+            // Wait for all files to be processed
+            if (newFiles.length === files.length) {
+              setUploadedFiles(prev => [...prev, ...newFiles]);
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast.error(`${file.name} is not a valid image or exceeds 5MB limit.`);
+      }
+    });
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && uploadedFiles.length === 0) || loading) return;
     
     const userMessage = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    
+    // Create a message with both text and image references if applicable
+    let messageContent = userMessage;
+    if (uploadedFiles.length > 0) {
+      if (!userMessage) {
+        messageContent = "I've uploaded image(s) for analysis.";
+      }
+    }
+    
+    setMessages((prev) => [...prev, { role: "user", content: messageContent }]);
     
     setLoading(true);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mathhub-ai`, {
+      // Prepare files for API
+      const files = uploadedFiles.map(file => {
+        const base64Content = file.preview.split(',')[1]; // Remove the data URL prefix
+        return {
+          name: file.file.name,
+          content: base64Content,
+          type: file.file.type
+        };
+      });
+
+      // Reset uploaded files after sending
+      setUploadedFiles([]);
+      
+      const response = await fetch(`https://gpzoytysrrormkmytmyk.supabase.co/functions/v1/mathhub-ai`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -218,8 +288,10 @@ const MathHubAI = () => {
         },
         body: JSON.stringify({
           question: userMessage,
+          model: selectedModel,
           useCustomKey,
-          customApiKey: useCustomKey ? customApiKey : undefined
+          customApiKey: useCustomKey ? customApiKey : undefined,
+          files: files
         })
       });
       
@@ -248,7 +320,7 @@ const MathHubAI = () => {
 
   const handleSubmitSupportTicket = async (values: { subject: string; message: string }) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-support-ticket`, {
+      const response = await fetch(`https://gpzoytysrrormkmytmyk.supabase.co/functions/v1/submit-support-ticket`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -281,10 +353,16 @@ const MathHubAI = () => {
     setActiveTab("chat");
   };
 
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[70vh]">
-        <LoadingAnimation />
+        <LoadingAnimation size="md" />
       </div>
     );
   }
@@ -330,7 +408,7 @@ const MathHubAI = () => {
                 <DialogHeader>
                   <DialogTitle>API Key Settings</DialogTitle>
                   <DialogDescription>
-                    You can use your own OpenAI API key instead of the free quota.
+                    You can use your own API key instead of the free quota.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -345,11 +423,11 @@ const MathHubAI = () => {
                   
                   {useCustomKey && (
                     <div className="space-y-2">
-                      <Label htmlFor="api-key">OpenAI API Key</Label>
+                      <Label htmlFor="api-key">API Key</Label>
                       <Input
                         id="api-key"
                         type="password"
-                        placeholder="sk-..."
+                        placeholder="Enter your API key..."
                         value={customApiKey}
                         onChange={(e) => setCustomApiKey(e.target.value)}
                       />
@@ -422,7 +500,69 @@ const MathHubAI = () => {
                     <div ref={messagesEndRef} />
                   </div>
                   
+                  {/* File uploads display */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="relative">
+                          <img 
+                            src={file.preview} 
+                            alt={`Upload ${index + 1}`} 
+                            className="h-16 w-16 object-cover rounded-lg" 
+                          />
+                          <button
+                            onClick={() => removeFile(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Model selector */}
+                  <div className="mb-3">
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select AI Model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>OpenAI Models</SelectLabel>
+                          <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                          <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>Claude Models</SelectLabel>
+                          <SelectItem value="claude-3-sonnet-20240229">Claude Sonnet</SelectItem>
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>Perplexity Models</SelectLabel>
+                          <SelectItem value="sonar-small-online">Sonar Small</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      multiple
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={triggerFileInput}
+                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey)}
+                    >
+                      <Upload size={18} />
+                    </Button>
                     <Input
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -432,9 +572,9 @@ const MathHubAI = () => {
                     />
                     <Button 
                       type="submit" 
-                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey)}
+                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey) || (input.trim() === "" && uploadedFiles.length === 0)}
                     >
-                      {loading ? <LoadingAnimation small /> : <Send size={18} />}
+                      {loading ? <LoadingAnimation size="sm" /> : <Send size={18} />}
                     </Button>
                   </form>
                   

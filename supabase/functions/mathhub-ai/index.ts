@@ -3,14 +3,22 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
+const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 interface RequestBody {
   question: string;
+  model: string;
   useCustomKey?: boolean;
   customApiKey?: string;
+  files?: Array<{
+    name: string;
+    content: string; // base64 encoded
+    type: string;
+  }>;
 }
 
 function createSupabaseClient(authHeader: string | null) {
@@ -94,6 +102,129 @@ async function saveAiChatHistory(supabase: any, userId: string, question: string
   }
 }
 
+async function callOpenAI(question: string, apiKey: string, files: any[] = []) {
+  const messages = [
+    { 
+      role: 'system', 
+      content: `You are MathHub AI, a specialized math tutor that helps students solve math problems and understand mathematical concepts.
+      Focus on providing clear, step-by-step solutions to math problems.
+      For complex math, use clear explanations and break down the concepts.
+      If a question is not math-related, politely redirect to math topics.
+      Always be encouraging and supportive, recognizing that learning math can be challenging.`
+    },
+    { 
+      role: 'user', 
+      content: [
+        { type: 'text', text: question }
+      ]
+    }
+  ];
+  
+  // Add any files to the message
+  if (files && files.length > 0) {
+    for (const file of files) {
+      messages[1].content.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:${file.type};base64,${file.content}`
+        }
+      });
+    }
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: messages,
+      temperature: 0.7
+    })
+  });
+
+  return response;
+}
+
+async function callClaude(question: string, apiKey: string, files: any[] = []) {
+  const messages = [
+    { 
+      role: 'user', 
+      content: [
+        { 
+          type: 'text', 
+          text: `You are MathHub AI, a specialized math tutor that helps students solve math problems and understand mathematical concepts.
+          Focus on providing clear, step-by-step solutions to math problems.
+          For complex math, use clear explanations and break down the concepts.
+          If a question is not math-related, politely redirect to math topics.
+          Always be encouraging and supportive, recognizing that learning math can be challenging.
+          
+          Here is the question: ${question}`
+        }
+      ]
+    }
+  ];
+  
+  // Add any files to the messages
+  if (files && files.length > 0) {
+    for (const file of files) {
+      messages[0].content.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: file.type,
+          data: file.content
+        }
+      });
+    }
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-3-sonnet-20240229',
+      max_tokens: 2000,
+      messages
+    })
+  });
+
+  return response;
+}
+
+async function callPerplexity(question: string, apiKey: string) {
+  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'sonar-small-online',
+      messages: [
+        { 
+          role: 'system', 
+          content: `You are MathHub AI, a specialized math tutor that helps students solve math problems and understand mathematical concepts.
+          Focus on providing clear, step-by-step solutions to math problems.
+          For complex math, use clear explanations and break down the concepts.
+          If a question is not math-related, politely redirect to math topics.
+          Always be encouraging and supportive, recognizing that learning math can be challenging.`
+        },
+        { role: 'user', content: question }
+      ],
+      temperature: 0.7
+    })
+  });
+
+  return response;
+}
+
 // Handle the request
 Deno.serve(async (req) => {
   // Handle CORS
@@ -117,7 +248,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { question, useCustomKey = false, customApiKey = '' } = await req.json() as RequestBody;
+    const { question, model = 'gpt-4o-mini', useCustomKey = false, customApiKey = '', files = [] } = await req.json() as RequestBody;
 
     // Check if user can make this request
     const canProceed = await checkUserQuotaAndUpdate(supabase, user.id);
@@ -129,61 +260,100 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Determine which API key to use
-    const apiKey = useCustomKey ? customApiKey : openAiApiKey;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key is required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    let response;
+    let data;
+    let answer;
 
-    // Format the system prompt for math-focused assistance
-    const systemPrompt = `You are MathHub AI, a specialized math tutor that helps students solve math problems and understand mathematical concepts.
-    Focus on providing clear, step-by-step solutions to math problems.
-    For complex math, use clear explanations and break down the concepts.
-    If a question is not math-related, politely redirect to math topics.
-    Always be encouraging and supportive, recognizing that learning math can be challenging.`;
-
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: question
-          }
-        ],
-        temperature: 0.7
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('OpenAI API error:', data);
-      if (useCustomKey) {
-        return new Response(JSON.stringify({ 
-          error: 'Error with your custom API key. Please check that it is valid and has sufficient credits.' 
-        }), {
+    // Call the appropriate API based on the selected model
+    if (model.startsWith('gpt-')) {
+      // Determine which API key to use for OpenAI
+      const apiKey = useCustomKey ? customApiKey : openAiApiKey;
+      if (!apiKey) {
+        return new Response(JSON.stringify({ error: 'API key is required' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-      return new Response(JSON.stringify({ error: 'Failed to get answer from AI' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      
+      response = await callOpenAI(question, apiKey, files);
+      data = await response.json();
+      
+      if (!response.ok) {
+        console.error('OpenAI API error:', data);
+        if (useCustomKey) {
+          return new Response(JSON.stringify({ 
+            error: 'Error with your custom API key. Please check that it is valid and has sufficient credits.' 
+          }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        return new Response(JSON.stringify({ error: 'Failed to get answer from AI' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      answer = data.choices[0].message.content;
+    } 
+    else if (model.startsWith('claude-')) {
+      // Determine which API key to use for Claude
+      const apiKey = useCustomKey ? customApiKey : claudeApiKey;
+      if (!apiKey) {
+        return new Response(JSON.stringify({ error: 'Claude API key is required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      response = await callClaude(question, apiKey, files);
+      data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Claude API error:', data);
+        if (useCustomKey) {
+          return new Response(JSON.stringify({ 
+            error: 'Error with your custom API key. Please check that it is valid and has sufficient credits.' 
+          }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        return new Response(JSON.stringify({ error: 'Failed to get answer from Claude AI' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      answer = data.content[0].text;
+    }
+    else if (model.startsWith('sonar-')) {
+      // Determine which API key to use for Perplexity
+      const apiKey = useCustomKey ? customApiKey : perplexityApiKey;
+      if (!apiKey) {
+        return new Response(JSON.stringify({ error: 'Perplexity API key is required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      response = await callPerplexity(question, apiKey);
+      data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Perplexity API error:', data);
+        if (useCustomKey) {
+          return new Response(JSON.stringify({ 
+            error: 'Error with your custom API key. Please check that it is valid and has sufficient credits.' 
+          }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        return new Response(JSON.stringify({ error: 'Failed to get answer from Perplexity AI' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      answer = data.choices[0].message.content;
+    }
+    else {
+      return new Response(JSON.stringify({ error: 'Invalid model selected' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-
-    const answer = data.choices[0].message.content;
 
     // Save chat history only if not using custom key
     if (!useCustomKey) {
