@@ -44,14 +44,14 @@ const BoardsPage = () => {
       <Navbar />
       
       <main className="flex-grow">
-        <div className="bg-gradient-to-b from-mathlight to-white py-12">
+        <div className="bg-gradient-to-b from-mathlight to-white dark:from-gray-800 dark:to-gray-900 py-16">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl font-bold text-center mb-4">Select Your Board</h1>
-            <p className="text-center text-gray-600 max-w-2xl mx-auto mb-8">
+            <h1 className="text-4xl font-bold text-center mb-4 text-mathdark dark:text-white">Select Your Board</h1>
+            <p className="text-center text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
               Choose your educational board to access previous year mathematics papers organized by chapters.
             </p>
             
-            <div className="max-w-md mx-auto mb-8">
+            <div className="max-w-md mx-auto mb-12">
               <div className="relative">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <Input

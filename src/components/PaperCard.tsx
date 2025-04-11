@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PaperCardProps {
   title: string;
@@ -52,7 +53,7 @@ const PaperCard = ({
     setLocalUserIsPremium(premiumStatus);
   }, []);
   
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (isPremium && !localUserIsPremium) {
       toast.error("This is a premium paper. Please upgrade to access it.", {
         action: {
@@ -65,15 +66,41 @@ const PaperCard = ({
     
     setIsDownloading(true);
     
-    // Simulate download delay
-    setTimeout(() => {
-      setIsDownloading(false);
-      toast.success("Download started!");
-      // In a real app, window.location.href = downloadUrl
-    }, 1500);
+    if (downloadUrl) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('exam_papers')
+          .download(downloadUrl);
+          
+        if (error) throw error;
+        
+        // Create a download link
+        const url = URL.createObjectURL(data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = downloadUrl.split('/').pop() || 'exam_paper.pdf';
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success("Download started!");
+      } catch (error) {
+        console.error("Download error:", error);
+        toast.error("Failed to download the paper. Please try again later.");
+      } finally {
+        setIsDownloading(false);
+      }
+    } else {
+      // Simulate download delay for demo
+      setTimeout(() => {
+        setIsDownloading(false);
+        toast.success("Download started!");
+      }, 1500);
+    }
   };
   
-  const handleDownloadSolution = () => {
+  const handleDownloadSolution = async () => {
     if (isPremium && !localUserIsPremium) {
       toast.error("Solutions are available for premium users only. Please upgrade to access them.", {
         action: {
@@ -86,12 +113,38 @@ const PaperCard = ({
     
     setIsDownloadingSolution(true);
     
-    // Simulate download delay
-    setTimeout(() => {
-      setIsDownloadingSolution(false);
-      toast.success("Solution download started!");
-      // In a real app, window.location.href = solutionUrl
-    }, 1500);
+    if (solutionUrl) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('solutions')
+          .download(solutionUrl);
+          
+        if (error) throw error;
+        
+        // Create a download link
+        const url = URL.createObjectURL(data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = solutionUrl.split('/').pop() || 'solution.pdf';
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success("Solution download started!");
+      } catch (error) {
+        console.error("Download error:", error);
+        toast.error("Failed to download the solution. Please try again later.");
+      } finally {
+        setIsDownloadingSolution(false);
+      }
+    } else {
+      // Simulate download delay for demo
+      setTimeout(() => {
+        setIsDownloadingSolution(false);
+        toast.success("Solution download started!");
+      }, 1500);
+    }
   };
   
   return (
@@ -167,7 +220,7 @@ const PaperCard = ({
           )}
         </div>
         
-        {/* Solutions button - now shown for all exam boards */}
+        {/* Solutions button - ensure it's always visible */}
         <Button 
           variant="secondary" 
           size="sm"

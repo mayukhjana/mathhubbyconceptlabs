@@ -6,30 +6,19 @@ interface SchoolLogo {
   logoUrl: string;
 }
 
+// Update school logos to include only the requested schools with proper logos
 const schoolLogos: SchoolLogo[] = [
   {
     name: "St. Xavier's College",
-    logoUrl: "/placeholder.svg"
+    logoUrl: "/stxaviers-logo.png"
   },
   {
     name: "La Martiniere",
-    logoUrl: "/placeholder.svg"
+    logoUrl: "/lamartiniere-logo.png"
   },
   {
     name: "Modern High School",
-    logoUrl: "/placeholder.svg"
-  },
-  {
-    name: "Delhi Public School",
-    logoUrl: "/placeholder.svg"
-  },
-  {
-    name: "Jadavpur University",
-    logoUrl: "/placeholder.svg"
-  },
-  {
-    name: "Presidency University",
-    logoUrl: "/placeholder.svg"
+    logoUrl: "/modernhigh-logo.png"
   }
 ];
 
@@ -66,23 +55,23 @@ const SchoolLogosMarquee = () => {
         >
           <div 
             ref={scrollRef}
-            className="flex gap-8 overflow-x-scroll scrollbar-none"
+            className="flex gap-12 overflow-x-scroll scrollbar-none"
             style={{ scrollbarWidth: 'none' }}
           >
             {/* Double the logos to create seamless loop */}
             {[...schoolLogos, ...schoolLogos].map((school, index) => (
               <div 
                 key={`${school.name}-${index}`}
-                className="flex flex-col items-center min-w-[160px] p-4"
+                className="flex flex-col items-center min-w-[180px] p-4"
               >
-                <div className="w-16 h-16 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center mb-3 shadow-md">
+                <div className="w-20 h-20 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center mb-3 shadow-md">
                   <img 
                     src={school.logoUrl} 
                     alt={`${school.name} logo`} 
-                    className="w-12 h-12 object-contain" 
+                    className="w-16 h-16 object-contain" 
                   />
                 </div>
-                <span className="text-sm text-center font-medium">{school.name}</span>
+                <span className="text-sm text-center font-medium text-mathdark dark:text-white">{school.name}</span>
               </div>
             ))}
           </div>
