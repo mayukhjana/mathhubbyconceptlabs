@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.submit-support-ticket]
 verify_jwt = true
+
+[functions.sql-execute]
+verify_jwt = true

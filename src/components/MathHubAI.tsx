@@ -36,6 +36,30 @@ type SupportTicket = {
   created_at: string;
 };
 
+type UserAIDoubts = {
+  id: string;
+  user_id: string;
+  total_used: number;
+  created_at: string | null;
+};
+
+type AIChatHistory = {
+  id: string;
+  user_id: string;
+  question: string;
+  answer: string;
+  created_at: string | null;
+};
+
+type SupportTicketData = {
+  id: string;
+  user_id: string;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: string | null;
+};
+
 const MathHubAI = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -59,7 +83,6 @@ const MathHubAI = () => {
   });
 
   useEffect(() => {
-    // Redirect to auth if not authenticated
     if (!isLoading && !isAuthenticated) {
       navigate("/auth", { state: { returnTo: "/mathhub-ai" } });
     }
@@ -77,7 +100,6 @@ const MathHubAI = () => {
 
   const fetchUserData = async () => {
     try {
-      // Check premium status
       const { data: premiumData } = await supabase
         .from("user_premium")
         .select("*")
@@ -87,37 +109,48 @@ const MathHubAI = () => {
       
       setIsPremium(!!premiumData);
 
-      // Check remaining doubts if not premium
-      if (!premiumData) {
-        const { data: doubtsData } = await supabase
-          .from("user_ai_doubts")
-          .select("total_used")
-          .eq("user_id", user?.id)
-          .single();
-        
-        if (doubtsData) {
-          setRemainingDoubts(Math.max(0, 5 - doubtsData.total_used));
-        } else {
-          setRemainingDoubts(5);
-        }
+      const { data, error } = await supabase
+        .rpc<{ table: string }>('execute_sql', { 
+          query_text: `SELECT * FROM user_ai_doubts WHERE user_id = '${user?.id}'`
+        });
+
+      if (error) {
+        console.error("Error fetching user data:", error);
+        setRemainingDoubts(5);
+        return;
+      }
+
+      const doubtsData = data as unknown as UserAIDoubts[];
+      
+      if (doubtsData && doubtsData.length > 0) {
+        setRemainingDoubts(Math.max(0, 5 - doubtsData[0].total_used));
+      } else {
+        setRemainingDoubts(5);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
-      setRemainingDoubts(5); // Assume 5 if we can't fetch
+      setRemainingDoubts(5);
     }
   };
 
   const fetchChatHistory = async () => {
     try {
       const { data, error } = await supabase
-        .from("ai_chat_history")
-        .select("*")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false })
-        .limit(20);
+        .rpc<{ table: string }>('execute_sql', { 
+          query_text: `SELECT * FROM ai_chat_history WHERE user_id = '${user?.id}' ORDER BY created_at DESC LIMIT 20`
+        });
         
-      if (error) throw error;
-      setChatHistory(data || []);
+      if (error) {
+        console.error("Error fetching chat history:", error);
+        return;
+      }
+      
+      setChatHistory((data as unknown as AIChatHistory[]).map(item => ({
+        id: item.id,
+        question: item.question,
+        answer: item.answer,
+        created_at: item.created_at || ''
+      })));
     } catch (error) {
       console.error("Error fetching chat history:", error);
     }
@@ -126,13 +159,22 @@ const MathHubAI = () => {
   const fetchSupportTickets = async () => {
     try {
       const { data, error } = await supabase
-        .from("support_tickets")
-        .select("*")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false });
+        .rpc<{ table: string }>('execute_sql', { 
+          query_text: `SELECT * FROM support_tickets WHERE user_id = '${user?.id}' ORDER BY created_at DESC`
+        });
         
-      if (error) throw error;
-      setSupportTickets(data || []);
+      if (error) {
+        console.error("Error fetching support tickets:", error);
+        return;
+      }
+      
+      setSupportTickets((data as unknown as SupportTicketData[]).map(item => ({
+        id: item.id,
+        subject: item.subject,
+        message: item.message,
+        status: item.status,
+        created_at: item.created_at || ''
+      })));
     } catch (error) {
       console.error("Error fetching support tickets:", error);
     }
@@ -153,7 +195,7 @@ const MathHubAI = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`${supabase.functions.url}/mathhub-ai`, {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mathhub-ai`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -174,12 +216,10 @@ const MathHubAI = () => {
       
       setMessages((prev) => [...prev, { role: "assistant", content: data.answer }]);
       
-      // Update remaining doubts only if not using custom key and not premium
       if (!useCustomKey && !isPremium) {
         fetchUserData();
       }
 
-      // Refresh chat history if not using custom key
       if (!useCustomKey) {
         fetchChatHistory();
       }
@@ -193,7 +233,7 @@ const MathHubAI = () => {
 
   const handleSubmitSupportTicket = async (values: { subject: string; message: string }) => {
     try {
-      const response = await fetch(`${supabase.functions.url}/submit-support-ticket`, {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-support-ticket`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -396,7 +436,6 @@ const MathHubAI = () => {
                           <DialogTrigger asChild>
                             <Button size="sm" variant="secondary">Use My API Key</Button>
                           </DialogTrigger>
-                          {/* Rest of the dialog is already defined above */}
                         </Dialog>
                       </div>
                     </div>
