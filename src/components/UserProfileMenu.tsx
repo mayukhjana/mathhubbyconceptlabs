@@ -10,8 +10,8 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User, Crown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { LogOut, Settings, User, Crown, CreditCard } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     // In a real app, this would fetch premium status from a subscription service
@@ -62,6 +63,10 @@ const UserProfileMenu = () => {
     if (!user?.email) return "U";
     return user.email.substring(0, 2).toUpperCase();
   };
+
+  const handleUpgradeToPremium = () => {
+    navigate('/premium');
+  };
   
   return (
     <DropdownMenu>
@@ -89,12 +94,21 @@ const UserProfileMenu = () => {
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
+        
+        {!userIsPremium && (
+          <DropdownMenuItem onClick={handleUpgradeToPremium} className="flex cursor-pointer items-center">
+            <Crown className="mr-2 h-4 w-4 text-yellow-500" />
+            <span>Upgrade to Premium</span>
+          </DropdownMenuItem>
+        )}
+        
         <DropdownMenuItem asChild>
           <Link to="/settings" className="flex w-full cursor-pointer items-center">
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </Link>
         </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           className="flex cursor-pointer items-center text-red-600 focus:text-red-500"

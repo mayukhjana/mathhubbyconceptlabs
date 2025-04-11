@@ -94,9 +94,6 @@ const PaperCard = ({
     }, 1500);
   };
   
-  // Check if this is a JEE or WBJEE paper to show solutions button
-  const showSolutionsButton = examBoard === 'JEE Mains' || examBoard === 'JEE Advanced' || examBoard === 'WBJEE';
-  
   return (
     <Card className="paper overflow-hidden h-full flex flex-col hover:border-mathprimary/50 transition-all duration-300">
       <CardHeader className="pb-2">
@@ -170,19 +167,17 @@ const PaperCard = ({
           )}
         </div>
         
-        {/* Solutions button for JEE and WBJEE papers */}
-        {showSolutionsButton && (
-          <Button 
-            variant="secondary" 
-            size="sm"
-            onClick={handleDownloadSolution}
-            disabled={isDownloadingSolution || (isPremium && !localUserIsPremium)}
-            className="w-full flex gap-2 items-center"
-          >
-            <BookOpen size={14} />
-            {isDownloadingSolution ? "Downloading..." : "Download Solutions"}
-          </Button>
-        )}
+        {/* Solutions button - now shown for all exam boards */}
+        <Button 
+          variant="secondary" 
+          size="sm"
+          onClick={handleDownloadSolution}
+          disabled={isDownloadingSolution || (isPremium && !localUserIsPremium)}
+          className="w-full flex gap-2 items-center"
+        >
+          <BookOpen size={14} />
+          {isDownloadingSolution ? "Downloading..." : "Download Solutions"}
+        </Button>
       </CardFooter>
     </Card>
   );
