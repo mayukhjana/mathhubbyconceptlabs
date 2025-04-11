@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,18 +69,7 @@ const ProfilePage = () => {
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${user!.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-      
-      // Check if avatars bucket exists, if not create it
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const avatarsBucketExists = buckets?.some(b => b.name === 'avatars');
-      
-      if (!avatarsBucketExists) {
-        await supabase.storage.createBucket('avatars', {
-          public: true,
-          fileSizeLimit: 1024 * 1024 * 2 // 2MB
-        });
-      }
+      const filePath = `${fileName}`;
       
       // Upload image to Supabase Storage
       const { error: uploadError } = await supabase.storage
@@ -140,13 +129,9 @@ const ProfilePage = () => {
     }
   };
   
-  const togglePremiumStatus = () => {
-    // This is just for demo purposes
-    // In a real app, this would be handled by a payment system
-    const newStatus = !userIsPremium;
-    setUserIsPremium(newStatus);
-    localStorage.setItem("userIsPremium", newStatus.toString());
-    toast.success(newStatus ? "Premium activated" : "Premium deactivated");
+  // Always navigate to premium page when clicked
+  const navigateToPremium = () => {
+    navigate("/premium");
   };
   
   if (isLoading) {
@@ -281,13 +266,12 @@ const ProfilePage = () => {
                       <span>{userIsPremium ? "Premium Member" : "Free Account"}</span>
                     </div>
                     
-                    {/* For demo purposes only */}
                     <Button 
                       variant={userIsPremium ? "destructive" : "default"} 
                       size="sm"
-                      onClick={togglePremiumStatus}
+                      onClick={navigateToPremium}
                     >
-                      {userIsPremium ? "Cancel Premium" : "Upgrade to Premium"}
+                      {userIsPremium ? "Manage Premium" : "Upgrade to Premium"}
                     </Button>
                   </div>
                 </div>

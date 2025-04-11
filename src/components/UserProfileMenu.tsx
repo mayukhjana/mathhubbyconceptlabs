@@ -14,16 +14,40 @@ import { LogOut, Settings, User, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   
   useEffect(() => {
     // In a real app, this would fetch premium status from a subscription service
     // For demo, we're using localStorage
     setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
-  }, []);
+    
+    // Fetch user avatar if authenticated
+    const fetchUserAvatar = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        if (data) {
+          setAvatarUrl(data.avatar_url);
+        }
+      } catch (error) {
+        console.error('Error fetching user avatar:', error);
+      }
+    };
+    
+    fetchUserAvatar();
+  }, [user]);
   
   if (!isAuthenticated) {
     return null;
@@ -44,7 +68,7 @@ const UserProfileMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarImage src={avatarUrl || undefined} />
             <AvatarFallback className="bg-mathprimary text-white">
               {getInitials()}
             </AvatarFallback>
