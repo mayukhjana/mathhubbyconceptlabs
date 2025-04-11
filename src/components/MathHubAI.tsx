@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,6 +61,11 @@ type SupportTicketData = {
   created_at: string | null;
 };
 
+// Generic SQL query response type
+type SqlQueryResponse<T> = {
+  data: T[];
+};
+
 const MathHubAI = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -109,9 +115,12 @@ const MathHubAI = () => {
       
       setIsPremium(!!premiumData);
 
+      // Use the sql-execute edge function to query user_ai_doubts
       const { data, error } = await supabase
-        .rpc<{ table: string }>('execute_sql', { 
-          query_text: `SELECT * FROM user_ai_doubts WHERE user_id = '${user?.id}'`
+        .functions.invoke<SqlQueryResponse<UserAIDoubts>>("sql-execute", {
+          body: {
+            query: `SELECT * FROM user_ai_doubts WHERE user_id = '${user?.id}'`
+          }
         });
 
       if (error) {
@@ -120,7 +129,7 @@ const MathHubAI = () => {
         return;
       }
 
-      const doubtsData = data as unknown as UserAIDoubts[];
+      const doubtsData = data?.data as UserAIDoubts[];
       
       if (doubtsData && doubtsData.length > 0) {
         setRemainingDoubts(Math.max(0, 5 - doubtsData[0].total_used));
@@ -136,8 +145,10 @@ const MathHubAI = () => {
   const fetchChatHistory = async () => {
     try {
       const { data, error } = await supabase
-        .rpc<{ table: string }>('execute_sql', { 
-          query_text: `SELECT * FROM ai_chat_history WHERE user_id = '${user?.id}' ORDER BY created_at DESC LIMIT 20`
+        .functions.invoke<SqlQueryResponse<AIChatHistory>>("sql-execute", {
+          body: {
+            query: `SELECT * FROM ai_chat_history WHERE user_id = '${user?.id}' ORDER BY created_at DESC LIMIT 20`
+          }
         });
         
       if (error) {
@@ -145,7 +156,8 @@ const MathHubAI = () => {
         return;
       }
       
-      setChatHistory((data as unknown as AIChatHistory[]).map(item => ({
+      const chatData = data?.data as AIChatHistory[];
+      setChatHistory(chatData.map(item => ({
         id: item.id,
         question: item.question,
         answer: item.answer,
@@ -159,8 +171,10 @@ const MathHubAI = () => {
   const fetchSupportTickets = async () => {
     try {
       const { data, error } = await supabase
-        .rpc<{ table: string }>('execute_sql', { 
-          query_text: `SELECT * FROM support_tickets WHERE user_id = '${user?.id}' ORDER BY created_at DESC`
+        .functions.invoke<SqlQueryResponse<SupportTicketData>>("sql-execute", {
+          body: {
+            query: `SELECT * FROM support_tickets WHERE user_id = '${user?.id}' ORDER BY created_at DESC`
+          }
         });
         
       if (error) {
@@ -168,7 +182,8 @@ const MathHubAI = () => {
         return;
       }
       
-      setSupportTickets((data as unknown as SupportTicketData[]).map(item => ({
+      const ticketsData = data?.data as SupportTicketData[];
+      setSupportTickets(ticketsData.map(item => ({
         id: item.id,
         subject: item.subject,
         message: item.message,
@@ -419,7 +434,7 @@ const MathHubAI = () => {
                       type="submit" 
                       disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey)}
                     >
-                      {loading ? <LoadingAnimation size="sm" /> : <Send size={18} />}
+                      {loading ? <LoadingAnimation small /> : <Send size={18} />}
                     </Button>
                   </form>
                   
