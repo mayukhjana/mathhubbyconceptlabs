@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -14,7 +14,8 @@ import {
   Book,
   BarChart3,
   Sun,
-  Moon
+  Moon,
+  BrainCircuit
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
@@ -99,6 +100,17 @@ const Navbar = () => {
               <span>Results</span>
             </Button>
           </Link>
+          {isAuthenticated && (
+            <Link to="/mathhub-ai">
+              <Button 
+                variant={isActive("/mathhub-ai") ? "default" : "ghost"} 
+                className="flex items-center gap-2"
+              >
+                <BrainCircuit size={18} />
+                <span>MathHub AI</span>
+              </Button>
+            </Link>
+          )}
           <Link to="/premium">
             <Button 
               variant={isActive("/premium") ? "default" : "ghost"} 
@@ -196,6 +208,17 @@ const Navbar = () => {
                 Results
               </Button>
             </Link>
+            {isAuthenticated && (
+              <Link to="/mathhub-ai" onClick={closeMenu}>
+                <Button 
+                  variant={isActive("/mathhub-ai") ? "default" : "ghost"} 
+                  className="w-full justify-start text-lg"
+                >
+                  <BrainCircuit className="mr-3" size={20} />
+                  MathHub AI
+                </Button>
+              </Link>
+            )}
             <Link to="/premium" onClick={closeMenu}>
               <Button 
                 variant={isActive("/premium") ? "default" : "ghost"} 

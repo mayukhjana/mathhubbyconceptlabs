@@ -19,6 +19,7 @@ import PremiumSuccessPage from "./pages/PremiumSuccessPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminUploadPage from "./pages/AdminUploadPage";
 import AuthPage from "./pages/AuthPage";
+import MathHubAIPage from "./pages/MathHubAIPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,11 @@ const App = () => (
               <Route path="/profile" element={
                 <AuthGuard>
                   <ProfilePage />
+                </AuthGuard>
+              } />
+              <Route path="/mathhub-ai" element={
+                <AuthGuard>
+                  <MathHubAIPage />
                 </AuthGuard>
               } />
               <Route path="/admin/upload" element={
