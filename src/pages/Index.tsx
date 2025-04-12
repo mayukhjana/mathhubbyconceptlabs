@@ -1,5 +1,4 @@
 
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -508,4 +507,3 @@ const Index = () => {
 };
 
 export default Index;
-
