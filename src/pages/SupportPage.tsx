@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -66,6 +66,10 @@ const SupportPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("create");
+  
+  // Reference to the Create tab trigger button
+  const createTabTriggerRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     if (!isAuthenticated) {
@@ -167,6 +171,10 @@ const SupportPage = () => {
     }
   };
   
+  const handleSwitchToCreateTab = () => {
+    setActiveTab("create");
+  };
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -197,9 +205,14 @@ const SupportPage = () => {
             </div>
           </div>
           
-          <Tabs defaultValue="create" className="mb-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="create">Submit a Ticket</TabsTrigger>
+              <TabsTrigger 
+                value="create" 
+                ref={createTabTriggerRef}
+              >
+                Submit a Ticket
+              </TabsTrigger>
               <TabsTrigger value="history">Your Tickets</TabsTrigger>
             </TabsList>
             
@@ -267,7 +280,7 @@ const SupportPage = () => {
                       <p className="text-muted-foreground mb-6">
                         You haven't submitted any support tickets yet.
                       </p>
-                      <Button variant="outline" onClick={() => document.querySelector('[data-value="create"]')?.click()}>
+                      <Button variant="outline" onClick={handleSwitchToCreateTab}>
                         Create Your First Ticket
                       </Button>
                     </div>
