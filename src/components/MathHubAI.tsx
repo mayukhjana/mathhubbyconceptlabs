@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,10 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -79,8 +76,6 @@ const MathHubAI = () => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [useCustomKey, setUseCustomKey] = useState(false);
-  const [customApiKey, setCustomApiKey] = useState("");
   const [remainingDoubts, setRemainingDoubts] = useState<number | null>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [chatHistory, setChatHistory] = useState<HistoryItem[]>([]);
@@ -289,8 +284,6 @@ const MathHubAI = () => {
         body: JSON.stringify({
           question: userMessage,
           model: selectedModel,
-          useCustomKey,
-          customApiKey: useCustomKey ? customApiKey : undefined,
           files: files
         })
       });
@@ -303,13 +296,11 @@ const MathHubAI = () => {
       
       setMessages((prev) => [...prev, { role: "assistant", content: data.answer }]);
       
-      if (!useCustomKey && !isPremium) {
+      if (!isPremium) {
         fetchUserData();
       }
 
-      if (!useCustomKey) {
-        fetchChatHistory();
-      }
+      fetchChatHistory();
     } catch (error) {
       console.error(error);
       toast.error(error instanceof Error ? error.message : "Failed to get answer from AI");
@@ -396,54 +387,6 @@ const MathHubAI = () => {
                 <Sparkles size={14} className="mr-1" /> Premium User
               </div>
             )}
-            
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Key size={16} className="mr-2" />
-                  API Key Settings
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>API Key Settings</DialogTitle>
-                  <DialogDescription>
-                    You can use your own API key instead of the free quota.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="use-custom-key"
-                      checked={useCustomKey}
-                      onCheckedChange={setUseCustomKey}
-                    />
-                    <Label htmlFor="use-custom-key">Use my own API key</Label>
-                  </div>
-                  
-                  {useCustomKey && (
-                    <div className="space-y-2">
-                      <Label htmlFor="api-key">API Key</Label>
-                      <Input
-                        id="api-key"
-                        type="password"
-                        placeholder="Enter your API key..."
-                        value={customApiKey}
-                        onChange={(e) => setCustomApiKey(e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Your API key is used only for your requests and is never stored on our servers.
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button onClick={() => toast.success("API key settings saved")}>
-                    Save Settings
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
         
@@ -521,7 +464,7 @@ const MathHubAI = () => {
                     </div>
                   )}
                   
-                  {/* Model selector */}
+                  {/* Model selector - simplified to only OpenAI models */}
                   <div className="mb-3">
                     <Select value={selectedModel} onValueChange={setSelectedModel}>
                       <SelectTrigger className="w-full">
@@ -532,14 +475,6 @@ const MathHubAI = () => {
                           <SelectLabel>OpenAI Models</SelectLabel>
                           <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
                           <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>Claude Models</SelectLabel>
-                          <SelectItem value="claude-3-sonnet-20240229">Claude Sonnet</SelectItem>
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>Perplexity Models</SelectLabel>
-                          <SelectItem value="sonar-small-online">Sonar Small</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -559,7 +494,7 @@ const MathHubAI = () => {
                       variant="outline"
                       size="icon"
                       onClick={triggerFileInput}
-                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey)}
+                      disabled={loading || (!isPremium && remainingDoubts === 0)}
                     >
                       <Upload size={18} />
                     </Button>
@@ -567,31 +502,26 @@ const MathHubAI = () => {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="Ask any math question..."
-                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey)}
+                      disabled={loading || (!isPremium && remainingDoubts === 0)}
                       className="flex-1"
                     />
                     <Button 
                       type="submit" 
-                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey) || (input.trim() === "" && uploadedFiles.length === 0)}
+                      disabled={loading || (!isPremium && remainingDoubts === 0) || (input.trim() === "" && uploadedFiles.length === 0)}
                     >
                       {loading ? <LoadingAnimation size="sm" /> : <Send size={18} />}
                     </Button>
                   </form>
                   
-                  {!isPremium && remainingDoubts === 0 && !useCustomKey && (
+                  {!isPremium && remainingDoubts === 0 && (
                     <div className="mt-4 text-center">
                       <p className="text-amber-600 dark:text-amber-400 text-sm">
-                        You've used all your free doubts. Upgrade to premium or use your own API key.
+                        You've used all your free doubts. Upgrade to premium to continue.
                       </p>
-                      <div className="mt-2 flex justify-center gap-2">
+                      <div className="mt-2 flex justify-center">
                         <Button variant="outline" size="sm" asChild>
                           <Link to="/premium">Upgrade to Premium</Link>
                         </Button>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="secondary">Use My API Key</Button>
-                          </DialogTrigger>
-                        </Dialog>
                       </div>
                     </div>
                   )}
@@ -606,11 +536,6 @@ const MathHubAI = () => {
                 <CardTitle>Chat History</CardTitle>
                 <CardDescription>
                   Your previous conversations with MathHub AI.
-                  {!isPremium && (
-                    <span className="block mt-1 text-amber-600 dark:text-amber-400">
-                      History is only saved when using the free quota, not with custom API keys.
-                    </span>
-                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>

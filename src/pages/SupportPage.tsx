@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -68,7 +67,6 @@ const SupportPage = () => {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("create");
   
-  // Reference to the Create tab trigger button
   const createTabTriggerRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
@@ -127,7 +125,6 @@ const SupportPage = () => {
       setSubject("");
       setMessage("");
       
-      // Refresh the ticket list
       fetchTickets();
       
     } catch (error) {
@@ -207,10 +204,7 @@ const SupportPage = () => {
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger 
-                value="create" 
-                ref={createTabTriggerRef}
-              >
+              <TabsTrigger value="create">
                 Submit a Ticket
               </TabsTrigger>
               <TabsTrigger value="history">Your Tickets</TabsTrigger>
