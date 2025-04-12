@@ -1,14 +1,21 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { BrainCircuit, Send, MessageSquare, History, Image, Upload } from "lucide-react";
+import { BrainCircuit, Send, Key, HelpCircle, MessageSquare, History, Sparkles, Image, Upload } from "lucide-react";
+import { useForm } from "react-hook-form";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
 type ChatMessage = {
@@ -23,15 +30,12 @@ type HistoryItem = {
   created_at: string;
 };
 
-// File upload type
-type UploadedFile = {
-  file: File;
-  preview: string;
-};
-
-// Generic SQL query response type
-type SqlQueryResponse<T> = {
-  data: T[];
+type SupportTicket = {
+  id: string;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: string;
 };
 
 type UserAIDoubts = {
@@ -49,21 +53,50 @@ type AIChatHistory = {
   created_at: string | null;
 };
 
+type SupportTicketData = {
+  id: string;
+  user_id: string;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: string | null;
+};
+
+// File upload type
+type UploadedFile = {
+  file: File;
+  preview: string;
+};
+
+// Generic SQL query response type
+type SqlQueryResponse<T> = {
+  data: T[];
+};
+
 const MathHubAI = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [useCustomKey, setUseCustomKey] = useState(false);
+  const [customApiKey, setCustomApiKey] = useState("");
   const [remainingDoubts, setRemainingDoubts] = useState<number | null>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [chatHistory, setChatHistory] = useState<HistoryItem[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [activeTab, setActiveTab] = useState("chat");
-  const [selectedModel, setSelectedModel] = useState("gpt-4o");
+  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const supportForm = useForm({
+    defaultValues: {
+      subject: "",
+      message: ""
+    }
+  });
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -73,6 +106,7 @@ const MathHubAI = () => {
     if (isAuthenticated && user) {
       fetchUserData();
       fetchChatHistory();
+      fetchSupportTickets();
     }
   }, [isAuthenticated, isLoading, user, navigate]);
 
@@ -143,6 +177,35 @@ const MathHubAI = () => {
       }
     } catch (error) {
       console.error("Error fetching chat history:", error);
+    }
+  };
+
+  const fetchSupportTickets = async () => {
+    try {
+      const { data, error } = await supabase
+        .functions.invoke<SqlQueryResponse<SupportTicketData>>("sql-execute", {
+          body: {
+            query: `SELECT * FROM support_tickets WHERE user_id = '${user?.id}' ORDER BY created_at DESC`
+          }
+        });
+        
+      if (error) {
+        console.error("Error fetching support tickets:", error);
+        return;
+      }
+      
+      const ticketsData = data?.data;
+      if (ticketsData) {
+        setSupportTickets(ticketsData.map(item => ({
+          id: item.id,
+          subject: item.subject,
+          message: item.message,
+          status: item.status,
+          created_at: item.created_at || ''
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching support tickets:", error);
     }
   };
 
@@ -226,6 +289,8 @@ const MathHubAI = () => {
         body: JSON.stringify({
           question: userMessage,
           model: selectedModel,
+          useCustomKey,
+          customApiKey: useCustomKey ? customApiKey : undefined,
           files: files
         })
       });
@@ -238,16 +303,45 @@ const MathHubAI = () => {
       
       setMessages((prev) => [...prev, { role: "assistant", content: data.answer }]);
       
-      if (!isPremium) {
+      if (!useCustomKey && !isPremium) {
         fetchUserData();
       }
 
-      fetchChatHistory();
+      if (!useCustomKey) {
+        fetchChatHistory();
+      }
     } catch (error) {
       console.error(error);
       toast.error(error instanceof Error ? error.message : "Failed to get answer from AI");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmitSupportTicket = async (values: { subject: string; message: string }) => {
+    try {
+      const response = await fetch(`https://gpzoytysrrormkmytmyk.supabase.co/functions/v1/submit-support-ticket`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify(values)
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit support ticket");
+      }
+      
+      toast.success("Support ticket submitted successfully");
+      supportForm.reset();
+      fetchSupportTickets();
+      setActiveTab("tickets");
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Failed to submit support ticket");
     }
   };
 
@@ -296,11 +390,65 @@ const MathHubAI = () => {
                 </span>
               </div>
             )}
+            
+            {isPremium && (
+              <div className="text-sm bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-3 py-1.5 rounded-full flex items-center">
+                <Sparkles size={14} className="mr-1" /> Premium User
+              </div>
+            )}
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Key size={16} className="mr-2" />
+                  API Key Settings
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>API Key Settings</DialogTitle>
+                  <DialogDescription>
+                    You can use your own API key instead of the free quota.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="use-custom-key"
+                      checked={useCustomKey}
+                      onCheckedChange={setUseCustomKey}
+                    />
+                    <Label htmlFor="use-custom-key">Use my own API key</Label>
+                  </div>
+                  
+                  {useCustomKey && (
+                    <div className="space-y-2">
+                      <Label htmlFor="api-key">API Key</Label>
+                      <Input
+                        id="api-key"
+                        type="password"
+                        placeholder="Enter your API key..."
+                        value={customApiKey}
+                        onChange={(e) => setCustomApiKey(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your API key is used only for your requests and is never stored on our servers.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => toast.success("API key settings saved")}>
+                    Save Settings
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 mb-8">
+          <TabsList className="grid grid-cols-3 mb-8">
             <TabsTrigger value="chat" className="flex items-center gap-2">
               <MessageSquare size={16} />
               <span>AI Chat</span>
@@ -308,6 +456,10 @@ const MathHubAI = () => {
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History size={16} />
               <span>History</span>
+            </TabsTrigger>
+            <TabsTrigger value="tickets" className="flex items-center gap-2">
+              <HelpCircle size={16} />
+              <span>Support</span>
             </TabsTrigger>
           </TabsList>
           
@@ -368,6 +520,30 @@ const MathHubAI = () => {
                       ))}
                     </div>
                   )}
+                  
+                  {/* Model selector */}
+                  <div className="mb-3">
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select AI Model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>OpenAI Models</SelectLabel>
+                          <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                          <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>Claude Models</SelectLabel>
+                          <SelectItem value="claude-3-sonnet-20240229">Claude Sonnet</SelectItem>
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>Perplexity Models</SelectLabel>
+                          <SelectItem value="sonar-small-online">Sonar Small</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   <form onSubmit={handleSendMessage} className="flex gap-2">
                     <Input
@@ -383,7 +559,7 @@ const MathHubAI = () => {
                       variant="outline"
                       size="icon"
                       onClick={triggerFileInput}
-                      disabled={loading || (!isPremium && remainingDoubts === 0)}
+                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey)}
                     >
                       <Upload size={18} />
                     </Button>
@@ -391,26 +567,31 @@ const MathHubAI = () => {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="Ask any math question..."
-                      disabled={loading || (!isPremium && remainingDoubts === 0)}
+                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey)}
                       className="flex-1"
                     />
                     <Button 
                       type="submit" 
-                      disabled={loading || (!isPremium && remainingDoubts === 0) || (input.trim() === "" && uploadedFiles.length === 0)}
+                      disabled={loading || (!isPremium && remainingDoubts === 0 && !useCustomKey) || (input.trim() === "" && uploadedFiles.length === 0)}
                     >
                       {loading ? <LoadingAnimation size="sm" /> : <Send size={18} />}
                     </Button>
                   </form>
                   
-                  {!isPremium && remainingDoubts === 0 && (
+                  {!isPremium && remainingDoubts === 0 && !useCustomKey && (
                     <div className="mt-4 text-center">
                       <p className="text-amber-600 dark:text-amber-400 text-sm">
-                        You've used all your free doubts. Upgrade to premium to continue.
+                        You've used all your free doubts. Upgrade to premium or use your own API key.
                       </p>
-                      <div className="mt-2">
+                      <div className="mt-2 flex justify-center gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <a href="/premium">Upgrade to Premium</a>
+                          <Link to="/premium">Upgrade to Premium</Link>
                         </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="secondary">Use My API Key</Button>
+                          </DialogTrigger>
+                        </Dialog>
                       </div>
                     </div>
                   )}
@@ -424,7 +605,12 @@ const MathHubAI = () => {
               <CardHeader>
                 <CardTitle>Chat History</CardTitle>
                 <CardDescription>
-                  Your previous conversations with MathHub AI
+                  Your previous conversations with MathHub AI.
+                  {!isPremium && (
+                    <span className="block mt-1 text-amber-600 dark:text-amber-400">
+                      History is only saved when using the free quota, not with custom API keys.
+                    </span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -454,6 +640,98 @@ const MathHubAI = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="tickets">
+            <div className="grid md:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submit Support Ticket</CardTitle>
+                  <CardDescription>
+                    Need help? Submit a ticket and our team will assist you.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...supportForm}>
+                    <form
+                      onSubmit={supportForm.handleSubmit(handleSubmitSupportTicket)}
+                      className="space-y-4"
+                    >
+                      <FormField
+                        control={supportForm.control}
+                        name="subject"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Subject</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Brief description of your issue" {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={supportForm.control}
+                        name="message"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Message</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Describe your issue in detail..." {...field} rows={5} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button type="submit" className="w-full">
+                        Submit Ticket
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Tickets</CardTitle>
+                  <CardDescription>
+                    Track the status of your support requests.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {supportTickets.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No support tickets yet. Submit a ticket if you need help.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {supportTickets.map((ticket) => (
+                        <div key={ticket.id} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="font-medium">{ticket.subject}</div>
+                            <div
+                              className={`text-xs px-2 py-1 rounded-full uppercase font-medium ${
+                                ticket.status === "open"
+                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                  : ticket.status === "in-progress"
+                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                  : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                              }`}
+                            >
+                              {ticket.status}
+                            </div>
+                          </div>
+                          <div className="text-sm mt-2 line-clamp-2">{ticket.message}</div>
+                          <div className="text-xs text-muted-foreground mt-2">
+                            {new Date(ticket.created_at).toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
