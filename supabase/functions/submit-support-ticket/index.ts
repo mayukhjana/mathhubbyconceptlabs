@@ -4,6 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+const sendgridApiKey = Deno.env.get('SENDGRID_API_KEY');
 const adminEmail = "mayukhjana27@gmail.com";
 
 interface SupportTicket {
@@ -66,7 +67,7 @@ Deno.serve(async (req) => {
       });
     }
     
-    // Send email notification
+    // Send email notification to admin
     try {
       const emailBody = `
         New Support Ticket Submitted
@@ -82,7 +83,7 @@ Deno.serve(async (req) => {
       await fetch("https://api.sendgrid.com/v3/mail/send", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${Deno.env.get('SENDGRID_API_KEY')}`,
+          "Authorization": `Bearer ${sendgridApiKey}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({

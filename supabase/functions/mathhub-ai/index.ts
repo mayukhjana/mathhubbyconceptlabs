@@ -4,7 +4,6 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
 const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -12,8 +11,6 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 interface RequestBody {
   question: string;
   model: string;
-  useCustomKey?: boolean;
-  customApiKey?: string;
   files?: Array<{
     name: string;
     content: string; // base64 encoded
@@ -102,7 +99,7 @@ async function saveAiChatHistory(supabase: any, userId: string, question: string
   }
 }
 
-async function callOpenAI(question: string, apiKey: string, files: any[] = []) {
+async function callOpenAI(question: string, files: any[] = []) {
   const messages = [
     { 
       role: 'system', 
@@ -136,7 +133,7 @@ async function callOpenAI(question: string, apiKey: string, files: any[] = []) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'Authorization': `Bearer ${openAiApiKey}`
     },
     body: JSON.stringify({
       model: 'gpt-4o',
@@ -148,7 +145,7 @@ async function callOpenAI(question: string, apiKey: string, files: any[] = []) {
   return response;
 }
 
-async function callClaude(question: string, apiKey: string, files: any[] = []) {
+async function callClaude(question: string, files: any[] = []) {
   const messages = [
     { 
       role: 'user', 
@@ -185,40 +182,13 @@ async function callClaude(question: string, apiKey: string, files: any[] = []) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
+      'x-api-key': claudeApiKey!,
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
       model: 'claude-3-sonnet-20240229',
       max_tokens: 2000,
       messages
-    })
-  });
-
-  return response;
-}
-
-async function callPerplexity(question: string, apiKey: string) {
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'sonar-small-online',
-      messages: [
-        { 
-          role: 'system', 
-          content: `You are MathHub AI, a specialized math tutor that helps students solve math problems and understand mathematical concepts.
-          Focus on providing clear, step-by-step solutions to math problems.
-          For complex math, use clear explanations and break down the concepts.
-          If a question is not math-related, politely redirect to math topics.
-          Always be encouraging and supportive, recognizing that learning math can be challenging.`
-        },
-        { role: 'user', content: question }
-      ],
-      temperature: 0.7
     })
   });
 
@@ -248,13 +218,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { question, model = 'gpt-4o-mini', useCustomKey = false, customApiKey = '', files = [] } = await req.json() as RequestBody;
+    const { question, model = 'gpt-4o', files = [] } = await req.json() as RequestBody;
 
     // Check if user can make this request
     const canProceed = await checkUserQuotaAndUpdate(supabase, user.id);
-    if (!canProceed && !useCustomKey) {
+    if (!canProceed) {
       return new Response(JSON.stringify({
-        error: 'Free quota exhausted. Please upgrade to premium or use your own API key.'
+        error: 'Free quota exhausted. Please upgrade to premium.'
       }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -266,26 +236,11 @@ Deno.serve(async (req) => {
 
     // Call the appropriate API based on the selected model
     if (model.startsWith('gpt-')) {
-      // Determine which API key to use for OpenAI
-      const apiKey = useCustomKey ? customApiKey : openAiApiKey;
-      if (!apiKey) {
-        return new Response(JSON.stringify({ error: 'API key is required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      response = await callOpenAI(question, apiKey, files);
+      response = await callOpenAI(question, files);
       data = await response.json();
       
       if (!response.ok) {
         console.error('OpenAI API error:', data);
-        if (useCustomKey) {
-          return new Response(JSON.stringify({ 
-            error: 'Error with your custom API key. Please check that it is valid and has sufficient credits.' 
-          }), {
-            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
         return new Response(JSON.stringify({ error: 'Failed to get answer from AI' }), {
           status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
@@ -294,26 +249,11 @@ Deno.serve(async (req) => {
       answer = data.choices[0].message.content;
     } 
     else if (model.startsWith('claude-')) {
-      // Determine which API key to use for Claude
-      const apiKey = useCustomKey ? customApiKey : claudeApiKey;
-      if (!apiKey) {
-        return new Response(JSON.stringify({ error: 'Claude API key is required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      response = await callClaude(question, apiKey, files);
+      response = await callClaude(question, files);
       data = await response.json();
       
       if (!response.ok) {
         console.error('Claude API error:', data);
-        if (useCustomKey) {
-          return new Response(JSON.stringify({ 
-            error: 'Error with your custom API key. Please check that it is valid and has sufficient credits.' 
-          }), {
-            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
         return new Response(JSON.stringify({ error: 'Failed to get answer from Claude AI' }), {
           status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
@@ -321,44 +261,14 @@ Deno.serve(async (req) => {
       
       answer = data.content[0].text;
     }
-    else if (model.startsWith('sonar-')) {
-      // Determine which API key to use for Perplexity
-      const apiKey = useCustomKey ? customApiKey : perplexityApiKey;
-      if (!apiKey) {
-        return new Response(JSON.stringify({ error: 'Perplexity API key is required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      response = await callPerplexity(question, apiKey);
-      data = await response.json();
-      
-      if (!response.ok) {
-        console.error('Perplexity API error:', data);
-        if (useCustomKey) {
-          return new Response(JSON.stringify({ 
-            error: 'Error with your custom API key. Please check that it is valid and has sufficient credits.' 
-          }), {
-            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-        return new Response(JSON.stringify({ error: 'Failed to get answer from Perplexity AI' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      answer = data.choices[0].message.content;
-    }
     else {
       return new Response(JSON.stringify({ error: 'Invalid model selected' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Save chat history only if not using custom key
-    if (!useCustomKey) {
-      await saveAiChatHistory(supabase, user.id, question, answer);
-    }
+    // Save chat history
+    await saveAiChatHistory(supabase, user.id, question, answer);
 
     return new Response(JSON.stringify({ answer }), {
       status: 200,
