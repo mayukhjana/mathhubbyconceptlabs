@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User, Crown, CreditCard } from "lucide-react";
+import { LogOut, User, Crown, CreditCard, LifeBuoy } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -103,9 +103,9 @@ const UserProfileMenu = () => {
         )}
         
         <DropdownMenuItem asChild>
-          <Link to="/settings" className="flex w-full cursor-pointer items-center">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+          <Link to="/support" className="flex w-full cursor-pointer items-center">
+            <LifeBuoy className="mr-2 h-4 w-4" />
+            <span>Support</span>
           </Link>
         </DropdownMenuItem>
         

@@ -17,6 +17,7 @@ import ResultsPage from "./pages/ResultsPage";
 import PremiumPage from "./pages/PremiumPage";
 import PremiumSuccessPage from "./pages/PremiumSuccessPage";
 import ProfilePage from "./pages/ProfilePage";
+import SupportPage from "./pages/SupportPage";
 import AdminUploadPage from "./pages/AdminUploadPage";
 import AuthPage from "./pages/AuthPage";
 import MathHubAIPage from "./pages/MathHubAIPage";
@@ -57,6 +58,11 @@ const App = () => (
               <Route path="/profile" element={
                 <AuthGuard>
                   <ProfilePage />
+                </AuthGuard>
+              } />
+              <Route path="/support" element={
+                <AuthGuard>
+                  <SupportPage />
                 </AuthGuard>
               } />
               <Route path="/mathhub-ai" element={

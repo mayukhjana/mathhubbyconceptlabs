@@ -19,7 +19,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { BookOpen, FileText, ClockIcon, Search, Lock, CheckCircle } from "lucide-react";
+import { BookOpen, FileText, ClockIcon, Search, Lock, CheckCircle, BarChart3 } from "lucide-react";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -291,9 +291,17 @@ const ExamsList = () => {
                           <Link to="/premium">Upgrade to Take</Link>
                         </Button>
                       ) : examCompleted ? (
-                        <Button className="w-full" variant="outline" disabled>
-                          Already Completed
-                        </Button>
+                        <div className="flex flex-col w-full gap-2">
+                          <div className="text-sm text-center font-medium text-amber-600 pb-1">
+                            Already Completed
+                          </div>
+                          <Button className="w-full" variant="outline" asChild>
+                            <Link to="/results">
+                              <BarChart3 size={16} className="mr-2" />
+                              View Results
+                            </Link>
+                          </Button>
+                        </div>
                       ) : (
                         <Button className="w-full" asChild>
                           <Link to={`/exams/${exam.id}`}>Start Exam</Link>
