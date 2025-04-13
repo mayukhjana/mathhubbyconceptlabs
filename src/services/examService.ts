@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -123,9 +122,9 @@ export const uploadExamFile = async (file: File, examId: string, fileType: 'pape
   }
 };
 
-// Function to get a list of all entrance exams
 export const fetchEntranceExams = async (): Promise<Exam[]> => {
   try {
+    console.log("Fetching entrance exams...");
     const { data, error } = await supabase
       .from("exams")
       .select("*")
@@ -137,19 +136,20 @@ export const fetchEntranceExams = async (): Promise<Exam[]> => {
       throw error;
     }
     
+    console.log("Fetched exams:", data);
+    
     return data || [];
   } catch (error) {
+    console.error("Failed to load entrance exams:", error);
     toast.error("Failed to load entrance exams");
     return [];
   }
 };
 
-// Function to get the download URL for an exam paper or solution
 export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution'): Promise<string | null> => {
   try {
     const bucket = fileType === 'paper' ? 'exam_papers' : 'solutions';
     
-    // List all files in the exam's directory
     const { data, error } = await supabase.storage
       .from(bucket)
       .list(`${examId}`);
@@ -162,7 +162,6 @@ export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'so
       return null;
     }
     
-    // Get the first file (most likely the only one or the main one)
     const filePath = `${examId}/${data[0].name}`;
     
     const { data: urlData } = supabase.storage
