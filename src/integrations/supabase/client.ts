@@ -20,7 +20,13 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     const bucketsList = {
       avatars: false,
       exam_papers: false,
-      solutions: false
+      solutions: false,
+      wbjee_papers: false,
+      wbjee_solutions: false,
+      jee_mains_papers: false,
+      jee_mains_solutions: false,
+      jee_advanced_papers: false,
+      jee_advanced_solutions: false
     };
     
     // Check which buckets already exist
@@ -55,6 +61,60 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
         fileSizeLimit: 1024 * 1024 * 10 // 10MB
       });
       console.log('Created solutions bucket');
+    }
+    
+    // Create WBJEE papers bucket
+    if (!bucketsList.wbjee_papers) {
+      await supabase.storage.createBucket('wbjee_papers', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created wbjee_papers bucket');
+    }
+    
+    // Create WBJEE solutions bucket
+    if (!bucketsList.wbjee_solutions) {
+      await supabase.storage.createBucket('wbjee_solutions', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created wbjee_solutions bucket');
+    }
+    
+    // Create JEE MAINS papers bucket
+    if (!bucketsList.jee_mains_papers) {
+      await supabase.storage.createBucket('jee_mains_papers', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created jee_mains_papers bucket');
+    }
+    
+    // Create JEE MAINS solutions bucket
+    if (!bucketsList.jee_mains_solutions) {
+      await supabase.storage.createBucket('jee_mains_solutions', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created jee_mains_solutions bucket');
+    }
+    
+    // Create JEE ADVANCED papers bucket
+    if (!bucketsList.jee_advanced_papers) {
+      await supabase.storage.createBucket('jee_advanced_papers', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created jee_advanced_papers bucket');
+    }
+    
+    // Create JEE ADVANCED solutions bucket
+    if (!bucketsList.jee_advanced_solutions) {
+      await supabase.storage.createBucket('jee_advanced_solutions', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created jee_advanced_solutions bucket');
     }
   } catch (error) {
     console.error('Error initializing storage buckets:', error);

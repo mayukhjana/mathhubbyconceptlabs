@@ -27,6 +27,7 @@ const ExamPapersPage = () => {
     const loadExams = async () => {
       setLoading(true);
       const examData = await fetchEntranceExams();
+      console.log("Loaded exams:", examData);
       setExams(examData);
       setLoading(false);
     };
@@ -34,18 +35,50 @@ const ExamPapersPage = () => {
     loadExams();
   }, []);
   
-  // Get unique exam types for tabs
-  const examBoards = Array.from(new Set(exams.map(exam => exam.board.toLowerCase())));
+  // Define fixed tabs
+  const examBoardTabs = [
+    { id: "all", label: "All Exams" },
+    { id: "WBJEE", label: "WBJEE" },
+    { id: "JEE MAINS", label: "JEE MAINS" },
+    { id: "JEE ADVANCED", label: "JEE ADVANCED" }
+  ];
   
   const filteredExams = exams.filter(exam => {
     const matchesSearch = 
       exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      exam.board.toLowerCase().includes(searchQuery.toLowerCase());
+      exam.board.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exam.year.toLowerCase().includes(searchQuery.toLowerCase());
       
-    const matchesTab = activeTab === "all" || exam.board.toLowerCase() === activeTab.toLowerCase();
+    const matchesTab = activeTab === "all" || exam.board === activeTab;
     
     return matchesSearch && matchesTab;
   });
+  
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
+    // If switching to a specific board, you could optionally fetch only that board's exams
+    if (value !== "all") {
+      const loadBoardExams = async () => {
+        setLoading(true);
+        const examData = await fetchEntranceExams(value);
+        setExams(examData);
+        setLoading(false);
+      };
+      
+      loadBoardExams();
+    } else {
+      // If going back to "all", fetch all boards
+      const loadAllExams = async () => {
+        setLoading(true);
+        const examData = await fetchEntranceExams();
+        setExams(examData);
+        setLoading(false);
+      };
+      
+      loadAllExams();
+    }
+  };
   
   if (loading) {
     return (
@@ -80,25 +113,21 @@ const ExamPapersPage = () => {
             </div>
           </div>
           
-          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange} className="mb-8">
             <TabsList className="w-full flex overflow-x-auto">
-              <TabsTrigger value="all" className="flex-1">All Exams</TabsTrigger>
-              {examBoards.map(board => (
-                <TabsTrigger key={board} value={board} className="flex-1 capitalize">
-                  {board}
+              {examBoardTabs.map(tab => (
+                <TabsTrigger key={tab.id} value={tab.id} className="flex-1">
+                  {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
             
-            <TabsContent value="all" className="mt-6">
-              <ExamsList exams={filteredExams} userIsPremium={userIsPremium} />
-            </TabsContent>
-            
-            {examBoards.map(board => (
-              <TabsContent key={board} value={board} className="mt-6">
+            {examBoardTabs.map(tab => (
+              <TabsContent key={tab.id} value={tab.id} className="mt-6">
                 <ExamsList 
-                  exams={filteredExams.filter(exam => exam.board.toLowerCase() === board)} 
+                  exams={filteredExams} 
                   userIsPremium={userIsPremium}
+                  searchQuery={searchQuery}
                 />
               </TabsContent>
             ))}
@@ -111,11 +140,24 @@ const ExamPapersPage = () => {
   );
 };
 
-const ExamsList = ({ exams, userIsPremium }: { exams: Exam[], userIsPremium: boolean }) => {
+const ExamsList = ({ 
+  exams, 
+  userIsPremium,
+  searchQuery
+}: { 
+  exams: Exam[], 
+  userIsPremium: boolean,
+  searchQuery: string
+}) => {
   if (exams.length === 0) {
     return (
       <div className="col-span-full text-center py-12">
-        <p className="text-muted-foreground">No exam papers found matching your search.</p>
+        <p className="text-muted-foreground">
+          {searchQuery ? 
+            "No exam papers found matching your search." :
+            "No exam papers available in this category yet."
+          }
+        </p>
       </div>
     );
   }
@@ -136,15 +178,15 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
   useEffect(() => {
     // Get paper and solution URLs
     const fetchUrls = async () => {
-      const paperDownloadUrl = await getFileDownloadUrl(exam.id, 'paper');
-      const solutionDownloadUrl = await getFileDownloadUrl(exam.id, 'solution');
+      const paperDownloadUrl = await getFileDownloadUrl(exam.id, 'paper', exam.board);
+      const solutionDownloadUrl = await getFileDownloadUrl(exam.id, 'solution', exam.board);
       
       setPaperUrl(paperDownloadUrl);
       setSolutionUrl(solutionDownloadUrl);
     };
     
     fetchUrls();
-  }, [exam.id]);
+  }, [exam.id, exam.board]);
   
   return (
     <PaperCard 

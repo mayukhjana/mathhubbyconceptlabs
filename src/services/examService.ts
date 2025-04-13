@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -95,9 +94,40 @@ export const submitExamResults = async (
   }
 };
 
-export const uploadExamFile = async (file: File, examId: string, fileType: 'paper' | 'solution') => {
+export const uploadExamFile = async (file: File, examId: string, fileType: 'paper' | 'solution', board: string) => {
   try {
-    const bucket = fileType === 'paper' ? 'exam_papers' : 'solutions';
+    let bucket = '';
+    
+    if (fileType === 'paper') {
+      switch (board.toUpperCase()) {
+        case 'WBJEE':
+          bucket = 'wbjee_papers';
+          break;
+        case 'JEE MAINS':
+          bucket = 'jee_mains_papers';
+          break;
+        case 'JEE ADVANCED':
+          bucket = 'jee_advanced_papers';
+          break;
+        default:
+          bucket = 'exam_papers';
+      }
+    } else { // solution
+      switch (board.toUpperCase()) {
+        case 'WBJEE':
+          bucket = 'wbjee_solutions';
+          break;
+        case 'JEE MAINS':
+          bucket = 'jee_mains_solutions';
+          break;
+        case 'JEE ADVANCED':
+          bucket = 'jee_advanced_solutions';
+          break;
+        default:
+          bucket = 'solutions';
+      }
+    }
+    
     const filePath = `${examId}/${file.name}`;
     
     const { error } = await supabase.storage
@@ -123,15 +153,23 @@ export const uploadExamFile = async (file: File, examId: string, fileType: 'pape
   }
 };
 
-export const fetchEntranceExams = async (): Promise<Exam[]> => {
+export const fetchEntranceExams = async (boardFilter?: string): Promise<Exam[]> => {
   try {
-    console.log("Fetching entrance exams...");
-    // Fix: Use array with uppercase values exactly matching how they're stored in the database
-    const { data, error } = await supabase
+    console.log("Fetching entrance exams with filter:", boardFilter);
+    
+    let query = supabase
       .from("exams")
-      .select("*")
-      .in("board", ['WBJEE', 'JEE MAINS', 'JEE ADVANCED'])
-      .order("year", { ascending: false });
+      .select("*");
+    
+    if (boardFilter && boardFilter.toLowerCase() !== "all") {
+      query = query.eq("board", boardFilter);
+    } else {
+      query = query.in("board", ['WBJEE', 'JEE MAINS', 'JEE ADVANCED']);
+    }
+    
+    query = query.order("year", { ascending: false });
+    
+    const { data, error } = await query;
       
     if (error) {
       console.error("Error fetching entrance exams:", error);
@@ -148,9 +186,39 @@ export const fetchEntranceExams = async (): Promise<Exam[]> => {
   }
 };
 
-export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution'): Promise<string | null> => {
+export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution', board: string): Promise<string | null> => {
   try {
-    const bucket = fileType === 'paper' ? 'exam_papers' : 'solutions';
+    let bucket = '';
+    
+    if (fileType === 'paper') {
+      switch (board.toUpperCase()) {
+        case 'WBJEE':
+          bucket = 'wbjee_papers';
+          break;
+        case 'JEE MAINS':
+          bucket = 'jee_mains_papers';
+          break;
+        case 'JEE ADVANCED':
+          bucket = 'jee_advanced_papers';
+          break;
+        default:
+          bucket = 'exam_papers';
+      }
+    } else { // solution
+      switch (board.toUpperCase()) {
+        case 'WBJEE':
+          bucket = 'wbjee_solutions';
+          break;
+        case 'JEE MAINS':
+          bucket = 'jee_mains_solutions';
+          break;
+        case 'JEE ADVANCED':
+          bucket = 'jee_advanced_solutions';
+          break;
+        default:
+          bucket = 'solutions';
+      }
+    }
     
     const { data, error } = await supabase.storage
       .from(bucket)

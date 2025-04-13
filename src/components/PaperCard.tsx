@@ -68,22 +68,7 @@ const PaperCard = ({
     
     if (downloadUrl) {
       try {
-        const { data, error } = await supabase.storage
-          .from('exam_papers')
-          .download(downloadUrl);
-          
-        if (error) throw error;
-        
-        // Create a download link
-        const url = URL.createObjectURL(data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = downloadUrl.split('/').pop() || 'exam_paper.pdf';
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
+        window.open(downloadUrl, '_blank');
         toast.success("Download started!");
       } catch (error) {
         console.error("Download error:", error);
@@ -92,11 +77,8 @@ const PaperCard = ({
         setIsDownloading(false);
       }
     } else {
-      // Simulate download delay for demo
-      setTimeout(() => {
-        setIsDownloading(false);
-        toast.success("Download started!");
-      }, 1500);
+      toast.info("This paper hasn't been uploaded yet. Please check back later.");
+      setIsDownloading(false);
     }
   };
   
@@ -115,22 +97,7 @@ const PaperCard = ({
     
     if (solutionUrl) {
       try {
-        const { data, error } = await supabase.storage
-          .from('solutions')
-          .download(solutionUrl);
-          
-        if (error) throw error;
-        
-        // Create a download link
-        const url = URL.createObjectURL(data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = solutionUrl.split('/').pop() || 'solution.pdf';
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
+        window.open(solutionUrl, '_blank');
         toast.success("Solution download started!");
       } catch (error) {
         console.error("Download error:", error);
@@ -139,11 +106,8 @@ const PaperCard = ({
         setIsDownloadingSolution(false);
       }
     } else {
-      // Simulate download delay for demo
-      setTimeout(() => {
-        setIsDownloadingSolution(false);
-        toast.success("Solution download started!");
-      }, 1500);
+      toast.info("Solutions for this paper haven't been uploaded yet. Please check back later.");
+      setIsDownloadingSolution(false);
     }
   };
   
