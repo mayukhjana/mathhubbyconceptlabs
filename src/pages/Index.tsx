@@ -361,7 +361,7 @@ const Index = () => {
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <div className="flex gap-4 mb-6">
-                      <Button variant={activeTab === 'monthly' ? 'default' : 'outline'} size="sm" className="border-white/20 text-white" onClick={() => setActiveTab('monthly')}>
+                      <Button variant={activeTab === 'monthly' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('monthly')} className="border-white/20 text-zinc-900">
                         Monthly
                       </Button>
                       <Button variant={activeTab === 'yearly' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('yearly')} className="border-white/20 text-zinc-900">
