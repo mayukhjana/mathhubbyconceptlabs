@@ -1,95 +1,53 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
-  BookOpen, 
-  FileText, 
-  GraduationCap, 
-  Users, 
-  Award, 
-  CheckCircle, 
-  ChevronRight,
-  BarChart3,
-  Clock,
-  Lightbulb,
-  Zap,
-  Database,
-  ArrowRight,
-  Star,
-  BarChart,
-  Brain,
-  Trophy,
-  PlusCircle,
-  Sparkles
-} from "lucide-react";
+import { BookOpen, FileText, GraduationCap, Users, Award, CheckCircle, ChevronRight, BarChart3, Clock, Lightbulb, Zap, Database, ArrowRight, Star, BarChart, Brain, Trophy, PlusCircle, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useState } from "react";
 import SchoolLogosMarquee from "@/components/SchoolLogosMarquee";
 import { motion } from "framer-motion";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious
-} from "@/components/ui/carousel";
-
-const features = [
-  {
-    icon: <Database className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
-    title: "5000+ Practice Papers",
-    description: "Access thousands of previous year papers from ICSE, CBSE, and West Bengal boards organized by chapter."
-  },
-  {
-    icon: <Brain className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
-    title: "Interactive MCQs",
-    description: "Test your knowledge with our engaging multiple-choice questions and get instant feedback."
-  },
-  {
-    icon: <BarChart className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
-    title: "Smart Analytics",
-    description: "Track your progress over time with detailed analytics that adapt to your learning style."
-  },
-  {
-    icon: <Sparkles className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
-    title: "AI-Powered Learning",
-    description: "Our system recommends personalized learning resources based on your performance patterns."
-  },
-];
-
-const testimonials = [
-  {
-    name: "Rajiv Kumar",
-    role: "CBSE Student, Class 12",
-    content: "MathHub helped me score 95% in my math board exam. The practice papers organized by chapter were exactly what I needed!",
-    avatar: "/placeholder.svg"
-  },
-  {
-    name: "Priya Sharma",
-    role: "ICSE Student, Class 10",
-    content: "The MCQ practice exams gave me confidence before my finals. The instant feedback helped me understand my weak areas.",
-    avatar: "/placeholder.svg"
-  },
-  {
-    name: "Ananya Roy",
-    role: "West Bengal Board Student",
-    content: "Finding previous year papers used to be so difficult. Now I have everything in one place. The premium subscription is worth every rupee!",
-    avatar: "/placeholder.svg"
-  },
-  {
-    name: "Vikram Mehta",
-    role: "JEE Advanced Qualifier",
-    content: "The JEE papers with detailed solutions were instrumental in my preparation. I could practice anytime and track my improvement daily.",
-    avatar: "/placeholder.svg"
-  }
-];
-
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+const features = [{
+  icon: <Database className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
+  title: "5000+ Practice Papers",
+  description: "Access thousands of previous year papers from ICSE, CBSE, and West Bengal boards organized by chapter."
+}, {
+  icon: <Brain className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
+  title: "Interactive MCQs",
+  description: "Test your knowledge with our engaging multiple-choice questions and get instant feedback."
+}, {
+  icon: <BarChart className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
+  title: "Smart Analytics",
+  description: "Track your progress over time with detailed analytics that adapt to your learning style."
+}, {
+  icon: <Sparkles className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
+  title: "AI-Powered Learning",
+  description: "Our system recommends personalized learning resources based on your performance patterns."
+}];
+const testimonials = [{
+  name: "Rajiv Kumar",
+  role: "CBSE Student, Class 12",
+  content: "MathHub helped me score 95% in my math board exam. The practice papers organized by chapter were exactly what I needed!",
+  avatar: "/placeholder.svg"
+}, {
+  name: "Priya Sharma",
+  role: "ICSE Student, Class 10",
+  content: "The MCQ practice exams gave me confidence before my finals. The instant feedback helped me understand my weak areas.",
+  avatar: "/placeholder.svg"
+}, {
+  name: "Ananya Roy",
+  role: "West Bengal Board Student",
+  content: "Finding previous year papers used to be so difficult. Now I have everything in one place. The premium subscription is worth every rupee!",
+  avatar: "/placeholder.svg"
+}, {
+  name: "Vikram Mehta",
+  role: "JEE Advanced Qualifier",
+  content: "The JEE papers with detailed solutions were instrumental in my preparation. I could practice anytime and track my improvement daily.",
+  avatar: "/placeholder.svg"
+}];
 const Index = () => {
   const [activeTab, setActiveTab] = useState<'monthly' | 'yearly'>('monthly');
-  
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
+  return <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
       {/* Hero Section - Modern & Minimal Design */}
@@ -134,11 +92,9 @@ const Index = () => {
               
               <div className="mt-10 flex items-center gap-6 justify-center lg:justify-start">
                 <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-700">
+                  {[1, 2, 3, 4].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-slate-50">
                       <span className="sr-only">User</span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 <div className="text-sm text-mathdark/70 dark:text-gray-400">
                   <span className="font-semibold text-mathdark dark:text-white">4.9/5</span> from over 5,000 reviews
@@ -166,7 +122,9 @@ const Index = () => {
                         <span className="text-sm text-mathprimary dark:text-blue-400">75% Complete</span>
                       </div>
                       <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-mathprimary dark:bg-blue-500 rounded-full" style={{width: "75%"}}></div>
+                        <div className="h-full bg-mathprimary dark:bg-blue-500 rounded-full" style={{
+                        width: "75%"
+                      }}></div>
                       </div>
                     </div>
 
@@ -190,7 +148,9 @@ const Index = () => {
                           <span className="font-medium text-mathdark dark:text-white">86%</span>
                         </div>
                         <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-green-500 rounded-full" style={{width: "86%"}}></div>
+                          <div className="h-full bg-green-500 rounded-full" style={{
+                          width: "86%"
+                        }}></div>
                         </div>
                       </div>
                       <div>
@@ -199,7 +159,9 @@ const Index = () => {
                           <span className="font-medium text-mathdark dark:text-white">72%</span>
                         </div>
                         <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-mathprimary dark:bg-blue-500 rounded-full" style={{width: "72%"}}></div>
+                          <div className="h-full bg-mathprimary dark:bg-blue-500 rounded-full" style={{
+                          width: "72%"
+                        }}></div>
                         </div>
                       </div>
                       <div>
@@ -208,7 +170,9 @@ const Index = () => {
                           <span className="font-medium text-mathdark dark:text-white">54%</span>
                         </div>
                         <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-yellow-500 rounded-full" style={{width: "54%"}}></div>
+                          <div className="h-full bg-yellow-500 rounded-full" style={{
+                          width: "54%"
+                        }}></div>
                         </div>
                       </div>
                     </div>
@@ -259,18 +223,13 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition-shadow"
-              >
+            {features.map((feature, index) => <div key={index} className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition-shadow">
                 <div className="bg-mathprimary/10 dark:bg-blue-900/30 inline-flex rounded-full p-3 mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-mathdark dark:text-white">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -402,20 +361,10 @@ const Index = () => {
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <div className="flex gap-4 mb-6">
-                      <Button 
-                        variant={activeTab === 'monthly' ? 'default' : 'outline'} 
-                        size="sm"
-                        className="border-white/20 text-white"
-                        onClick={() => setActiveTab('monthly')}
-                      >
+                      <Button variant={activeTab === 'monthly' ? 'default' : 'outline'} size="sm" className="border-white/20 text-white" onClick={() => setActiveTab('monthly')}>
                         Monthly
                       </Button>
-                      <Button
-                        variant={activeTab === 'yearly' ? 'default' : 'outline'}
-                        size="sm" 
-                        className="border-white/20 text-white"
-                        onClick={() => setActiveTab('yearly')}
-                      >
+                      <Button variant={activeTab === 'yearly' ? 'default' : 'outline'} size="sm" className="border-white/20 text-white" onClick={() => setActiveTab('yearly')}>
                         Yearly <span className="ml-1 text-xs bg-green-500 px-1.5 py-0.5 rounded-full">Save 20%</span>
                       </Button>
                     </div>
@@ -432,19 +381,10 @@ const Index = () => {
                 </div>
                 
                 <div className="space-y-3 mb-6">
-                  {[
-                    "Access to 5000+ papers",
-                    "All practice exams included",
-                    "Unlimited downloads",
-                    "Performance analytics",
-                    "Ad-free experience",
-                    "Mobile app access"
-                  ].map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                  {["Access to 5000+ papers", "All practice exams included", "Unlimited downloads", "Performance analytics", "Ad-free experience", "Mobile app access"].map((feature, index) => <div key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-mathprimary dark:text-blue-400" />
                       <span>{feature}</span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 
                 <Button className="w-full bg-white text-mathdark hover:bg-gray-100 dark:hover:bg-gray-200" size="lg" asChild>
@@ -476,8 +416,7 @@ const Index = () => {
           
           <Carousel className="w-full max-w-5xl mx-auto">
             <CarouselContent>
-              {testimonials.map((testimonial, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+              {testimonials.map((testimonial, index) => <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                   <div className="h-full bg-gray-50 dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-gray-700 relative">
                     <div className="text-6xl text-mathprimary/20 dark:text-blue-500/20 absolute top-4 left-4">"</div>
                     <p className="text-gray-700 dark:text-gray-300 mb-6 relative z-10">
@@ -493,8 +432,7 @@ const Index = () => {
                       </div>
                     </div>
                   </div>
-                </CarouselItem>
-              ))}
+                </CarouselItem>)}
             </CarouselContent>
             <div className="flex justify-center mt-8">
               <CarouselPrevious className="static translate-y-0 mr-2" />
@@ -523,8 +461,6 @@ const Index = () => {
       </section>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
