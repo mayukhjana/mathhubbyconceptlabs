@@ -454,7 +454,7 @@ const Index = () => {
               <Link to="/boards">Browse Papers</Link>
             </Button>
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
-              <Link to="/premium">Get Premium</Link>
+              <Link to="/premium" className="text-black">Get Premium</Link>
             </Button>
           </div>
         </div>
