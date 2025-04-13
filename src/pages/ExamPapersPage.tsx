@@ -14,43 +14,174 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Download, Search, Eye, FilePlus2 } from "lucide-react";
-import PaperCard from "@/components/PaperCard";
 import { Link } from "react-router-dom";
 
 // Mock paper data - replace with actual data from your database
 const paperData = [
   {
-    id: "icse-math-2022",
-    title: "ICSE Mathematics 2022",
-    board: "ICSE",
+    id: "wbjee-math-2024",
+    title: "WBJEE Mathematics 2024",
+    board: "WBJEE",
     subject: "Mathematics",
-    year: "2022",
-    class: "10",
+    year: "2024",
+    class: "12",
     pdfUrl: "#",
     solutionPdfUrl: "#",
-    examId: "icse-alg-2022" // Link to the interactive exam
+    examId: "wbjee-math-2024"
   },
   {
-    id: "cbse-math-2022",
-    title: "CBSE Mathematics 2022",
-    board: "CBSE",
+    id: "wbjee-math-2023",
+    title: "WBJEE Mathematics 2023",
+    board: "WBJEE",
     subject: "Mathematics",
-    year: "2022",
-    class: "10",
+    year: "2023",
+    class: "12",
     pdfUrl: "#",
     solutionPdfUrl: "#",
-    examId: "cbse-num-2022" // Link to the interactive exam
+    examId: "wbjee-math-2023"
   },
   {
-    id: "wb-math-2022",
-    title: "West Bengal Mathematics 2022",
-    board: "West Bengal",
+    id: "wbjee-math-2022",
+    title: "WBJEE Mathematics 2022",
+    board: "WBJEE",
     subject: "Mathematics",
     year: "2022",
-    class: "10",
+    class: "12",
     pdfUrl: "#",
     solutionPdfUrl: "#",
-    examId: "wb-alg-2022" // Link to the interactive exam
+    examId: "wbjee-math-2022"
+  },
+  {
+    id: "wbjee-math-2021",
+    title: "WBJEE Mathematics 2021",
+    board: "WBJEE",
+    subject: "Mathematics",
+    year: "2021",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "wbjee-math-2021"
+  },
+  {
+    id: "wbjee-math-2020",
+    title: "WBJEE Mathematics 2020",
+    board: "WBJEE",
+    subject: "Mathematics",
+    year: "2020",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "wbjee-math-2020"
+  },
+  {
+    id: "jeemain-math-2024",
+    title: "JEE MAINS Mathematics 2024",
+    board: "JEE MAINS",
+    subject: "Mathematics",
+    year: "2024",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeemain-math-2024"
+  },
+  {
+    id: "jeemain-math-2023",
+    title: "JEE MAINS Mathematics 2023",
+    board: "JEE MAINS",
+    subject: "Mathematics",
+    year: "2023",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeemain-math-2023"
+  },
+  {
+    id: "jeemain-math-2022",
+    title: "JEE MAINS Mathematics 2022",
+    board: "JEE MAINS",
+    subject: "Mathematics",
+    year: "2022",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeemain-math-2022"
+  },
+  {
+    id: "jeemain-math-2021",
+    title: "JEE MAINS Mathematics 2021",
+    board: "JEE MAINS",
+    subject: "Mathematics",
+    year: "2021",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeemain-math-2021"
+  },
+  {
+    id: "jeemain-math-2020",
+    title: "JEE MAINS Mathematics 2020",
+    board: "JEE MAINS",
+    subject: "Mathematics",
+    year: "2020",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeemain-math-2020"
+  },
+  {
+    id: "jeeadv-math-2024",
+    title: "JEE ADVANCED Mathematics 2024",
+    board: "JEE ADVANCED",
+    subject: "Mathematics",
+    year: "2024",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeeadv-math-2024"
+  },
+  {
+    id: "jeeadv-math-2023",
+    title: "JEE ADVANCED Mathematics 2023",
+    board: "JEE ADVANCED",
+    subject: "Mathematics",
+    year: "2023",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeeadv-math-2023"
+  },
+  {
+    id: "jeeadv-math-2022",
+    title: "JEE ADVANCED Mathematics 2022",
+    board: "JEE ADVANCED",
+    subject: "Mathematics",
+    year: "2022",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeeadv-math-2022"
+  },
+  {
+    id: "jeeadv-math-2021",
+    title: "JEE ADVANCED Mathematics 2021",
+    board: "JEE ADVANCED",
+    subject: "Mathematics",
+    year: "2021",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeeadv-math-2021"
+  },
+  {
+    id: "jeeadv-math-2020",
+    title: "JEE ADVANCED Mathematics 2020",
+    board: "JEE ADVANCED",
+    subject: "Mathematics",
+    year: "2020",
+    class: "12",
+    pdfUrl: "#",
+    solutionPdfUrl: "#",
+    examId: "jeeadv-math-2020"
   }
 ];
 
@@ -69,8 +200,8 @@ const ExamPapersPage = () => {
     return matchesSearch && matchesTab;
   });
   
-  // Get unique boards for tabs
-  const boards = Array.from(new Set(paperData.map(paper => paper.board.toLowerCase())));
+  // Get unique exam types for tabs
+  const exams = Array.from(new Set(paperData.map(paper => paper.board.toLowerCase())));
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -78,7 +209,7 @@ const ExamPapersPage = () => {
       
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-6">Exam Papers</h1>
+          <h1 className="text-3xl font-bold mb-6">Entrance Exam Papers</h1>
           
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center mb-6">
             <div className="relative flex-1">
@@ -95,10 +226,10 @@ const ExamPapersPage = () => {
           
           <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
             <TabsList className="w-full flex overflow-x-auto">
-              <TabsTrigger value="all" className="flex-1">All Boards</TabsTrigger>
-              {boards.map(board => (
-                <TabsTrigger key={board} value={board} className="flex-1 capitalize">
-                  {board}
+              <TabsTrigger value="all" className="flex-1">All Exams</TabsTrigger>
+              {exams.map(exam => (
+                <TabsTrigger key={exam} value={exam} className="flex-1 capitalize">
+                  {exam}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -113,7 +244,7 @@ const ExamPapersPage = () => {
                         <div className="flex flex-wrap gap-2 mt-2">
                           <Badge variant="secondary">{paper.board}</Badge>
                           <Badge variant="outline">{paper.subject}</Badge>
-                          <Badge variant="outline">Class {paper.class}</Badge>
+                          <Badge variant="outline">Year {paper.year}</Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
@@ -145,11 +276,11 @@ const ExamPapersPage = () => {
               </div>
             </TabsContent>
             
-            {boards.map(board => (
-              <TabsContent key={board} value={board} className="mt-6">
+            {exams.map(exam => (
+              <TabsContent key={exam} value={exam} className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredPapers
-                    .filter(paper => paper.board.toLowerCase() === board)
+                    .filter(paper => paper.board.toLowerCase() === exam)
                     .map(paper => (
                       <Card key={paper.id} className="overflow-hidden">
                         <CardHeader>
@@ -157,7 +288,7 @@ const ExamPapersPage = () => {
                           <div className="flex flex-wrap gap-2 mt-2">
                             <Badge variant="secondary">{paper.board}</Badge>
                             <Badge variant="outline">{paper.subject}</Badge>
-                            <Badge variant="outline">Class {paper.class}</Badge>
+                            <Badge variant="outline">Year {paper.year}</Badge>
                           </div>
                         </CardHeader>
                         <CardContent>

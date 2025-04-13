@@ -1,435 +1,288 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { BrainCircuit, Send, Key, HelpCircle, MessageSquare, History, Sparkles, Image, Upload } from "lucide-react";
-import { useForm } from "react-hook-form";
-import LoadingAnimation from "@/components/LoadingAnimation";
 
-type ChatMessage = {
+import React, { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Send, Sparkles, MessageSquare, Loader2, AlertCircle, BookOpen } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-type HistoryItem = {
-  id: string;
-  question: string;
-  answer: string;
-  created_at: string;
-};
-
-type SupportTicket = {
-  id: string;
-  subject: string;
-  message: string;
-  status: string;
-  created_at: string;
-};
-
-type UserAIDoubts = {
+type DoubtsUsage = {
   id: string;
   user_id: string;
   total_used: number;
-  created_at: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
-type AIChatHistory = {
-  id: string;
-  user_id: string;
-  question: string;
-  answer: string;
-  created_at: string | null;
-};
+const DOUBTS_LIMIT = 5;
 
-type SupportTicketData = {
-  id: string;
-  user_id: string;
-  subject: string;
-  message: string;
-  status: string;
-  created_at: string | null;
-};
+const MathHubAI: React.FC = () => {
+  const { user } = useAuth();
+  const [prompt, setPrompt] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("gpt-4o");
+  const [doubtsUsage, setDoubtsUsage] = useState<DoubtsUsage | null>(null);
+  const [doubtsRemaining, setDoubtsRemaining] = useState<number>(DOUBTS_LIMIT);
+  const [view, setView] = useState<"chat" | "history">("chat");
+  const [history, setHistory] = useState<{ question: string; answer: string }[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-// File upload type
-type UploadedFile = {
-  file: File;
-  preview: string;
-};
-
-// Generic SQL query response type
-type SqlQueryResponse<T> = {
-  data: T[];
-};
-
-const MathHubAI = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [remainingDoubts, setRemainingDoubts] = useState<number | null>(null);
-  const [isPremium, setIsPremium] = useState(false);
-  const [chatHistory, setChatHistory] = useState<HistoryItem[]>([]);
-  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
-  const [activeTab, setActiveTab] = useState("chat");
-  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const supportForm = useForm({
-    defaultValues: {
-      subject: "",
-      message: ""
-    }
-  });
-
+  // Fetch user's doubts usage
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate("/auth", { state: { returnTo: "/mathhub-ai" } });
-    }
-    
-    if (isAuthenticated && user) {
-      fetchUserData();
-      fetchChatHistory();
-      fetchSupportTickets();
-    }
-  }, [isAuthenticated, isLoading, user, navigate]);
+    const fetchDoubtsUsage = async () => {
+      if (!user) return;
 
+      try {
+        const { data, error } = await supabase
+          .from("user_ai_doubts")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          console.error("Error fetching doubts usage:", error);
+          return;
+        }
+
+        if (data) {
+          setDoubtsUsage(data);
+          setDoubtsRemaining(Math.max(0, DOUBTS_LIMIT - data.total_used));
+        } else {
+          // Create a new record if none exists
+          const { data: newRecord, error: insertError } = await supabase
+            .from("user_ai_doubts")
+            .insert([{ user_id: user.id, total_used: 0 }])
+            .select("*")
+            .single();
+
+          if (insertError) {
+            console.error("Error creating doubts usage record:", insertError);
+            return;
+          }
+
+          setDoubtsUsage(newRecord);
+          setDoubtsRemaining(DOUBTS_LIMIT);
+        }
+      } catch (err) {
+        console.error("Error in doubts usage fetch:", err);
+      }
+    };
+
+    fetchDoubtsUsage();
+  }, [user]);
+
+  // Fetch chat history
   useEffect(() => {
-    scrollToBottom();
+    const fetchChatHistory = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("ai_chat_history")
+          .select("question, answer")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching chat history:", error);
+          return;
+        }
+
+        setHistory(data || []);
+      } catch (err) {
+        console.error("Error in chat history fetch:", err);
+      }
+    };
+
+    fetchChatHistory();
+  }, [user, view]);
+
+  // Scroll to bottom of messages
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
-  const fetchUserData = async () => {
-    try {
-      const { data: premiumData } = await supabase
-        .from("user_premium")
-        .select("*")
-        .eq("user_id", user?.id)
-        .eq("is_active", true)
-        .single();
-      
-      setIsPremium(!!premiumData);
-
-      // Use the sql-execute edge function to query user_ai_doubts
-      const { data, error } = await supabase
-        .functions.invoke<SqlQueryResponse<UserAIDoubts>>("sql-execute", {
-          body: {
-            query: `SELECT * FROM user_ai_doubts WHERE user_id = '${user?.id}'`
-          }
-        });
-
-      if (error) {
-        console.error("Error fetching user data:", error);
-        setRemainingDoubts(5);
-        return;
-      }
-
-      const doubtsData = data?.data;
-      
-      if (doubtsData && doubtsData.length > 0) {
-        setRemainingDoubts(Math.max(0, 5 - doubtsData[0].total_used));
-      } else {
-        setRemainingDoubts(5);
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setRemainingDoubts(5);
-    }
-  };
-
-  const fetchChatHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .functions.invoke<SqlQueryResponse<AIChatHistory>>("sql-execute", {
-          body: {
-            query: `SELECT * FROM ai_chat_history WHERE user_id = '${user?.id}' ORDER BY created_at DESC LIMIT 20`
-          }
-        });
-        
-      if (error) {
-        console.error("Error fetching chat history:", error);
-        return;
-      }
-      
-      const chatData = data?.data;
-      if (chatData) {
-        setChatHistory(chatData.map(item => ({
-          id: item.id,
-          question: item.question,
-          answer: item.answer,
-          created_at: item.created_at || ''
-        })));
-      }
-    } catch (error) {
-      console.error("Error fetching chat history:", error);
-    }
-  };
-
-  const fetchSupportTickets = async () => {
-    try {
-      const { data, error } = await supabase
-        .functions.invoke<SqlQueryResponse<SupportTicketData>>("sql-execute", {
-          body: {
-            query: `SELECT * FROM support_tickets WHERE user_id = '${user?.id}' ORDER BY created_at DESC`
-          }
-        });
-        
-      if (error) {
-        console.error("Error fetching support tickets:", error);
-        return;
-      }
-      
-      const ticketsData = data?.data;
-      if (ticketsData) {
-        setSupportTickets(ticketsData.map(item => ({
-          id: item.id,
-          subject: item.subject,
-          message: item.message,
-          status: item.status,
-          created_at: item.created_at || ''
-        })));
-      }
-    } catch (error) {
-      console.error("Error fetching support tickets:", error);
-    }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const newFiles: UploadedFile[] = [];
-    
-    Array.from(files).forEach(file => {
-      // Check if file is an image and less than 5MB
-      if (file.type.startsWith("image/") && file.size < 5 * 1024 * 1024) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            newFiles.push({
-              file,
-              preview: e.target.result as string
-            });
-            
-            // Wait for all files to be processed
-            if (newFiles.length === files.length) {
-              setUploadedFiles(prev => [...prev, ...newFiles]);
-            }
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast.error(`${file.name} is not a valid image or exceeds 5MB limit.`);
-      }
-    });
-  };
-
-  const removeFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!input.trim() && uploadedFiles.length === 0) || loading) return;
-    
-    const userMessage = input.trim();
-    setInput("");
-    
-    // Create a message with both text and image references if applicable
-    let messageContent = userMessage;
-    if (uploadedFiles.length > 0) {
-      if (!userMessage) {
-        messageContent = "I've uploaded image(s) for analysis.";
-      }
-    }
-    
-    setMessages((prev) => [...prev, { role: "user", content: messageContent }]);
-    
-    setLoading(true);
-    
-    try {
-      // Prepare files for API
-      const files = uploadedFiles.map(file => {
-        const base64Content = file.preview.split(',')[1]; // Remove the data URL prefix
-        return {
-          name: file.file.name,
-          content: base64Content,
-          type: file.file.type
-        };
+    if (!prompt.trim() || isLoading) return;
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to use MathHub AI",
+        variant: "destructive",
       });
+      return;
+    }
 
-      // Reset uploaded files after sending
-      setUploadedFiles([]);
-      
-      const response = await fetch(`https://gpzoytysrrormkmytmyk.supabase.co/functions/v1/mathhub-ai`, {
+    if (doubtsRemaining <= 0) {
+      toast({
+        title: "Limit reached",
+        description: "You have used all your available AI doubts. Please upgrade to premium for unlimited usage.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userMessage = { role: "user" as const, content: prompt };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+    setPrompt("");
+
+    try {
+      // Make API request to the backend
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mathhub-ai`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          question: userMessage,
+          message: prompt,
           model: selectedModel,
-          files: files
-        })
+          userId: user.id,
+        }),
       });
-      
-      const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || "Failed to get answer from AI");
-      }
-      
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer }]);
-      
-      if (!isPremium) {
-        fetchUserData();
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to get response from MathHub AI");
       }
 
-      fetchChatHistory();
-    } catch (error) {
-      console.error(error);
-      toast.error(error instanceof Error ? error.message : "Failed to get answer from AI");
+      const data = await response.json();
+      const aiMessage = { role: "assistant" as const, content: data.message };
+      setMessages((prev) => [...prev, aiMessage]);
+
+      // Update the doubts usage
+      if (doubtsUsage) {
+        const newUsage = doubtsUsage.total_used + 1;
+        await supabase
+          .from("user_ai_doubts")
+          .update({ total_used: newUsage })
+          .eq("id", doubtsUsage.id);
+
+        setDoubtsUsage({ ...doubtsUsage, total_used: newUsage });
+        setDoubtsRemaining(Math.max(0, DOUBTS_LIMIT - newUsage));
+      }
+
+      // Refresh history if in history view
+      if (view === "history") {
+        const { data: updatedHistory } = await supabase
+          .from("ai_chat_history")
+          .select("question, answer")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (updatedHistory) {
+          setHistory(updatedHistory);
+        }
+      }
+    } catch (err: any) {
+      console.error("MathHub AI error:", err);
+      setError(err.message || "An error occurred while processing your request");
+      toast({
+        title: "MathHub AI Error",
+        description: err.message || "Failed to get a response from MathHub AI",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
-  const handleSubmitSupportTicket = async (values: { subject: string; message: string }) => {
-    try {
-      const response = await fetch(`https://gpzoytysrrormkmytmyk.supabase.co/functions/v1/submit-support-ticket`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify(values)
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to submit support ticket");
-      }
-      
-      toast.success("Support ticket submitted successfully");
-      supportForm.reset();
-      fetchSupportTickets();
-      setActiveTab("tickets");
-    } catch (error) {
-      console.error(error);
-      toast.error(error instanceof Error ? error.message : "Failed to submit support ticket");
-    }
-  };
-
-  const loadHistoryItem = (item: HistoryItem) => {
-    setMessages([
-      { role: "user", content: item.question },
-      { role: "assistant", content: item.answer }
-    ]);
-    setActiveTab("chat");
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[70vh]">
-        <LoadingAnimation size="md" />
-      </div>
-    );
-  }
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
-      <div className="flex flex-col space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex flex-col space-y-4 max-w-4xl mx-auto">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center">
-              <BrainCircuit className="mr-2 text-mathprimary" />
+              <Sparkles className="mr-2 h-8 w-8 text-mathprimary" />
               MathHub AI
             </h1>
             <p className="text-muted-foreground mt-1">
-              Your AI-powered math tutor to help with problems and concepts
+              Your personal math tutor - Ask any math question and get instant help
             </p>
           </div>
-          
-          <div className="flex items-center gap-4">
-            {!isPremium && remainingDoubts !== null && (
-              <div className="text-sm bg-muted px-3 py-1.5 rounded-full">
-                <span className="font-medium">Free Doubts: </span> 
-                <span className={remainingDoubts > 0 ? "text-green-600" : "text-red-500"}>
-                  {remainingDoubts}/5 remaining
-                </span>
-              </div>
-            )}
-            
-            {isPremium && (
-              <div className="text-sm bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-3 py-1.5 rounded-full flex items-center">
-                <Sparkles size={14} className="mr-1" /> Premium User
-              </div>
-            )}
+
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="text-sm py-1">
+              <BookOpen className="w-3.5 h-3.5 mr-1" />
+              {doubtsRemaining} doubts remaining
+            </Badge>
           </div>
         </div>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-8">
-            <TabsTrigger value="chat" className="flex items-center gap-2">
-              <MessageSquare size={16} />
-              <span>AI Chat</span>
+
+        <Tabs defaultValue="chat" className="w-full" onValueChange={(value) => setView(value as "chat" | "history")}>
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger value="chat">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Chat
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <History size={16} />
-              <span>History</span>
-            </TabsTrigger>
-            <TabsTrigger value="tickets" className="flex items-center gap-2">
-              <HelpCircle size={16} />
-              <span>Support</span>
+            <TabsTrigger value="history">
+              <BookOpen className="h-4 w-4 mr-2" />
+              History
             </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="chat">
-            <Card className="mb-8">
-              <CardContent className="p-6">
-                <div className="h-[60vh] flex flex-col">
-                  <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                        <BrainCircuit size={48} className="text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-medium">Welcome to MathHub AI!</h3>
-                        <p className="text-muted-foreground max-w-md mt-2">
-                          Ask any math question, from basic arithmetic to advanced calculus.
-                          I'm here to help with step-by-step solutions.
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((msg, i) => (
+
+          <TabsContent value="chat" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Chat with MathHub AI</CardTitle>
+                <CardDescription>
+                  Ask any math question and our AI will help you solve it step by step
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Sparkles className="h-12 w-12 text-mathprimary/50 mx-auto mb-3" />
+                      <h3 className="text-lg font-medium mb-1">Welcome to MathHub AI!</h3>
+                      <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                        Ask any math question, from simple arithmetic to complex calculus. I'll guide you through the solution step by step.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto p-1">
+                      {messages.map((msg, index) => (
                         <div
-                          key={i}
+                          key={index}
                           className={`flex ${
                             msg.role === "user" ? "justify-end" : "justify-start"
                           }`}
                         >
                           <div
-                            className={`max-w-[80%] rounded-lg p-4 ${
+                            className={`max-w-[80%] rounded-lg p-3 ${
                               msg.role === "user"
                                 ? "bg-mathprimary text-white"
                                 : "bg-muted"
@@ -438,227 +291,118 @@ const MathHubAI = () => {
                             <div className="whitespace-pre-wrap">{msg.content}</div>
                           </div>
                         </div>
-                      ))
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                  
-                  {/* File uploads display */}
-                  {uploadedFiles.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {uploadedFiles.map((file, index) => (
-                        <div key={index} className="relative">
-                          <img 
-                            src={file.preview} 
-                            alt={`Upload ${index + 1}`} 
-                            className="h-16 w-16 object-cover rounded-lg" 
-                          />
-                          <button
-                            onClick={() => removeFile(index)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                          >
-                            ×
-                          </button>
-                        </div>
                       ))}
+                      <div ref={messagesEndRef} />
                     </div>
                   )}
-                  
-                  {/* Model selector - simplified to only OpenAI models */}
-                  <div className="mb-3">
-                    <Select value={selectedModel} onValueChange={setSelectedModel}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select AI Model" />
+
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <form onSubmit={handleSubmit} className="w-full space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Select
+                      value={selectedModel}
+                      onValueChange={setSelectedModel}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select model" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectLabel>OpenAI Models</SelectLabel>
-                          <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-                          <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                          <SelectItem value="gpt-4o">OpenAI GPT-4o</SelectItem>
+                          <SelectItem value="gpt-3.5-turbo">OpenAI GPT-3.5</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <Input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      multiple
+                  <div className="flex space-x-2">
+                    <Textarea
+                      placeholder="Type your math question here..."
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      disabled={isLoading || doubtsRemaining <= 0}
+                      className="min-h-[80px]"
                     />
                     <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={triggerFileInput}
-                      disabled={loading || (!isPremium && remainingDoubts === 0)}
+                      type="submit"
+                      disabled={isLoading || !prompt.trim() || doubtsRemaining <= 0}
+                      className="self-end"
                     >
-                      <Upload size={18} />
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
                     </Button>
-                    <Input
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask any math question..."
-                      disabled={loading || (!isPremium && remainingDoubts === 0)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      type="submit" 
-                      disabled={loading || (!isPremium && remainingDoubts === 0) || (input.trim() === "" && uploadedFiles.length === 0)}
-                    >
-                      {loading ? <LoadingAnimation size="sm" /> : <Send size={18} />}
-                    </Button>
-                  </form>
-                  
-                  {!isPremium && remainingDoubts === 0 && (
-                    <div className="mt-4 text-center">
-                      <p className="text-amber-600 dark:text-amber-400 text-sm">
-                        You've used all your free doubts. Upgrade to premium to continue.
-                      </p>
-                      <div className="mt-2 flex justify-center">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to="/premium">Upgrade to Premium</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
+                  </div>
+                </form>
+              </CardFooter>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="history">
             <Card>
               <CardHeader>
-                <CardTitle>Chat History</CardTitle>
+                <CardTitle className="text-xl">Your Question History</CardTitle>
                 <CardDescription>
-                  Your previous conversations with MathHub AI.
+                  Review your previous math questions and answers
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                {chatHistory.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No chat history yet. Start a conversation!
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {chatHistory.map((item) => (
-                      <div
-                        key={item.id}
-                        className="border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-                        onClick={() => loadHistoryItem(item)}
-                      >
-                        <div className="font-medium truncate">{item.question}</div>
-                        <div className="text-sm text-muted-foreground mt-1 truncate">
-                          {item.answer.substring(0, 100)}
-                          {item.answer.length > 100 ? "..." : ""}
+              <CardContent className="max-h-[600px] overflow-y-auto">
+                {history.length > 0 ? (
+                  <div className="space-y-6">
+                    {history.map((item, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="font-medium mb-2 text-mathprimary">
+                          <MessageSquare className="h-4 w-4 inline mr-2" />
+                          Question:
                         </div>
-                        <div className="text-xs text-muted-foreground mt-2">
-                          {new Date(item.created_at).toLocaleString()}
+                        <p className="mb-4 text-sm">{item.question}</p>
+                        <div className="font-medium mb-2 text-mathsecondary">
+                          <Sparkles className="h-4 w-4 inline mr-2" />
+                          Answer:
                         </div>
+                        <p className="text-sm whitespace-pre-wrap">{item.answer}</p>
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium mb-1">No questions yet</h3>
+                    <p className="text-muted-foreground text-sm">
+                      When you ask questions, they will appear here
+                    </p>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="tickets">
-            <div className="grid md:grid-cols-2 gap-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Submit Support Ticket</CardTitle>
-                  <CardDescription>
-                    Need help? Submit a ticket and our team will assist you.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...supportForm}>
-                    <form
-                      onSubmit={supportForm.handleSubmit(handleSubmitSupportTicket)}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={supportForm.control}
-                        name="subject"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Subject</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Brief description of your issue" {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={supportForm.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Message</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Describe your issue in detail..." {...field} rows={5} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <Button type="submit" className="w-full">
-                        Submit Ticket
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Tickets</CardTitle>
-                  <CardDescription>
-                    Track the status of your support requests.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {supportTickets.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No support tickets yet. Submit a ticket if you need help.
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {supportTickets.map((ticket) => (
-                        <div key={ticket.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start">
-                            <div className="font-medium">{ticket.subject}</div>
-                            <div
-                              className={`text-xs px-2 py-1 rounded-full uppercase font-medium ${
-                                ticket.status === "open"
-                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                  : ticket.status === "in-progress"
-                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                                  : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                              }`}
-                            >
-                              {ticket.status}
-                            </div>
-                          </div>
-                          <div className="text-sm mt-2 line-clamp-2">{ticket.message}</div>
-                          <div className="text-xs text-muted-foreground mt-2">
-                            {new Date(ticket.created_at).toLocaleString()}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
         </Tabs>
+
+        {doubtsRemaining <= 0 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Daily limit reached</AlertTitle>
+            <AlertDescription>
+              You've used all your free AI doubts for today. Upgrade to premium for unlimited access.
+              <div className="mt-2">
+                <Button variant="default" size="sm" asChild>
+                  <Link to="/premium">Upgrade to Premium</Link>
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
     </div>
   );
