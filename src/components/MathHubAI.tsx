@@ -1,5 +1,5 @@
-
 import React, { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -55,7 +55,6 @@ const MathHubAI: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Fetch user's doubts usage
   useEffect(() => {
     const fetchDoubtsUsage = async () => {
       if (!user) return;
@@ -76,7 +75,6 @@ const MathHubAI: React.FC = () => {
           setDoubtsUsage(data);
           setDoubtsRemaining(Math.max(0, DOUBTS_LIMIT - data.total_used));
         } else {
-          // Create a new record if none exists
           const { data: newRecord, error: insertError } = await supabase
             .from("user_ai_doubts")
             .insert([{ user_id: user.id, total_used: 0 }])
@@ -99,7 +97,6 @@ const MathHubAI: React.FC = () => {
     fetchDoubtsUsage();
   }, [user]);
 
-  // Fetch chat history
   useEffect(() => {
     const fetchChatHistory = async () => {
       if (!user) return;
@@ -125,7 +122,6 @@ const MathHubAI: React.FC = () => {
     fetchChatHistory();
   }, [user, view]);
 
-  // Scroll to bottom of messages
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -160,7 +156,6 @@ const MathHubAI: React.FC = () => {
     setPrompt("");
 
     try {
-      // Make API request to the backend
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mathhub-ai`, {
         method: "POST",
         headers: {
@@ -183,7 +178,6 @@ const MathHubAI: React.FC = () => {
       const aiMessage = { role: "assistant" as const, content: data.message };
       setMessages((prev) => [...prev, aiMessage]);
 
-      // Update the doubts usage
       if (doubtsUsage) {
         const newUsage = doubtsUsage.total_used + 1;
         await supabase
@@ -195,7 +189,6 @@ const MathHubAI: React.FC = () => {
         setDoubtsRemaining(Math.max(0, DOUBTS_LIMIT - newUsage));
       }
 
-      // Refresh history if in history view
       if (view === "history") {
         const { data: updatedHistory } = await supabase
           .from("ai_chat_history")
