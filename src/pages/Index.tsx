@@ -364,7 +364,7 @@ const Index = () => {
                       <Button variant={activeTab === 'monthly' ? 'default' : 'outline'} size="sm" className="border-white/20 text-white" onClick={() => setActiveTab('monthly')}>
                         Monthly
                       </Button>
-                      <Button variant={activeTab === 'yearly' ? 'default' : 'outline'} size="sm" className="border-white/20 text-white" onClick={() => setActiveTab('yearly')}>
+                      <Button variant={activeTab === 'yearly' ? 'default' : 'outline'} size="sm" onClick={() => setActiveTab('yearly')} className="border-white/20 text-zinc-900">
                         Yearly <span className="ml-1 text-xs bg-green-500 px-1.5 py-0.5 rounded-full">Save 20%</span>
                       </Button>
                     </div>
