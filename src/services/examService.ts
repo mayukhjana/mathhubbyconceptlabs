@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -125,6 +126,7 @@ export const uploadExamFile = async (file: File, examId: string, fileType: 'pape
 export const fetchEntranceExams = async (): Promise<Exam[]> => {
   try {
     console.log("Fetching entrance exams...");
+    // Fix: Use array with uppercase values exactly matching how they're stored in the database
     const { data, error } = await supabase
       .from("exams")
       .select("*")
