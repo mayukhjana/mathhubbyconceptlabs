@@ -1,207 +1,63 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Download, Search, Eye, FilePlus2 } from "lucide-react";
-import { Link } from "react-router-dom";
-
-// Mock paper data - replace with actual data from your database
-const paperData = [
-  {
-    id: "wbjee-math-2024",
-    title: "WBJEE Mathematics 2024",
-    board: "WBJEE",
-    subject: "Mathematics",
-    year: "2024",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "wbjee-math-2024"
-  },
-  {
-    id: "wbjee-math-2023",
-    title: "WBJEE Mathematics 2023",
-    board: "WBJEE",
-    subject: "Mathematics",
-    year: "2023",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "wbjee-math-2023"
-  },
-  {
-    id: "wbjee-math-2022",
-    title: "WBJEE Mathematics 2022",
-    board: "WBJEE",
-    subject: "Mathematics",
-    year: "2022",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "wbjee-math-2022"
-  },
-  {
-    id: "wbjee-math-2021",
-    title: "WBJEE Mathematics 2021",
-    board: "WBJEE",
-    subject: "Mathematics",
-    year: "2021",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "wbjee-math-2021"
-  },
-  {
-    id: "wbjee-math-2020",
-    title: "WBJEE Mathematics 2020",
-    board: "WBJEE",
-    subject: "Mathematics",
-    year: "2020",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "wbjee-math-2020"
-  },
-  {
-    id: "jeemain-math-2024",
-    title: "JEE MAINS Mathematics 2024",
-    board: "JEE MAINS",
-    subject: "Mathematics",
-    year: "2024",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeemain-math-2024"
-  },
-  {
-    id: "jeemain-math-2023",
-    title: "JEE MAINS Mathematics 2023",
-    board: "JEE MAINS",
-    subject: "Mathematics",
-    year: "2023",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeemain-math-2023"
-  },
-  {
-    id: "jeemain-math-2022",
-    title: "JEE MAINS Mathematics 2022",
-    board: "JEE MAINS",
-    subject: "Mathematics",
-    year: "2022",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeemain-math-2022"
-  },
-  {
-    id: "jeemain-math-2021",
-    title: "JEE MAINS Mathematics 2021",
-    board: "JEE MAINS",
-    subject: "Mathematics",
-    year: "2021",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeemain-math-2021"
-  },
-  {
-    id: "jeemain-math-2020",
-    title: "JEE MAINS Mathematics 2020",
-    board: "JEE MAINS",
-    subject: "Mathematics",
-    year: "2020",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeemain-math-2020"
-  },
-  {
-    id: "jeeadv-math-2024",
-    title: "JEE ADVANCED Mathematics 2024",
-    board: "JEE ADVANCED",
-    subject: "Mathematics",
-    year: "2024",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeeadv-math-2024"
-  },
-  {
-    id: "jeeadv-math-2023",
-    title: "JEE ADVANCED Mathematics 2023",
-    board: "JEE ADVANCED",
-    subject: "Mathematics",
-    year: "2023",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeeadv-math-2023"
-  },
-  {
-    id: "jeeadv-math-2022",
-    title: "JEE ADVANCED Mathematics 2022",
-    board: "JEE ADVANCED",
-    subject: "Mathematics",
-    year: "2022",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeeadv-math-2022"
-  },
-  {
-    id: "jeeadv-math-2021",
-    title: "JEE ADVANCED Mathematics 2021",
-    board: "JEE ADVANCED",
-    subject: "Mathematics",
-    year: "2021",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeeadv-math-2021"
-  },
-  {
-    id: "jeeadv-math-2020",
-    title: "JEE ADVANCED Mathematics 2020",
-    board: "JEE ADVANCED",
-    subject: "Mathematics",
-    year: "2020",
-    class: "12",
-    pdfUrl: "#",
-    solutionPdfUrl: "#",
-    examId: "jeeadv-math-2020"
-  }
-];
+import { Search } from "lucide-react";
+import PaperCard from "@/components/PaperCard";
+import { fetchEntranceExams, getFileDownloadUrl, Exam } from "@/services/examService";
+import LoadingAnimation from "@/components/LoadingAnimation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ExamPapersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const { user } = useAuth();
+  const [userIsPremium, setUserIsPremium] = useState(false);
   
-  const filteredPapers = paperData.filter(paper => {
+  useEffect(() => {
+    // For demo, check if user is premium from localStorage
+    const isPremium = localStorage.getItem("userIsPremium") === "true";
+    setUserIsPremium(isPremium);
+    
+    const loadExams = async () => {
+      setLoading(true);
+      const examData = await fetchEntranceExams();
+      setExams(examData);
+      setLoading(false);
+    };
+    
+    loadExams();
+  }, []);
+  
+  // Get unique exam types for tabs
+  const examBoards = Array.from(new Set(exams.map(exam => exam.board.toLowerCase())));
+  
+  const filteredExams = exams.filter(exam => {
     const matchesSearch = 
-      paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      paper.board.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      paper.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exam.board.toLowerCase().includes(searchQuery.toLowerCase());
       
-    const matchesTab = activeTab === "all" || paper.board.toLowerCase() === activeTab.toLowerCase();
+    const matchesTab = activeTab === "all" || exam.board.toLowerCase() === activeTab.toLowerCase();
     
     return matchesSearch && matchesTab;
   });
   
-  // Get unique exam types for tabs
-  const exams = Array.from(new Set(paperData.map(paper => paper.board.toLowerCase())));
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <LoadingAnimation />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -227,92 +83,23 @@ const ExamPapersPage = () => {
           <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
             <TabsList className="w-full flex overflow-x-auto">
               <TabsTrigger value="all" className="flex-1">All Exams</TabsTrigger>
-              {exams.map(exam => (
-                <TabsTrigger key={exam} value={exam} className="flex-1 capitalize">
-                  {exam}
+              {examBoards.map(board => (
+                <TabsTrigger key={board} value={board} className="flex-1 capitalize">
+                  {board}
                 </TabsTrigger>
               ))}
             </TabsList>
             
             <TabsContent value="all" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPapers.length > 0 ? (
-                  filteredPapers.map(paper => (
-                    <Card key={paper.id} className="overflow-hidden">
-                      <CardHeader>
-                        <CardTitle>{paper.title}</CardTitle>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <Badge variant="secondary">{paper.board}</Badge>
-                          <Badge variant="outline">{paper.subject}</Badge>
-                          <Badge variant="outline">Year {paper.year}</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-muted-foreground mb-2">Year: {paper.year}</p>
-                      </CardContent>
-                      <CardFooter className="flex flex-wrap gap-2 border-t pt-4">
-                        <Button variant="outline" className="flex-1" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                        <Button variant="outline" className="flex-1" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Solutions
-                        </Button>
-                        <Button className="w-full mt-2" asChild>
-                          <Link to={`/exams/${paper.examId}`}>
-                            <FilePlus2 className="h-4 w-4 mr-2" />
-                            Attempt Paper
-                          </Link>
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-muted-foreground">No exam papers found matching your search.</p>
-                  </div>
-                )}
-              </div>
+              <ExamsList exams={filteredExams} userIsPremium={userIsPremium} />
             </TabsContent>
             
-            {exams.map(exam => (
-              <TabsContent key={exam} value={exam} className="mt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredPapers
-                    .filter(paper => paper.board.toLowerCase() === exam)
-                    .map(paper => (
-                      <Card key={paper.id} className="overflow-hidden">
-                        <CardHeader>
-                          <CardTitle>{paper.title}</CardTitle>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <Badge variant="secondary">{paper.board}</Badge>
-                            <Badge variant="outline">{paper.subject}</Badge>
-                            <Badge variant="outline">Year {paper.year}</Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-muted-foreground mb-2">Year: {paper.year}</p>
-                        </CardContent>
-                        <CardFooter className="flex flex-wrap gap-2 border-t pt-4">
-                          <Button variant="outline" className="flex-1" size="sm">
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </Button>
-                          <Button variant="outline" className="flex-1" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Solutions
-                          </Button>
-                          <Button className="w-full mt-2" asChild>
-                            <Link to={`/exams/${paper.examId}`}>
-                              <FilePlus2 className="h-4 w-4 mr-2" />
-                              Attempt Paper
-                            </Link>
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                </div>
+            {examBoards.map(board => (
+              <TabsContent key={board} value={board} className="mt-6">
+                <ExamsList 
+                  exams={filteredExams.filter(exam => exam.board.toLowerCase() === board)} 
+                  userIsPremium={userIsPremium}
+                />
               </TabsContent>
             ))}
           </Tabs>
@@ -321,6 +108,56 @@ const ExamPapersPage = () => {
       
       <Footer />
     </div>
+  );
+};
+
+const ExamsList = ({ exams, userIsPremium }: { exams: Exam[], userIsPremium: boolean }) => {
+  if (exams.length === 0) {
+    return (
+      <div className="col-span-full text-center py-12">
+        <p className="text-muted-foreground">No exam papers found matching your search.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {exams.map(exam => (
+        <ExamPaperCard key={exam.id} exam={exam} userIsPremium={userIsPremium} />
+      ))}
+    </div>
+  );
+};
+
+const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boolean }) => {
+  const [paperUrl, setPaperUrl] = useState<string | null>(null);
+  const [solutionUrl, setSolutionUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Get paper and solution URLs
+    const fetchUrls = async () => {
+      const paperDownloadUrl = await getFileDownloadUrl(exam.id, 'paper');
+      const solutionDownloadUrl = await getFileDownloadUrl(exam.id, 'solution');
+      
+      setPaperUrl(paperDownloadUrl);
+      setSolutionUrl(solutionDownloadUrl);
+    };
+    
+    fetchUrls();
+  }, [exam.id]);
+  
+  return (
+    <PaperCard 
+      title={exam.title}
+      description={`${exam.board} ${exam.year} Entrance Exam`}
+      year={exam.year}
+      isPremium={exam.is_premium}
+      userIsPremium={userIsPremium}
+      downloadUrl={paperUrl || undefined}
+      solutionUrl={solutionUrl || undefined}
+      practiceUrl={`/exams/${exam.id}`}
+      examBoard={exam.board}
+    />
   );
 };
 

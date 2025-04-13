@@ -14,17 +14,47 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Initialize storage buckets
 (async () => {
   try {
-    // Check if avatars bucket exists
+    // Check if buckets exist
     const { data: buckets } = await supabase.storage.listBuckets();
-    const avatarsBucketExists = buckets?.some(b => b.name === 'avatars');
+    
+    const bucketsList = {
+      avatars: false,
+      exam_papers: false,
+      solutions: false
+    };
+    
+    // Check which buckets already exist
+    buckets?.forEach(b => {
+      if (bucketsList.hasOwnProperty(b.name)) {
+        bucketsList[b.name as keyof typeof bucketsList] = true;
+      }
+    });
     
     // Create avatars bucket if it doesn't exist
-    if (!avatarsBucketExists) {
+    if (!bucketsList.avatars) {
       await supabase.storage.createBucket('avatars', {
         public: true,
         fileSizeLimit: 1024 * 1024 * 2 // 2MB
       });
       console.log('Created avatars bucket');
+    }
+    
+    // Create exam_papers bucket if it doesn't exist
+    if (!bucketsList.exam_papers) {
+      await supabase.storage.createBucket('exam_papers', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created exam_papers bucket');
+    }
+    
+    // Create solutions bucket if it doesn't exist
+    if (!bucketsList.solutions) {
+      await supabase.storage.createBucket('solutions', {
+        public: true,
+        fileSizeLimit: 1024 * 1024 * 10 // 10MB
+      });
+      console.log('Created solutions bucket');
     }
   } catch (error) {
     console.error('Error initializing storage buckets:', error);
