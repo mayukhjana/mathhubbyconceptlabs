@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -34,8 +35,7 @@ import {
   TrendingUp,
   CalendarRange,
   Flame,
-  Calendar,
-  Download
+  Calendar
 } from "lucide-react";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { toast } from "sonner";
@@ -53,7 +53,6 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { getFileDownloadUrl } from "@/services/exam/storage";
 
 type ExamResult = {
   id: string;
@@ -136,11 +135,14 @@ const ResultsPage = () => {
         console.log("Fetched results:", data);
         setResults(data || []);
         
+        // Store completed exam IDs for preventing retakes
         if (data) {
           const examIds = data.map(result => result.exam_id);
           setCompletedExamIds(examIds);
+          // Store in localStorage to use in ExamPage
           localStorage.setItem('completedExamIds', JSON.stringify(examIds));
           
+          // Analyze the data for detailed insights
           analyzeResultsData(data);
         }
         
@@ -159,10 +161,12 @@ const ResultsPage = () => {
   const analyzeResultsData = (data: ExamResult[]) => {
     if (!data || data.length === 0) return;
     
+    // Basic stats
     const totalExams = data.length;
     const averageScore = Math.round(data.reduce((acc, curr) => acc + curr.score, 0) / totalExams);
     const bestScore = Math.max(...data.map(r => r.score));
     
+    // Group by board
     const examsByBoard: Record<string, number> = {};
     const scoresByBoard: Record<string, number> = {};
     const boardCounts: Record<string, number> = {};
@@ -171,14 +175,17 @@ const ResultsPage = () => {
       const board = result.exam?.board || 'Unknown';
       examsByBoard[board] = (examsByBoard[board] || 0) + 1;
       
+      // Calculate average score by board
       scoresByBoard[board] = (scoresByBoard[board] || 0) + result.score;
       boardCounts[board] = (boardCounts[board] || 0) + 1;
     });
     
+    // Calculate average score for each board
     Object.keys(scoresByBoard).forEach(board => {
       scoresByBoard[board] = Math.round(scoresByBoard[board] / boardCounts[board]);
     });
     
+    // Progress over time
     const progressOverTime = data
       .slice()
       .sort((a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime())
@@ -187,16 +194,19 @@ const ResultsPage = () => {
         score: result.score,
       }));
     
+    // Time taken vs score
     const timeByScore = data.map(result => ({
       score: result.score,
-      time: Math.round(result.time_taken / 60),
+      time: Math.round(result.time_taken / 60), // Convert to minutes
     }));
     
+    // Exams completed by board for pie chart
     const completedExamsByBoard = Object.entries(examsByBoard).map(([name, value]) => ({
       name,
       value
     }));
     
+    // Score distribution
     const scoreDistribution = [
       {range: "0-25%", count: 0},
       {range: "26-50%", count: 0},
@@ -222,20 +232,6 @@ const ResultsPage = () => {
       completedExamsByBoard,
       scoreDistribution
     });
-  };
-
-  const handleDownloadSolution = async (examId: string, board: string) => {
-    try {
-      const downloadUrl = await getFileDownloadUrl(examId, 'solution', board);
-      if (downloadUrl) {
-        window.open(downloadUrl, '_blank');
-      } else {
-        toast.error("Solution not available for this exam");
-      }
-    } catch (error) {
-      console.error("Error downloading solution:", error);
-      toast.error("Failed to download solution");
-    }
   };
 
   const formatTime = (seconds: number) => {
@@ -304,6 +300,7 @@ const ResultsPage = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                {/* Summary Cards */}
                 <Card>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
@@ -365,6 +362,7 @@ const ResultsPage = () => {
                 </Card>
               </div>
               
+              {/* Analytics Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <Card>
                   <CardHeader>
@@ -553,27 +551,16 @@ const ResultsPage = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="gap-1.5"
-                                disabled={true}
-                                title="You have already completed this exam"
-                              >
-                                <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                                Already Completed
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1.5"
-                                onClick={() => result.exam && handleDownloadSolution(result.exam_id, result.exam.board)}
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                                Solution
-                              </Button>
-                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-1.5"
+                              disabled={true}
+                              title="You have already completed this exam"
+                            >
+                              <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                              Already Completed
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
