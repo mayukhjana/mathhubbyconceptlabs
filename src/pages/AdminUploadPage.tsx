@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +33,13 @@ import QuestionForm, { QuestionData } from "@/components/QuestionForm";
 import { Upload, File, Check, Plus, Save, Pencil, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  EXAM_TYPES, 
+  BOARD_OPTIONS, 
+  ENTRANCE_OPTIONS, 
+  createExam, 
+  createQuestions 
+} from "@/services/examService";
 
 // Type for exam information
 interface ExamData {
@@ -53,16 +60,19 @@ interface ExamRecord extends ExamData {
 }
 
 const AdminUploadPage = () => {
+  const { user } = useAuth();
   // Exam basics state
   const [activeTab, setActiveTab] = useState("upload");
+  const [examType, setExamType] = useState<string>(EXAM_TYPES.ENTRANCE);
   const [selectedBoard, setSelectedBoard] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [examTitle, setExamTitle] = useState("");
   const [examDuration, setExamDuration] = useState(60);
   const [isPremium, setIsPremium] = useState(true);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [solutionFile, setSolutionFile] = useState<File | null>(null);
   
   // Questions state
   const [questions, setQuestions] = useState<QuestionData[]>([]);
@@ -80,21 +90,32 @@ const AdminUploadPage = () => {
     url: string;
   }[]>([]);
   
-  // Available boards and classes
-  const boards = ["WBJEE", "JEE MAINS", "JEE ADVANCED"];
+  // Available classes
   const classes = ["10", "12"];
-  const years = Array.from({ length: 6 }, (_, i) => (2024 - i).toString());
   const chapters = {
     "10": ["algebra", "geometry", "statistics", "trigonometry", "calculus"],
     "12": ["algebra", "calculus", "statistics", "vectors", "matrices", "probability"]
   };
   
+  useEffect(() => {
+    // Reset board selection when exam type changes
+    setSelectedBoard("");
+  }, [examType]);
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) {
       setUploadedFile(null);
       return;
     }
     setUploadedFile(event.target.files[0]);
+  };
+  
+  const handleSolutionFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      setSolutionFile(null);
+      return;
+    }
+    setSolutionFile(event.target.files[0]);
   };
   
   // Add or update question
@@ -143,6 +164,11 @@ const AdminUploadPage = () => {
   
   // Create a new MCQ exam
   const handleCreateMCQExam = async () => {
+    if (!user) {
+      toast.error("You must be logged in to create an exam");
+      return;
+    }
+    
     if (!isExamFormValid()) {
       toast.error("Please fill in all required fields");
       return;
@@ -170,30 +196,18 @@ const AdminUploadPage = () => {
       }, 300);
       
       // Prepare exam data
-      const examPayload: ExamData = {
+      const examPayload = {
         title: examTitle,
         board: selectedBoard,
         class: selectedClass,
-        chapter: selectedChapter,
+        chapter: selectedChapter || null,
         year: selectedYear,
         duration: examDuration,
         is_premium: isPremium
       };
       
-      // Insert exam
-      const { data: insertedExam, error: examError } = await supabase
-        .from('exams')
-        .insert(examPayload)
-        .select()
-        .single();
-      
-      if (examError) {
-        throw new Error(`Error creating exam: ${examError.message}`);
-      }
-      
-      if (!insertedExam) {
-        throw new Error("Failed to create exam: No data returned from insert operation");
-      }
+      // Create the exam
+      const insertedExam = await createExam(examPayload);
       
       // Insert questions
       const questionsWithExamId = questions.map(question => ({
@@ -201,13 +215,7 @@ const AdminUploadPage = () => {
         exam_id: insertedExam.id
       }));
       
-      const { error: questionsError } = await supabase
-        .from('questions')
-        .insert(questionsWithExamId);
-      
-      if (questionsError) {
-        throw new Error(`Error adding questions: ${questionsError.message}`);
-      }
+      await createQuestions(questionsWithExamId);
       
       // Add to recent uploads
       setRecentUploads(prev => [
@@ -230,7 +238,7 @@ const AdminUploadPage = () => {
       setSelectedBoard("");
       setSelectedClass("");
       setSelectedChapter("");
-      setSelectedYear("");
+      setSelectedYear(new Date().getFullYear().toString());
       setExamDuration(60);
       setIsPremium(true);
       setQuestions([]);
@@ -247,6 +255,11 @@ const AdminUploadPage = () => {
   
   // Upload PDF paper
   const handleUploadPDF = async () => {
+    if (!user) {
+      toast.error("You must be logged in to upload an exam paper");
+      return;
+    }
+
     if (!uploadedFile || !selectedBoard || !selectedClass || !selectedYear) {
       toast.error("Please fill in all fields and select a file to upload");
       return;
@@ -256,11 +269,6 @@ const AdminUploadPage = () => {
     setUploadProgress(0);
     
     try {
-      // Create a file path format like: WBJEE_class12_2022.pdf
-      const fileExt = uploadedFile.name.split('.').pop();
-      const fileName = `${selectedBoard.replace(/\s/g, '_')}_class${selectedClass}_${selectedYear}.${fileExt}`;
-      const filePath = `exam_papers/${fileName}`;
-      
       // Simulate upload progress
       const interval = setInterval(() => {
         setUploadProgress(prev => {
@@ -274,25 +282,31 @@ const AdminUploadPage = () => {
       }, 400);
       
       // Create the exam record
-      const { data: examData, error: examError } = await supabase
-        .from('exams')
-        .insert({
-          title: `${selectedBoard} Mathematics ${selectedYear}`,
-          board: selectedBoard,
-          class: selectedClass,
-          year: selectedYear,
-          duration: examDuration,
-          is_premium: isPremium
-        })
-        .select()
-        .single();
-        
-      if (examError) {
-        throw new Error(`Error creating exam record: ${examError.message}`);
+      const examPayload = {
+        title: examTitle || `${selectedBoard} Mathematics ${selectedYear}`,
+        board: selectedBoard,
+        class: selectedClass,
+        year: selectedYear,
+        chapter: selectedChapter || null,
+        duration: examDuration,
+        is_premium: isPremium
+      };
+      
+      const examData = await createExam(examPayload);
+      
+      // Upload paper file
+      if (uploadedFile) {
+        await supabase.storage
+          .from('exam_papers')
+          .upload(`${selectedBoard.replace(/\s/g, '_').toLowerCase()}_paper_${examData.id}.${uploadedFile.name.split('.').pop()}`, uploadedFile);
       }
       
-      // Wait for "upload" to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Upload solution file if provided
+      if (solutionFile) {
+        await supabase.storage
+          .from('exam_papers')
+          .upload(`${selectedBoard.replace(/\s/g, '_').toLowerCase()}_solution_${examData.id}.${solutionFile.name.split('.').pop()}`, solutionFile);
+      }
       
       // Add to recent uploads
       setRecentUploads(prev => [
@@ -302,20 +316,23 @@ const AdminUploadPage = () => {
           board: selectedBoard,
           class: selectedClass,
           year: selectedYear,
-          url: `/exam-papers?board=${selectedBoard}`
+          url: examType === EXAM_TYPES.ENTRANCE ? 
+            `/exam-papers?board=${selectedBoard}` : 
+            `/boards/${selectedBoard.toLowerCase().replace(/\s/g, '-')}/${selectedChapter || 'full-tests'}`
         },
         ...prev.slice(0, 4) // Keep only 5 most recent
       ]);
       
       // Reset form
+      setExamTitle("");
       setSelectedBoard("");
       setSelectedClass("");
-      setSelectedYear("");
+      setSelectedYear(new Date().getFullYear().toString());
       setUploadedFile(null);
+      setSolutionFile(null);
       
       // Show success message
-      toast.success("File uploaded successfully! The exam will now appear in the Entrance Exams section.");
-      
+      toast.success(`File uploaded successfully! The exam will now appear in the ${examType === EXAM_TYPES.ENTRANCE ? 'Entrance' : 'Board'} Exams section.`);
     } catch (error: any) {
       console.error("Error uploading file:", error);
       toast.error(`Failed to upload file: ${error.message}`);
@@ -355,6 +372,22 @@ const AdminUploadPage = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="exam-type">Exam Type</Label>
+                          <Select 
+                            value={examType} 
+                            onValueChange={setExamType}
+                          >
+                            <SelectTrigger id="exam-type">
+                              <SelectValue placeholder="Select Exam Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={EXAM_TYPES.BOARD}>Board Exam</SelectItem>
+                              <SelectItem value={EXAM_TYPES.ENTRANCE}>Entrance Exam</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="board">Board</Label>
@@ -366,11 +399,18 @@ const AdminUploadPage = () => {
                                 <SelectValue placeholder="Select Board" />
                               </SelectTrigger>
                               <SelectContent>
-                                {boards.map(board => (
-                                  <SelectItem key={board} value={board}>
-                                    {board}
-                                  </SelectItem>
-                                ))}
+                                {examType === EXAM_TYPES.ENTRANCE ? 
+                                  ENTRANCE_OPTIONS.map(board => (
+                                    <SelectItem key={board} value={board}>
+                                      {board}
+                                    </SelectItem>
+                                  )) :
+                                  BOARD_OPTIONS.map(board => (
+                                    <SelectItem key={board} value={board}>
+                                      {board}
+                                    </SelectItem>
+                                  ))
+                                }
                               </SelectContent>
                             </Select>
                           </div>
@@ -396,22 +436,63 @@ const AdminUploadPage = () => {
                           
                           <div className="space-y-2">
                             <Label htmlFor="year">Year</Label>
-                            <Select 
-                              value={selectedYear} 
-                              onValueChange={setSelectedYear}
-                            >
-                              <SelectTrigger id="year">
-                                <SelectValue placeholder="Select Year" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {years.map(year => (
-                                  <SelectItem key={year} value={year}>
-                                    {year}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Input
+                              id="year"
+                              type="text"
+                              value={selectedYear}
+                              onChange={(e) => setSelectedYear(e.target.value)}
+                              placeholder="e.g., 2025"
+                            />
                           </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="title">Paper Title (Optional)</Label>
+                          <Input
+                            id="title"
+                            value={examTitle}
+                            onChange={(e) => setExamTitle(e.target.value)}
+                            placeholder="e.g., Mathematics Final Exam 2025"
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            If not provided, a title will be generated automatically
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="chapter">Chapter (Optional)</Label>
+                          <Select
+                            value={selectedChapter}
+                            onValueChange={setSelectedChapter}
+                            disabled={!selectedClass}
+                          >
+                            <SelectTrigger id="chapter">
+                              <SelectValue placeholder="Select Chapter or leave empty for full exam" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {selectedClass && (
+                                chapters[selectedClass as "10" | "12"].map(chapter => (
+                                  <SelectItem key={chapter} value={chapter}>
+                                    {chapter.charAt(0).toUpperCase() + chapter.slice(1)}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-sm text-muted-foreground">
+                            If no chapter is selected, this will be considered a full mock test
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="duration">Duration (minutes)</Label>
+                          <Input
+                            id="duration"
+                            type="number"
+                            min="5"
+                            value={examDuration}
+                            onChange={(e) => setExamDuration(Number(e.target.value))}
+                          />
                         </div>
                         
                         <div className="space-y-2">
@@ -435,6 +516,32 @@ const AdminUploadPage = () => {
                               type="file" 
                               accept=".pdf" 
                               onChange={handleFileChange}
+                              className="hidden" 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="solution-upload">Solution (PDF, Optional)</Label>
+                          <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
+                            {solutionFile ? (
+                              <div className="flex items-center gap-2">
+                                <File size={24} className="text-mathprimary" />
+                                <span>{solutionFile.name}</span>
+                              </div>
+                            ) : (
+                              <div className="text-center">
+                                <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">
+                                  Drag and drop your solution file here, or click to select
+                                </p>
+                              </div>
+                            )}
+                            <Input 
+                              id="solution-upload" 
+                              type="file" 
+                              accept=".pdf" 
+                              onChange={handleSolutionFileChange}
                               className="hidden" 
                             />
                           </div>
@@ -486,8 +593,10 @@ const AdminUploadPage = () => {
                               <li key={upload.id} className="border rounded-md p-3">
                                 <div className="flex items-start justify-between">
                                   <div>
-                                    <div className="font-medium">{upload.board} Class {upload.class}</div>
-                                    <div className="text-sm text-muted-foreground">Year: {upload.year}</div>
+                                    <div className="font-medium">{upload.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {upload.board} Class {upload.class}, {upload.year}
+                                    </div>
                                   </div>
                                   <div className="bg-green-100 text-green-800 p-1 rounded">
                                     <Check size={14} />
@@ -511,8 +620,10 @@ const AdminUploadPage = () => {
                           <li>Upload files in PDF format</li>
                           <li>Maximum file size: 10MB</li>
                           <li>Name format will be automatically generated</li>
-                          <li>Uploaded papers will be immediately available to students in the Entrance Exams section</li>
-                          <li>For premium papers, students will need a subscription</li>
+                          <li>For board exams, select a chapter or leave empty for full mock test</li>
+                          <li>For entrance exams, select the appropriate entrance exam board</li>
+                          <li>Upload solutions to help students learn from their mistakes</li>
+                          <li>For premium papers, students will need a subscription to access</li>
                         </ul>
                       </CardContent>
                     </Card>
@@ -545,6 +656,22 @@ const AdminUploadPage = () => {
                             />
                           </div>
                           
+                          <div className="space-y-2">
+                            <Label htmlFor="exam-type-mcq">Exam Type</Label>
+                            <Select 
+                              value={examType} 
+                              onValueChange={setExamType}
+                            >
+                              <SelectTrigger id="exam-type-mcq">
+                                <SelectValue placeholder="Select Exam Type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value={EXAM_TYPES.BOARD}>Board Exam</SelectItem>
+                                <SelectItem value={EXAM_TYPES.ENTRANCE}>Entrance Exam</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="mcq-board">Board</Label>
@@ -556,11 +683,18 @@ const AdminUploadPage = () => {
                                   <SelectValue placeholder="Select Board" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {boards.map(board => (
-                                    <SelectItem key={board} value={board}>
-                                      {board}
-                                    </SelectItem>
-                                  ))}
+                                  {examType === EXAM_TYPES.ENTRANCE ? 
+                                    ENTRANCE_OPTIONS.map(board => (
+                                      <SelectItem key={board} value={board}>
+                                        {board}
+                                      </SelectItem>
+                                    )) :
+                                    BOARD_OPTIONS.map(board => (
+                                      <SelectItem key={board} value={board}>
+                                        {board}
+                                      </SelectItem>
+                                    ))
+                                  }
                                 </SelectContent>
                               </Select>
                             </div>
@@ -586,21 +720,12 @@ const AdminUploadPage = () => {
                             
                             <div className="space-y-2">
                               <Label htmlFor="mcq-year">Year</Label>
-                              <Select 
-                                value={selectedYear} 
-                                onValueChange={setSelectedYear}
-                              >
-                                <SelectTrigger id="mcq-year">
-                                  <SelectValue placeholder="Select Year" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {years.map(year => (
-                                    <SelectItem key={year} value={year}>
-                                      {year}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <Input
+                                id="mcq-year"
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                placeholder="e.g., 2025"
+                              />
                             </div>
                           </div>
                           
@@ -625,6 +750,9 @@ const AdminUploadPage = () => {
                                   )}
                                 </SelectContent>
                               </Select>
+                              <p className="text-sm text-muted-foreground">
+                                If no chapter is selected, this will be considered a full exam
+                              </p>
                             </div>
                             
                             <div className="space-y-2">
@@ -744,7 +872,7 @@ const AdminUploadPage = () => {
                             setSelectedBoard("");
                             setSelectedClass("");
                             setSelectedChapter("");
-                            setSelectedYear("");
+                            setSelectedYear(new Date().getFullYear().toString());
                             setExamDuration(60);
                             setIsPremium(true);
                             setQuestions([]);

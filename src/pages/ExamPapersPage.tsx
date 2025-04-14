@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
 import PaperCard from "@/components/PaperCard";
-import { fetchEntranceExams, getFileDownloadUrl, Exam } from "@/services/examService";
+import { 
+  fetchEntranceExams, 
+  getFileDownloadUrl, 
+  Exam, 
+  ENTRANCE_OPTIONS 
+} from "@/services/examService";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,7 +32,7 @@ const ExamPapersPage = () => {
     const loadExams = async () => {
       setLoading(true);
       const examData = await fetchEntranceExams();
-      console.log("Loaded exams:", examData);
+      console.log("Loaded entrance exams:", examData);
       setExams(examData);
       setLoading(false);
     };
@@ -35,12 +40,10 @@ const ExamPapersPage = () => {
     loadExams();
   }, []);
   
-  // Define fixed tabs
+  // Define entrance exam tabs
   const examBoardTabs = [
-    { id: "all", label: "All Exams" },
-    { id: "WBJEE", label: "WBJEE" },
-    { id: "JEE MAINS", label: "JEE MAINS" },
-    { id: "JEE ADVANCED", label: "JEE ADVANCED" }
+    { id: "all", label: "All Entrance Exams" },
+    ...ENTRANCE_OPTIONS.map(board => ({ id: board, label: board }))
   ];
   
   const filteredExams = exams.filter(exam => {

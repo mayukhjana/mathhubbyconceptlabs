@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Exam {
@@ -23,6 +24,29 @@ export interface Question {
   correct_answer: string;
   order_number: number;
 }
+
+export interface ExamResult {
+  id: string;
+  user_id: string;
+  exam_id: string;
+  score: number;
+  total_questions: number;
+  time_taken: number;
+  completed_at: string;
+}
+
+export interface ExamType {
+  id: string;
+  name: string;
+}
+
+export const EXAM_TYPES = {
+  BOARD: 'board',
+  ENTRANCE: 'entrance'
+};
+
+export const BOARD_OPTIONS = ["ICSE", "CBSE", "West Bengal Board"];
+export const ENTRANCE_OPTIONS = ["WBJEE", "JEE MAINS", "JEE ADVANCED"];
 
 export const fetchExamByBoardAndYear = async (board: string, year: string) => {
   const { data, error } = await supabase
@@ -88,6 +112,7 @@ export const fetchEntranceExams = async (boardFilter?: string) => {
   let query = supabase
     .from('exams')
     .select()
+    .in('board', ENTRANCE_OPTIONS)
     .order('year', { ascending: false });
     
   if (boardFilter && boardFilter !== "all") {
@@ -98,6 +123,31 @@ export const fetchEntranceExams = async (boardFilter?: string) => {
     
   if (error) {
     console.error("Error fetching entrance exams:", error);
+    return [];
+  }
+  
+  return data as Exam[];
+};
+
+export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: string) => {
+  let query = supabase
+    .from('exams')
+    .select()
+    .in('board', BOARD_OPTIONS)
+    .order('year', { ascending: false });
+    
+  if (boardFilter && boardFilter !== "all") {
+    query = query.eq('board', boardFilter);
+  }
+  
+  if (chapterFilter && chapterFilter !== "all") {
+    query = query.eq('chapter', chapterFilter);
+  }
+    
+  const { data, error } = await query;
+    
+  if (error) {
+    console.error("Error fetching board exams:", error);
     return [];
   }
   
@@ -126,6 +176,21 @@ export const submitExamResult = async (
   if (error) {
     console.error("Error submitting exam result:", error);
     return null;
+  }
+  
+  return data;
+};
+
+export const fetchExamResults = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('user_results')
+    .select('*, exams(title, board, year, chapter)')
+    .eq('user_id', userId)
+    .order('completed_at', { ascending: false });
+    
+  if (error) {
+    console.error("Error fetching exam results:", error);
+    return [];
   }
   
   return data;
@@ -164,8 +229,16 @@ export const uploadExamFile = async (
 ) => {
   try {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${board.replace(/\s/g, '_')}_${fileType}_${examId}.${fileExt}`;
+    const fileName = `${board.replace(/\s/g, '_').toLowerCase()}_${fileType}_${examId}.${fileExt}`;
     const filePath = `exam_papers/${fileName}`;
+    
+    // In a real implementation with Supabase storage:
+    // const { data, error } = await supabase
+    //   .storage
+    //   .from('exam_papers')
+    //   .upload(fileName, file);
+    
+    // if (error) throw error;
     
     console.log(`Uploading ${fileType} for exam ${examId} to ${filePath}`);
     
@@ -174,4 +247,33 @@ export const uploadExamFile = async (
     console.error(`Error uploading ${fileType}:`, error);
     throw error;
   }
+};
+
+export const createExam = async (examData: Omit<Exam, 'id' | 'created_at'>) => {
+  const { data, error } = await supabase
+    .from('exams')
+    .insert(examData)
+    .select()
+    .single();
+    
+  if (error) {
+    console.error("Error creating exam:", error);
+    throw error;
+  }
+  
+  return data as Exam;
+};
+
+export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
+  const { data, error } = await supabase
+    .from('questions')
+    .insert(questions)
+    .select();
+    
+  if (error) {
+    console.error("Error creating questions:", error);
+    throw error;
+  }
+  
+  return data as Question[];
 };
