@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -521,7 +521,7 @@ const ResultsPage = () => {
                         <TableHead>Date</TableHead>
                         <TableHead>Score</TableHead>
                         <TableHead>Time Taken</TableHead>
-                        <TableHead className="text-right">Solution</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -553,15 +553,27 @@ const ResultsPage = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-1.5"
-                              onClick={() => result.exam && handleDownloadSolution(result.exam_id, result.exam.board)}
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                              Solution
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="gap-1.5"
+                                disabled={true}
+                                title="You have already completed this exam"
+                              >
+                                <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                                Already Completed
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-1.5"
+                                onClick={() => result.exam && handleDownloadSolution(result.exam_id, result.exam.board)}
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                Solution
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
