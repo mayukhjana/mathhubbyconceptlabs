@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Exam {
@@ -304,4 +305,55 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
   }
   
   return data as Question[];
+};
+
+// Add a function to check if an exam has MCQs
+export const examHasMCQs = async (examId: string): Promise<boolean> => {
+  const { count, error } = await supabase
+    .from('questions')
+    .select('*', { count: 'exact', head: true })
+    .eq('exam_id', examId);
+    
+  if (error) {
+    console.error("Error checking if exam has MCQs:", error);
+    return false;
+  }
+  
+  return count !== null && count > 0;
+};
+
+// Add a function to delete all WBJEE exams (used for initial cleanup)
+export const deleteWBJEEExams = async () => {
+  try {
+    // First delete all questions associated with WBJEE exams
+    const { data: wbjeeExams } = await supabase
+      .from('exams')
+      .select('id')
+      .eq('board', 'WBJEE');
+    
+    if (wbjeeExams && wbjeeExams.length > 0) {
+      const examIds = wbjeeExams.map(exam => exam.id);
+      
+      // Delete questions
+      await supabase
+        .from('questions')
+        .delete()
+        .in('exam_id', examIds);
+      
+      // Delete exams
+      const { error } = await supabase
+        .from('exams')
+        .delete()
+        .eq('board', 'WBJEE');
+      
+      if (error) throw error;
+      
+      return { success: true, message: `Deleted ${wbjeeExams.length} WBJEE exams` };
+    }
+    
+    return { success: true, message: "No WBJEE exams to delete" };
+  } catch (error) {
+    console.error("Error deleting WBJEE exams:", error);
+    throw error;
+  }
 };

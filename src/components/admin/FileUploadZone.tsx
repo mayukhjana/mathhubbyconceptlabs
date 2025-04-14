@@ -10,6 +10,7 @@ interface FileUploadZoneProps {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   description?: string;
   acceptFormats?: string;
+  required?: boolean;
 }
 
 const FileUploadZone = ({ 
@@ -18,7 +19,8 @@ const FileUploadZone = ({
   file, 
   onChange, 
   description,
-  acceptFormats = ".pdf"
+  acceptFormats = ".pdf",
+  required = false
 }: FileUploadZoneProps) => {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -44,7 +46,10 @@ const FileUploadZone = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
       <div 
         className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-mathprimary transition-colors"
         onDragOver={handleDragOver}
