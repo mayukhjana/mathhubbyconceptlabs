@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
+import { BOARD_OPTIONS, ENTRANCE_OPTIONS } from "./types";
 
 export const fetchExamByBoardAndYear = async (board: string, year: string) => {
   const { data, error } = await supabase
