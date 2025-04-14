@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -19,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchExam, Exam } from "@/services/examService";
+import { fetchExamById, Exam } from "@/services/examService";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
 interface QuestionForm {
@@ -44,7 +43,7 @@ const AdminQuestionUploadPage = () => {
     const loadExam = async () => {
       if (!examId) return;
       
-      const examData = await fetchExam(examId);
+      const examData = await fetchExamById(examId);
       setExam(examData);
       
       // Create initial empty question
