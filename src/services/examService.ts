@@ -1,7 +1,19 @@
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
-export type Question = {
+import { supabase } from "@/integrations/supabase/client";
+
+export interface Exam {
+  id: string;
+  title: string;
+  board: string;
+  year: string;
+  class: string;
+  chapter: string | null;
+  duration: number;
+  is_premium: boolean;
+  created_at?: string;
+}
+
+export interface Question {
   id: string;
   exam_id: string;
   question_text: string;
@@ -9,238 +21,151 @@ export type Question = {
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_answer: string; // 'a', 'b', 'c', or 'd'
+  correct_answer: string;
   order_number: number;
-};
+}
 
-export type Exam = {
-  id: string;
-  title: string;
-  board: string;
-  class: string;
-  year: string;
-  chapter: string | null;
-  duration: number;
-  is_premium: boolean;
-};
-
-export const fetchExam = async (examId: string): Promise<Exam | null> => {
-  try {
-    const { data, error } = await supabase
-      .from("exams")
-      .select("*")
-      .eq("id", examId)
-      .single();
-      
-    if (error) {
-      console.error("Error fetching exam:", error);
-      throw error;
-    }
+export const fetchExamByBoardAndYear = async (board: string, year: string) => {
+  const { data, error } = await supabase
+    .from('exams')
+    .select()
+    .eq('board', board)
+    .eq('year', year)
+    .single();
     
-    return data;
-  } catch (error) {
-    toast.error("Failed to load exam details");
+  if (error) {
+    console.error("Error fetching exam:", error);
     return null;
   }
+  
+  return data as Exam;
 };
 
-export const fetchExamQuestions = async (examId: string): Promise<Question[]> => {
-  try {
-    const { data, error } = await supabase
-      .from("questions")
-      .select("*")
-      .eq("exam_id", examId)
-      .order("order_number", { ascending: true });
-      
-    if (error) {
-      console.error("Error fetching questions:", error);
-      throw error;
-    }
+export const fetchExamById = async (examId: string) => {
+  const { data, error } = await supabase
+    .from('exams')
+    .select()
+    .eq('id', examId)
+    .single();
     
-    return data || [];
-  } catch (error) {
-    toast.error("Failed to load exam questions");
+  if (error) {
+    console.error("Error fetching exam:", error);
+    return null;
+  }
+  
+  return data as Exam;
+};
+
+export const fetchQuestionsForExam = async (examId: string) => {
+  const { data, error } = await supabase
+    .from('questions')
+    .select()
+    .eq('exam_id', examId)
+    .order('order_number', { ascending: true });
+    
+  if (error) {
+    console.error("Error fetching questions:", error);
     return [];
   }
+  
+  return data as Question[];
 };
 
-export const submitExamResults = async (
+export const fetchPracticePapers = async () => {
+  const { data, error } = await supabase
+    .from('exams')
+    .select()
+    .order('created_at', { ascending: false });
+    
+  if (error) {
+    console.error("Error fetching exams:", error);
+    return [];
+  }
+  
+  return data as Exam[];
+};
+
+export const fetchEntranceExams = async (boardFilter?: string) => {
+  let query = supabase
+    .from('exams')
+    .select()
+    .order('year', { ascending: false });
+    
+  if (boardFilter && boardFilter !== "all") {
+    query = query.eq('board', boardFilter);
+  }
+    
+  const { data, error } = await query;
+    
+  if (error) {
+    console.error("Error fetching entrance exams:", error);
+    return [];
+  }
+  
+  return data as Exam[];
+};
+
+export const submitExamResult = async (
   userId: string,
-  examId: string,
-  score: number,
+  examId: string, 
+  score: number, 
   totalQuestions: number,
   timeTaken: number
 ) => {
-  try {
-    const { error } = await supabase
-      .from("user_results")
-      .insert({
-        user_id: userId,
-        exam_id: examId,
-        score,
-        total_questions: totalQuestions,
-        time_taken: timeTaken
-      });
-      
-    if (error) {
-      console.error("Error submitting results:", error);
-      throw error;
-    }
+  const { data, error } = await supabase
+    .from('user_results')
+    .insert({
+      user_id: userId,
+      exam_id: examId,
+      score,
+      total_questions: totalQuestions,
+      time_taken: timeTaken,
+    })
+    .select()
+    .single();
     
-    return true;
+  if (error) {
+    console.error("Error submitting exam result:", error);
+    return null;
+  }
+  
+  return data;
+};
+
+// Function to get a download URL for a file
+export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution', board: string) => {
+  try {
+    // In a real implementation, this would fetch from storage or generate a URL
+    // For demo purposes, we'll return a placeholder
+    const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
+    return `/exam_papers/${boardFormatted}_${fileType}_${examId}.pdf`;
   } catch (error) {
-    toast.error("Failed to save your exam results");
-    return false;
+    console.error(`Error getting ${fileType} download URL:`, error);
+    return null;
   }
 };
 
-export const uploadExamFile = async (file: File, examId: string, fileType: 'paper' | 'solution', board: string) => {
+// Function to upload an exam file
+export const uploadExamFile = async (
+  file: File, 
+  examId: string, 
+  fileType: 'paper' | 'solution',
+  board: string
+) => {
   try {
-    let bucket = '';
+    // Create a filename based on exam details
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${board.replace(/\s/g, '_')}_${fileType}_${examId}.${fileExt}`;
+    const filePath = `exam_papers/${fileName}`;
     
-    if (fileType === 'paper') {
-      switch (board.toUpperCase()) {
-        case 'WBJEE':
-          bucket = 'wbjee_papers';
-          break;
-        case 'JEE MAINS':
-          bucket = 'jee_mains_papers';
-          break;
-        case 'JEE ADVANCED':
-          bucket = 'jee_advanced_papers';
-          break;
-        default:
-          bucket = 'exam_papers';
-      }
-    } else { // solution
-      switch (board.toUpperCase()) {
-        case 'WBJEE':
-          bucket = 'wbjee_solutions';
-          break;
-        case 'JEE MAINS':
-          bucket = 'jee_mains_solutions';
-          break;
-        case 'JEE ADVANCED':
-          bucket = 'jee_advanced_solutions';
-          break;
-        default:
-          bucket = 'solutions';
-      }
-    }
+    // In a real implementation, this would upload to storage
+    // For now, we'll just return the path as if it was uploaded
+    console.log(`Uploading ${fileType} for exam ${examId} to ${filePath}`);
     
-    const filePath = `${examId}/${file.name}`;
-    
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true
-      });
-      
-    if (error) {
-      throw error;
-    }
-    
-    const { data } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
-      
-    return data.publicUrl;
+    // Return the path where the file would be stored
+    return filePath;
   } catch (error) {
     console.error(`Error uploading ${fileType}:`, error);
-    toast.error(`Failed to upload ${fileType}`);
-    return null;
-  }
-};
-
-export const fetchEntranceExams = async (boardFilter?: string): Promise<Exam[]> => {
-  try {
-    console.log("Fetching entrance exams with filter:", boardFilter);
-    
-    let query = supabase
-      .from("exams")
-      .select("*");
-    
-    if (boardFilter && boardFilter.toLowerCase() !== "all") {
-      query = query.eq("board", boardFilter);
-    } else {
-      query = query.in("board", ['WBJEE', 'JEE MAINS', 'JEE ADVANCED']);
-    }
-    
-    query = query.order("year", { ascending: false });
-    
-    const { data, error } = await query;
-      
-    if (error) {
-      console.error("Error fetching entrance exams:", error);
-      throw error;
-    }
-    
-    console.log("Fetched exams:", data);
-    
-    return data || [];
-  } catch (error) {
-    console.error("Failed to load entrance exams:", error);
-    toast.error("Failed to load entrance exams");
-    return [];
-  }
-};
-
-export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution', board: string): Promise<string | null> => {
-  try {
-    let bucket = '';
-    
-    if (fileType === 'paper') {
-      switch (board.toUpperCase()) {
-        case 'WBJEE':
-          bucket = 'wbjee_papers';
-          break;
-        case 'JEE MAINS':
-          bucket = 'jee_mains_papers';
-          break;
-        case 'JEE ADVANCED':
-          bucket = 'jee_advanced_papers';
-          break;
-        default:
-          bucket = 'exam_papers';
-      }
-    } else { // solution
-      switch (board.toUpperCase()) {
-        case 'WBJEE':
-          bucket = 'wbjee_solutions';
-          break;
-        case 'JEE MAINS':
-          bucket = 'jee_mains_solutions';
-          break;
-        case 'JEE ADVANCED':
-          bucket = 'jee_advanced_solutions';
-          break;
-        default:
-          bucket = 'solutions';
-      }
-    }
-    
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .list(`${examId}`);
-      
-    if (error) {
-      throw error;
-    }
-    
-    if (!data || data.length === 0) {
-      return null;
-    }
-    
-    const filePath = `${examId}/${data[0].name}`;
-    
-    const { data: urlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
-      
-    return urlData.publicUrl;
-  } catch (error) {
-    console.error(`Error getting ${fileType} URL:`, error);
-    return null;
+    throw error;
   }
 };

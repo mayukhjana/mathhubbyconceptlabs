@@ -102,12 +102,12 @@ const AdminExamUploadPage = () => {
       const examId = examData.id;
       
       // Step 2: Upload the paper file
-      const paperUrl = await uploadExamFile(paperFile, examId, 'paper');
+      const paperUrl = await uploadExamFile(paperFile, examId, 'paper', data.board);
       
       // Step 3: Upload the solution file if provided
       let solutionUrl = null;
       if (solutionFile) {
-        solutionUrl = await uploadExamFile(solutionFile, examId, 'solution');
+        solutionUrl = await uploadExamFile(solutionFile, examId, 'solution', data.board);
       }
       
       toast({ 

@@ -10,7 +10,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import BoardsPage from "./pages/BoardsPage";
 import BoardDetail from "./pages/BoardDetail";
-import ExamsList from "./pages/ExamsList";
 import ExamPage from "./pages/ExamPage";
 import ExamPapersPage from "./pages/ExamPapersPage";
 import ResultsPage from "./pages/ResultsPage";
@@ -19,6 +18,7 @@ import PremiumSuccessPage from "./pages/PremiumSuccessPage";
 import ProfilePage from "./pages/ProfilePage";
 import SupportPage from "./pages/SupportPage";
 import AdminUploadPage from "./pages/AdminUploadPage";
+import AdminExamUploadPage from "./pages/AdminExamUploadPage";
 import AuthPage from "./pages/AuthPage";
 import MathHubAIPage from "./pages/MathHubAIPage";
 import NotFound from "./pages/NotFound";
@@ -37,7 +37,6 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/boards" element={<BoardsPage />} />
               <Route path="/boards/:boardId/*" element={<BoardDetail />} />
-              <Route path="/exams" element={<ExamsList />} />
               <Route path="/exams/:examId" element={<ExamPage />} />
               <Route path="/exam-papers" element={<ExamPapersPage />} />
               <Route path="/results" element={
@@ -73,6 +72,11 @@ const App = () => (
               <Route path="/admin/upload" element={
                 <AuthGuard>
                   <AdminUploadPage />
+                </AuthGuard>
+              } />
+              <Route path="/admin/exam-upload" element={
+                <AuthGuard>
+                  <AdminExamUploadPage />
                 </AuthGuard>
               } />
               <Route path="/auth" element={<AuthPage />} />

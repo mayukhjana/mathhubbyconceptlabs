@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,12 +49,6 @@ const Navbar = () => {
             <Button variant={isActive("/boards") ? "default" : "ghost"} className="flex items-center gap-2">
               <BookOpen size={18} />
               <span>Papers</span>
-            </Button>
-          </Link>
-          <Link to="/exams">
-            <Button variant={isActive("/exams") ? "default" : "ghost"} className="flex items-center gap-2">
-              <FileText size={18} />
-              <span>Practice Exams</span>
             </Button>
           </Link>
           <Link to="/exam-papers">
@@ -120,16 +115,10 @@ const Navbar = () => {
                 Papers
               </Button>
             </Link>
-            <Link to="/exams" onClick={closeMenu}>
-              <Button variant={isActive("/exams") ? "default" : "ghost"} className="w-full justify-start text-lg">
-                <FileText className="mr-3" size={20} />
-                Practice Exams
-              </Button>
-            </Link>
             <Link to="/exam-papers" onClick={closeMenu}>
               <Button variant={isActive("/exam-papers") ? "default" : "ghost"} className="w-full justify-start text-lg">
                 <Book className="mr-3" size={20} />
-                Exam Papers
+                Entrance Exams
               </Button>
             </Link>
             <Link to="/results" onClick={closeMenu}>

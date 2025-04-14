@@ -56,28 +56,6 @@ const ExamPapersPage = () => {
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    
-    // If switching to a specific board, you could optionally fetch only that board's exams
-    if (value !== "all") {
-      const loadBoardExams = async () => {
-        setLoading(true);
-        const examData = await fetchEntranceExams(value);
-        setExams(examData);
-        setLoading(false);
-      };
-      
-      loadBoardExams();
-    } else {
-      // If going back to "all", fetch all boards
-      const loadAllExams = async () => {
-        setLoading(true);
-        const examData = await fetchEntranceExams();
-        setExams(examData);
-        setLoading(false);
-      };
-      
-      loadAllExams();
-    }
   };
   
   if (loading) {
@@ -178,11 +156,15 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
   useEffect(() => {
     // Get paper and solution URLs
     const fetchUrls = async () => {
-      const paperDownloadUrl = await getFileDownloadUrl(exam.id, 'paper', exam.board);
-      const solutionDownloadUrl = await getFileDownloadUrl(exam.id, 'solution', exam.board);
-      
-      setPaperUrl(paperDownloadUrl);
-      setSolutionUrl(solutionDownloadUrl);
+      try {
+        const paperDownloadUrl = await getFileDownloadUrl(exam.id, 'paper', exam.board);
+        const solutionDownloadUrl = await getFileDownloadUrl(exam.id, 'solution', exam.board);
+        
+        setPaperUrl(paperDownloadUrl);
+        setSolutionUrl(solutionDownloadUrl);
+      } catch (error) {
+        console.error("Error fetching download URLs:", error);
+      }
     };
     
     fetchUrls();

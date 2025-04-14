@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -80,9 +81,9 @@ const AdminUploadPage = () => {
   }[]>([]);
   
   // Available boards and classes
-  const boards = ["icse", "cbse", "west-bengal"];
+  const boards = ["WBJEE", "JEE MAINS", "JEE ADVANCED"];
   const classes = ["10", "12"];
-  const years = Array.from({ length: 6 }, (_, i) => (2025 - i).toString());
+  const years = Array.from({ length: 6 }, (_, i) => (2024 - i).toString());
   const chapters = {
     "10": ["algebra", "geometry", "statistics", "trigonometry", "calculus"],
     "12": ["algebra", "calculus", "statistics", "vectors", "matrices", "probability"]
@@ -255,9 +256,9 @@ const AdminUploadPage = () => {
     setUploadProgress(0);
     
     try {
-      // Create a file path format like: icse_class10_2022.pdf
+      // Create a file path format like: WBJEE_class12_2022.pdf
       const fileExt = uploadedFile.name.split('.').pop();
-      const fileName = `${selectedBoard}_class${selectedClass}_${selectedYear}.${fileExt}`;
+      const fileName = `${selectedBoard.replace(/\s/g, '_')}_class${selectedClass}_${selectedYear}.${fileExt}`;
       const filePath = `exam_papers/${fileName}`;
       
       // Simulate upload progress
@@ -272,21 +273,36 @@ const AdminUploadPage = () => {
         });
       }, 400);
       
-      // Wait for "upload" to complete (simulation for demo)
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      // Create the exam record
+      const { data: examData, error: examError } = await supabase
+        .from('exams')
+        .insert({
+          title: `${selectedBoard} Mathematics ${selectedYear}`,
+          board: selectedBoard,
+          class: selectedClass,
+          year: selectedYear,
+          duration: examDuration,
+          is_premium: isPremium
+        })
+        .select()
+        .single();
+        
+      if (examError) {
+        throw new Error(`Error creating exam record: ${examError.message}`);
+      }
       
-      // Get public URL (in a real app, this would be from Supabase)
-      const publicUrl = `/exam_papers/${fileName}`;
+      // Wait for "upload" to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Add to recent uploads
       setRecentUploads(prev => [
         {
-          id: Date.now().toString(),
-          name: fileName,
+          id: examData.id,
+          name: examData.title,
           board: selectedBoard,
           class: selectedClass,
           year: selectedYear,
-          url: publicUrl
+          url: `/exam-papers?board=${selectedBoard}`
         },
         ...prev.slice(0, 4) // Keep only 5 most recent
       ]);
@@ -298,11 +314,11 @@ const AdminUploadPage = () => {
       setUploadedFile(null);
       
       // Show success message
-      toast.success("File uploaded successfully!");
+      toast.success("File uploaded successfully! The exam will now appear in the Entrance Exams section.");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading file:", error);
-      toast.error("Failed to upload file. Please try again.");
+      toast.error(`Failed to upload file: ${error.message}`);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -352,7 +368,7 @@ const AdminUploadPage = () => {
                               <SelectContent>
                                 {boards.map(board => (
                                   <SelectItem key={board} value={board}>
-                                    {board.toUpperCase()}
+                                    {board}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -424,6 +440,15 @@ const AdminUploadPage = () => {
                           </div>
                         </div>
                         
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="premium"
+                            checked={isPremium}
+                            onCheckedChange={setIsPremium}
+                          />
+                          <Label htmlFor="premium">Mark as Premium Content</Label>
+                        </div>
+                        
                         {isUploading && (
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
@@ -461,7 +486,7 @@ const AdminUploadPage = () => {
                               <li key={upload.id} className="border rounded-md p-3">
                                 <div className="flex items-start justify-between">
                                   <div>
-                                    <div className="font-medium">{upload.board.toUpperCase()} Class {upload.class}</div>
+                                    <div className="font-medium">{upload.board} Class {upload.class}</div>
                                     <div className="text-sm text-muted-foreground">Year: {upload.year}</div>
                                   </div>
                                   <div className="bg-green-100 text-green-800 p-1 rounded">
@@ -486,7 +511,7 @@ const AdminUploadPage = () => {
                           <li>Upload files in PDF format</li>
                           <li>Maximum file size: 10MB</li>
                           <li>Name format will be automatically generated</li>
-                          <li>Uploaded papers will be immediately available to students</li>
+                          <li>Uploaded papers will be immediately available to students in the Entrance Exams section</li>
                           <li>For premium papers, students will need a subscription</li>
                         </ul>
                       </CardContent>
@@ -516,7 +541,7 @@ const AdminUploadPage = () => {
                               id="exam-title"
                               value={examTitle}
                               onChange={(e) => setExamTitle(e.target.value)}
-                              placeholder="E.g., CBSE Class 10 Algebra Practice Test 2023"
+                              placeholder="E.g., WBJEE Mathematics 2024"
                             />
                           </div>
                           
@@ -533,7 +558,7 @@ const AdminUploadPage = () => {
                                 <SelectContent>
                                   {boards.map(board => (
                                     <SelectItem key={board} value={board}>
-                                      {board.toUpperCase()}
+                                      {board}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -757,7 +782,7 @@ const AdminUploadPage = () => {
                                   <div>
                                     <div className="font-medium">{upload.name}</div>
                                     <div className="text-sm text-muted-foreground">
-                                      {upload.board.toUpperCase()} Class {upload.class}
+                                      {upload.board} Class {upload.class}
                                     </div>
                                   </div>
                                   <div className="bg-green-100 text-green-800 p-1 rounded">
