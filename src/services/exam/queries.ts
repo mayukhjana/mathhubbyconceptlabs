@@ -7,19 +7,24 @@ export const fetchExam = async (examId: string) => {
 };
 
 export const fetchExamByBoardAndYear = async (board: string, year: string) => {
-  const { data, error } = await supabase
-    .from('exams')
-    .select()
-    .eq('board', board)
-    .eq('year', year)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('exams')
+      .select()
+      .eq('board', board)
+      .eq('year', year)
+      .single();
+      
+    if (error) {
+      console.error("Error fetching exam:", error);
+      return null;
+    }
     
-  if (error) {
-    console.error("Error fetching exam:", error);
+    return data as Exam;
+  } catch (error) {
+    console.error("Exception fetching exam by board and year:", error);
     return null;
   }
-  
-  return data as Exam;
 };
 
 export const fetchExamById = async (examId: string) => {
@@ -73,63 +78,78 @@ export const fetchQuestionsForExam = async (examId: string) => {
 };
 
 export const fetchPracticePapers = async () => {
-  const { data, error } = await supabase
-    .from('exams')
-    .select()
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('exams')
+      .select()
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error("Error fetching exams:", error);
+      return [];
+    }
     
-  if (error) {
-    console.error("Error fetching exams:", error);
+    return data as Exam[];
+  } catch (error) {
+    console.error("Exception fetching practice papers:", error);
     return [];
   }
-  
-  return data as Exam[];
 };
 
 export const fetchEntranceExams = async (boardFilter?: string) => {
-  let query = supabase
-    .from('exams')
-    .select()
-    .in('board', ENTRANCE_OPTIONS)
-    .order('year', { ascending: false });
+  try {
+    let query = supabase
+      .from('exams')
+      .select()
+      .in('board', ENTRANCE_OPTIONS)
+      .order('year', { ascending: false });
+      
+    if (boardFilter && boardFilter !== "all") {
+      query = query.eq('board', boardFilter);
+    }
+      
+    const { data, error } = await query;
+      
+    if (error) {
+      console.error("Error fetching entrance exams:", error);
+      return [];
+    }
     
-  if (boardFilter && boardFilter !== "all") {
-    query = query.eq('board', boardFilter);
-  }
-    
-  const { data, error } = await query;
-    
-  if (error) {
-    console.error("Error fetching entrance exams:", error);
+    return data as Exam[];
+  } catch (error) {
+    console.error("Exception fetching entrance exams:", error);
     return [];
   }
-  
-  return data as Exam[];
 };
 
 export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: string) => {
-  let query = supabase
-    .from('exams')
-    .select()
-    .in('board', BOARD_OPTIONS)
-    .order('year', { ascending: false });
+  try {
+    let query = supabase
+      .from('exams')
+      .select()
+      .in('board', BOARD_OPTIONS)
+      .order('year', { ascending: false });
+      
+    if (boardFilter && boardFilter !== "all") {
+      query = query.eq('board', boardFilter);
+    }
     
-  if (boardFilter && boardFilter !== "all") {
-    query = query.eq('board', boardFilter);
-  }
-  
-  if (chapterFilter && chapterFilter !== "all") {
-    query = query.eq('chapter', chapterFilter);
-  }
+    if (chapterFilter && chapterFilter !== "all") {
+      query = query.eq('chapter', chapterFilter);
+    }
+      
+    const { data, error } = await query;
+      
+    if (error) {
+      console.error("Error fetching board exams:", error);
+      return [];
+    }
     
-  const { data, error } = await query;
-    
-  if (error) {
-    console.error("Error fetching board exams:", error);
+    return data as Exam[];
+  } catch (error) {
+    console.error("Exception fetching board exams:", error);
     return [];
   }
-  
-  return data as Exam[];
 };
 
 const isMockExam = (examId: string) => {

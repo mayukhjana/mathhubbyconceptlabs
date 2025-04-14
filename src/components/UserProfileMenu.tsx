@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Crown, CreditCard, LifeBuoy } from "lucide-react";
+import { LogOut, User, Crown, LifeBuoy } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -39,7 +39,7 @@ const UserProfileMenu = () => {
           .single();
           
         if (error) throw error;
-        if (data) {
+        if (data && 'avatar_url' in data) {
           setAvatarUrl(data.avatar_url);
         }
       } catch (error) {

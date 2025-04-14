@@ -24,15 +24,6 @@ export const supabase = createClient<Database>(
     },
     db: {
       schema: 'public',
-    },
-    // Add more detailed error logging
-    logger: {
-      error: (error) => {
-        console.error('Supabase Error:', error);
-      },
-      warn: (message) => {
-        console.warn('Supabase Warning:', message);
-      },
     }
   }
 );

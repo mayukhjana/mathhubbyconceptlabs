@@ -42,9 +42,9 @@ const ProfilePage = () => {
         if (error) throw error;
         
         if (data) {
-          setFullName(data.full_name || "");
-          setUsername(data.username || "");
-          setAvatarUrl(data.avatar_url);
+          if ('full_name' in data) setFullName(data.full_name || "");
+          if ('username' in data) setUsername(data.username || "");
+          if ('avatar_url' in data) setAvatarUrl(data.avatar_url);
           
           // In real app, this would check subscription status
           // For now, we're just mocking premium status
@@ -60,7 +60,7 @@ const ProfilePage = () => {
   }, [user, isAuthenticated, isLoading, navigate]);
   
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0) {
+    if (!event.target.files || event.target.files.length === 0 || !user) {
       return;
     }
     
@@ -68,7 +68,7 @@ const ProfilePage = () => {
       setUploading(true);
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user!.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
       
       // Upload image to Supabase Storage
@@ -88,16 +88,19 @@ const ProfilePage = () => {
       
       const publicUrl = data.publicUrl;
         
-      // Update profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user!.id);
-        
-      if (updateError) throw updateError;
-      
-      setAvatarUrl(publicUrl);
-      toast.success("Avatar updated successfully");
+      try {
+        // Update profile with new avatar URL
+        await supabase
+          .from('profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('id', user.id);
+          
+        setAvatarUrl(publicUrl);
+        toast.success("Avatar updated successfully");
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        toast.error("Failed to update avatar in profile");
+      }
       
     } catch (error: any) {
       console.error("Error uploading avatar:", error);
@@ -111,12 +114,14 @@ const ProfilePage = () => {
     if (!user) return;
     
     try {
+      const profileData = {
+        full_name: fullName,
+        username: username,
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: fullName,
-          username: username,
-        })
+        .update(profileData)
         .eq('id', user.id);
         
       if (error) throw error;

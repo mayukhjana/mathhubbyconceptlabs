@@ -22,7 +22,8 @@ export const ensureStorageBuckets = async () => {
       'jee_mains_papers',
       'jee_mains_solutions',
       'jee_advanced_papers',
-      'jee_advanced_solutions'
+      'jee_advanced_solutions',
+      'avatars'
     ];
     
     // Create a map of which buckets already exist
@@ -80,6 +81,11 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
     });
     
     if (error) {
+      // If error is about bucket already existing, consider it a success
+      if (error.message.includes('already exists')) {
+        console.log(`Bucket ${bucketName} already exists, continuing...`);
+        return true;
+      }
       console.error(`Error creating bucket ${bucketName}:`, error);
       return false;
     }
@@ -99,6 +105,9 @@ export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'so
     const fileName = `${boardLower}_${fileType}_${examId}.pdf`;
     
     console.log(`Attempting to get ${fileType} from bucket: ${bucketName}, file: ${fileName}`);
+    
+    // Try to create the bucket if it doesn't exist
+    await createSpecificBucket(bucketName);
     
     const { data, error } = await supabase
       .storage
@@ -132,7 +141,10 @@ export const uploadExamFile = async (
     console.log(`Uploading ${fileType} to bucket: ${bucketName}, file: ${fileName}`);
     
     // First, ensure the specific bucket exists before uploading
-    await createSpecificBucket(bucketName);
+    const bucketCreated = await createSpecificBucket(bucketName);
+    if (!bucketCreated) {
+      throw new Error(`Failed to create or verify bucket: ${bucketName}`);
+    }
     
     // Now attempt the upload
     const { data, error } = await supabase
