@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Exam {
@@ -220,6 +219,8 @@ export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'so
     
     const fileName = `${boardFormatted}_${fileType}_${examId}.pdf`;
     
+    console.log(`Attempting to get ${fileType} from bucket: ${bucketName}, file: ${fileName}`);
+    
     // Check if file exists in the specified bucket
     const { data, error } = await supabase
       .storage
@@ -231,6 +232,7 @@ export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'so
       return null;
     }
     
+    console.log(`Successfully got signed URL for ${fileType}:`, data.signedUrl);
     return data.signedUrl;
   } catch (error) {
     console.error(`Error getting ${fileType} download URL:`, error);
@@ -238,7 +240,6 @@ export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'so
   }
 };
 
-// Update the uploadExamFile function for proper storage
 export const uploadExamFile = async (
   file: File, 
   examId: string, 
@@ -253,6 +254,8 @@ export const uploadExamFile = async (
     
     const fileName = `${boardFormatted}_${fileType}_${examId}.pdf`;
     
+    console.log(`Uploading ${fileType} to bucket: ${bucketName}, file: ${fileName}`);
+    
     const { data, error } = await supabase
       .storage
       .from(bucketName)
@@ -261,8 +264,12 @@ export const uploadExamFile = async (
         upsert: true
       });
     
-    if (error) throw error;
+    if (error) {
+      console.error(`Error uploading ${fileType}:`, error);
+      throw error;
+    }
     
+    console.log(`Successfully uploaded ${fileType}:`, data);
     return fileName;
   } catch (error) {
     console.error(`Error uploading ${fileType}:`, error);

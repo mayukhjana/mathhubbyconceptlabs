@@ -9,7 +9,8 @@ const UploadInstructions = ({ type }: UploadInstructionsProps) => {
   const instructions = type === "pdf" ? [
     "Upload files in PDF format only",
     "Maximum file size: 10MB",
-    "File naming is handled automatically - just upload the raw files",
+    "Files will be stored in board-specific buckets (wbjee_papers, wbjee_solutions, etc.)",
+    "File naming is handled automatically according to pattern: board_paper_examId.pdf",
     "For board exams, select a chapter or leave empty for full mock test",
     "For entrance exams, select the appropriate entrance exam board",
     "Upload solutions to help students learn from their mistakes",
