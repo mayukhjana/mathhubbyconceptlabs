@@ -51,6 +51,7 @@ const UnifiedExamForm = ({
       toast.success("Question updated successfully!");
     } else {
       toast.success("Question added successfully!");
+      // Don't hide the form so they can keep adding questions
     }
   };
 

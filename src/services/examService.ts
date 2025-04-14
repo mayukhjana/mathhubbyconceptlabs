@@ -346,14 +346,19 @@ export const uploadExamFile = async (
   try {
     const boardLower = board.toLowerCase().replace(/\s+/g, '_');
     
-    const isEntranceBoard = ENTRANCE_OPTIONS.some(opt => opt.toLowerCase().replace(/\s+/g, '_') === boardLower);
-    
+    // Use one of the existing buckets created in the client.ts initialization
+    // Instead of dynamically creating bucket names that might not exist
     let bucketName;
-    if (isEntranceBoard) {
-      bucketName = fileType === 'paper' 
-        ? `${boardLower}_papers` 
-        : `${boardLower}_solutions`;
+    
+    // Check if the board is one of the entrance exams
+    if (board === 'WBJEE') {
+      bucketName = fileType === 'paper' ? 'wbjee_papers' : 'wbjee_solutions';
+    } else if (board === 'JEE MAINS') {
+      bucketName = fileType === 'paper' ? 'jee_mains_papers' : 'jee_mains_solutions';
+    } else if (board === 'JEE ADVANCED') {
+      bucketName = fileType === 'paper' ? 'jee_advanced_papers' : 'jee_advanced_solutions';
     } else {
+      // For board exams, use the default buckets
       bucketName = fileType === 'paper' ? 'exam_papers' : 'solutions';
     }
     
