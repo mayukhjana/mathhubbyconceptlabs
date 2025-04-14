@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,11 +27,13 @@ import {
   Home,
   BarChart3,
   Loader2,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { fetchExamById, fetchQuestionsForExam } from "@/services/examService";
+import { getFileDownloadUrl } from "@/services/exam/storage";
 
 const ExamPage = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -63,7 +64,6 @@ const ExamPage = () => {
     questions: Question[];
   } | null>(null);
   
-  // Load exam data from Supabase
   useEffect(() => {
     const loadExam = async () => {
       if (!examId) return;
@@ -72,7 +72,6 @@ const ExamPage = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch exam details
         const examData = await fetchExamById(examId);
         
         if (!examData) {
@@ -81,7 +80,6 @@ const ExamPage = () => {
           return;
         }
         
-        // Fetch questions
         const questionsData = await fetchQuestionsForExam(examId);
         
         if (!questionsData || questionsData.length === 0) {
@@ -90,7 +88,6 @@ const ExamPage = () => {
           return;
         }
         
-        // Format questions to match the Question interface
         const formattedQuestions = questionsData.map(q => ({
           id: q.id,
           text: q.question_text,
@@ -103,7 +100,6 @@ const ExamPage = () => {
           correctAnswer: q.correct_answer
         }));
         
-        // Set exam data
         setExam({
           id: examData.id,
           title: examData.title,
@@ -115,7 +111,6 @@ const ExamPage = () => {
           questions: formattedQuestions
         });
         
-        // Initialize timer
         setTimeRemaining(examData.duration * 60);
         setStartTime(new Date());
         
@@ -387,7 +382,7 @@ const ExamPage = () => {
                   You've completed the {exam.title} exam.
                 </p>
                 
-                <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-6 mb-8">
+                <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-6 mb-4">
                   <h2 className="text-lg font-medium mb-4">Your Results</h2>
                   
                   <div className="flex justify-between items-center mb-3">
@@ -397,16 +392,18 @@ const ExamPage = () => {
                   
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-gray-600 dark:text-gray-300">Correct Answers:</span>
-                    <span className="font-medium">{exam.questions.filter(q => userAnswers[q.id] === q.correctAnswer).length} / {exam.questions.length}</span>
+                    <span className="font-medium">
+                      {exam.questions.filter(q => userAnswers[q.id] === q.correctAnswer).length} / {exam.questions.length}
+                    </span>
                   </div>
                   
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-600 dark:text-gray-300">Time Taken:</span>
                     <span className="font-medium">{formatTime(timeTaken)}</span>
                   </div>
 
                   {user && (
-                    <div className="mt-3 pt-3 border-t">
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600 dark:text-gray-300">Results Saved:</span>
                         <span className={`font-medium ${resultSaved ? "text-green-500" : "text-red-500"}`}>
@@ -416,22 +413,30 @@ const ExamPage = () => {
                     </div>
                   )}
                 </div>
-                
-                <h3 className="text-lg font-medium mb-4">Review Your Answers</h3>
-                
-                <div className="space-y-4 max-h-96 overflow-y-auto mb-8">
-                  {exam.questions.map((question, index) => (
-                    <QuestionCard
-                      key={question.id}
-                      question={question}
-                      onAnswer={() => {}}
-                      userAnswer={userAnswers[question.id]}
-                      showResult={true}
-                      questionNumber={index + 1}
-                    />
-                  ))}
+
+                <div className="mb-8">
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2"
+                    onClick={async () => {
+                      try {
+                        const url = await getFileDownloadUrl(examId, 'solution', exam.board);
+                        if (url) {
+                          window.open(url, '_blank');
+                        } else {
+                          toast.error("Solution not available for this exam");
+                        }
+                      } catch (error) {
+                        console.error("Error downloading solution:", error);
+                        toast.error("Failed to download solution");
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Solution
+                  </Button>
                 </div>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button variant="outline" className="gap-2" asChild>
                     <Link to="/results">

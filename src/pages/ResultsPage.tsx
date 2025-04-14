@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -53,6 +52,7 @@ import {
   Pie,
   Cell
 } from "recharts";
+import ExamResultCharts from "@/components/ExamResultCharts";
 
 type ExamResult = {
   id: string;
@@ -503,6 +503,30 @@ const ResultsPage = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {results.some(r => ['WBJEE', 'JEE Mains', 'JEE Advanced'].includes(r.exam?.board || '')) && (
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold mb-4">Entrance Exam Results</h2>
+                  <ExamResultCharts 
+                    results={results.filter(r => 
+                      ['WBJEE', 'JEE Mains', 'JEE Advanced'].includes(r.exam?.board || '')
+                    )}
+                    type="entrance"
+                  />
+                </div>
+              )}
+
+              {results.some(r => !['WBJEE', 'JEE Mains', 'JEE Advanced'].includes(r.exam?.board || '')) && (
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold mb-4">Board Exam Results</h2>
+                  <ExamResultCharts 
+                    results={results.filter(r => 
+                      !['WBJEE', 'JEE Mains', 'JEE Advanced'].includes(r.exam?.board || '')
+                    )}
+                    type="board"
+                  />
+                </div>
+              )}
 
               <Card>
                 <CardHeader>
