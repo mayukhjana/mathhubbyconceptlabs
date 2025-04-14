@@ -1,6 +1,57 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Function to ensure all required buckets exist
+export const ensureStorageBuckets = async () => {
+  try {
+    // Check if buckets exist
+    const { data: buckets } = await supabase.storage.listBuckets();
+    
+    const bucketsList = {
+      exam_papers: false,
+      solutions: false,
+      wbjee_papers: false,
+      wbjee_solutions: false,
+      jee_mains_papers: false,
+      jee_mains_solutions: false,
+      jee_advanced_papers: false,
+      jee_advanced_solutions: false
+    };
+    
+    // Check which buckets already exist
+    buckets?.forEach(b => {
+      if (bucketsList.hasOwnProperty(b.name)) {
+        bucketsList[b.name as keyof typeof bucketsList] = true;
+      }
+    });
+    
+    // Create buckets that don't exist
+    const createPromises = [];
+    
+    for (const [name, exists] of Object.entries(bucketsList)) {
+      if (!exists) {
+        console.log(`Creating bucket: ${name}`);
+        createPromises.push(
+          supabase.storage.createBucket(name, {
+            public: true,
+            fileSizeLimit: 1024 * 1024 * 10 // 10MB
+          })
+        );
+      }
+    }
+    
+    if (createPromises.length > 0) {
+      await Promise.all(createPromises);
+      console.log(`Created ${createPromises.length} missing buckets`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error ensuring storage buckets:", error);
+    return false;
+  }
+};
+
 export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution', board: string) => {
   try {
     const boardLower = board.toLowerCase().replace(/\s+/g, '_');
@@ -34,6 +85,9 @@ export const uploadExamFile = async (
   board: string
 ) => {
   try {
+    // First ensure all required buckets exist
+    await ensureStorageBuckets();
+    
     const boardLower = board.toLowerCase().replace(/\s+/g, '_');
     const bucketName = getBucketName(board, fileType);
     const fileName = `${boardLower}_${fileType}_${examId}.pdf`;

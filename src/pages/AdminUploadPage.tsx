@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
-import { createExam, createQuestions, uploadExamFile, fetchEntranceExams } from "@/services/examService";
+import { createExam, createQuestions, uploadExamFile, fetchEntranceExams, ensureStorageBuckets } from "@/services/examService";
 import ExamTypeSelector from "@/components/admin/ExamTypeSelector";
 import RecentUploads from "@/components/admin/RecentUploads";
 import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
@@ -36,6 +36,7 @@ const AdminUploadPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [bucketsReady, setBucketsReady] = useState(false);
   const [recentUploads, setRecentUploads] = useState<{
     id: string;
     name: string;
@@ -43,6 +44,26 @@ const AdminUploadPage = () => {
     class: string;
     year: string;
   }[]>([]);
+
+  // Ensure buckets exist when page loads
+  useEffect(() => {
+    const initBuckets = async () => {
+      try {
+        const result = await ensureStorageBuckets();
+        setBucketsReady(result);
+        if (!result) {
+          setError("Failed to initialize storage buckets. Please try again later.");
+        } else {
+          console.log("Storage buckets initialized successfully");
+        }
+      } catch (err) {
+        console.error("Error initializing buckets:", err);
+        setError("Failed to initialize storage buckets. Please try again later.");
+      }
+    };
+    
+    initBuckets();
+  }, []);
 
   // Reset form to initial state
   const resetForm = () => {
@@ -133,7 +154,8 @@ const AdminUploadPage = () => {
       selectedClass && 
       selectedYear &&
       examDuration > 0 &&
-      uploadedFile !== null
+      uploadedFile !== null &&
+      bucketsReady
     );
   };
 
@@ -142,6 +164,16 @@ const AdminUploadPage = () => {
     if (!user) {
       toast.error("You must be logged in to create an exam");
       return;
+    }
+    
+    if (!bucketsReady) {
+      toast.error("Storage is not ready. Please try again in a moment.");
+      // Try to reinitialize buckets
+      const result = await ensureStorageBuckets();
+      setBucketsReady(result);
+      if (!result) {
+        return;
+      }
     }
     
     if (!isExamFormValid()) {
@@ -244,6 +276,16 @@ const AdminUploadPage = () => {
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Error</AlertTitle>
                         <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    {!bucketsReady && (
+                      <Alert className="mb-6">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Storage Initializing</AlertTitle>
+                        <AlertDescription>
+                          The storage system is initializing. Please wait a moment before uploading files.
+                        </AlertDescription>
                       </Alert>
                     )}
                     
