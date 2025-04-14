@@ -53,6 +53,7 @@ import {
   Pie,
   Cell
 } from "recharts";
+import { getFileDownloadUrl } from "@/services/exam/storage";
 
 type ExamResult = {
   id: string;
