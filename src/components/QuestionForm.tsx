@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { X, PlusCircle } from "lucide-react";
+import { X, PlusCircle, Save } from "lucide-react";
 
 export type QuestionData = {
   id?: string;
@@ -49,6 +49,16 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
     e.preventDefault();
     onSave(question);
   };
+
+  const isFormValid = () => {
+    return (
+      question.question_text.trim() !== "" &&
+      question.option_a.trim() !== "" &&
+      question.option_b.trim() !== "" &&
+      question.option_c.trim() !== "" &&
+      question.option_d.trim() !== "" 
+    );
+  };
   
   return (
     <form onSubmit={handleSubmit} className="border rounded-md p-4 mb-4">
@@ -62,7 +72,7 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
             onClick={onCancel}
             className="text-red-500 hover:text-red-700 hover:bg-red-50"
           >
-            <X className="h-4 w-4 mr-1" /> Remove
+            <X className="h-4 w-4 mr-1" /> Cancel
           </Button>
         )}
       </div>
@@ -158,9 +168,13 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
         </div>
       </div>
       
-      <Button type="submit" className="w-full mt-4">
-        <PlusCircle className="h-4 w-4 mr-2" />
-        {initialData ? "Update Question" : "Add Question"}
+      <Button 
+        type="submit" 
+        className="w-full mt-4"
+        disabled={!isFormValid()}
+      >
+        <Save className="h-4 w-4 mr-2" />
+        {initialData ? "Update Question" : "Save Question"}
       </Button>
     </form>
   );

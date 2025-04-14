@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,86 +27,12 @@ import {
   BookOpen,
   Home,
   BarChart3,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingAnimation from "@/components/LoadingAnimation";
-
-const examsData: Record<string, {
-  title: string;
-  board: string;
-  chapter: string;
-  year: string;
-  duration: number;
-  questions: Question[];
-  isPremium: boolean;
-}> = {
-  "icse-alg-2022": {
-    title: "ICSE Algebra 2022",
-    board: "ICSE",
-    chapter: "Algebra",
-    year: "2022",
-    duration: 60,
-    isPremium: false,
-    questions: [
-      {
-        id: "q1",
-        text: "If a² + b² = 25 and ab = 12, find the value of (a + b)².",
-        options: [
-          { id: "a", text: "25" },
-          { id: "b", text: "37" },
-          { id: "c", text: "49" },
-          { id: "d", text: "61" }
-        ],
-        correctAnswer: "c"
-      },
-      {
-        id: "q2",
-        text: "Solve for x: 3x² - 5x - 2 = 0",
-        options: [
-          { id: "a", text: "x = 2, x = -1/3" },
-          { id: "b", text: "x = -2, x = 1/3" },
-          { id: "c", text: "x = 2, x = 1/3" },
-          { id: "d", text: "x = -2, x = -1/3" }
-        ],
-        correctAnswer: "a"
-      },
-      {
-        id: "q3",
-        text: "The sum of first n terms of an AP is 3n² + 4n. Find the nth term of the AP.",
-        options: [
-          { id: "a", text: "6n + 4" },
-          { id: "b", text: "6n + 1" },
-          { id: "c", text: "6n - 2" },
-          { id: "d", text: "6n" }
-        ],
-        correctAnswer: "a"
-      },
-      {
-        id: "q4",
-        text: "If α and β are the roots of the equation x² - 5x + 6 = 0, find the value of α² + β².",
-        options: [
-          { id: "a", text: "13" },
-          { id: "b", text: "25" },
-          { id: "c", text: "36" },
-          { id: "d", text: "49" }
-        ],
-        correctAnswer: "b"
-      },
-      {
-        id: "q5",
-        text: "The quadratic equation x² + px + 12 = 0 has equal roots. Find the value of p.",
-        options: [
-          { id: "a", text: "±4" },
-          { id: "b", text: "±6" },
-          { id: "c", text: "±8" },
-          { id: "d", text: "±12" }
-        ],
-        correctAnswer: "c"
-      }
-    ]
-  }
-};
+import { fetchExamById, fetchQuestionsForExam } from "@/services/examService";
 
 const ExamPage = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -122,16 +49,86 @@ const ExamPage = () => {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [timeTaken, setTimeTaken] = useState(0);
   const [resultSaved, setResultSaved] = useState(false);
-  const [questionsWithFeedback, setQuestionsWithFeedback] = useState<Array<Question & { isCorrect?: boolean }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const exam = examId ? examsData[examId] : null;
+  const [exam, setExam] = useState<{
+    id: string;
+    title: string;
+    board: string;
+    chapter: string | null;
+    year: string;
+    duration: number;
+    isPremium: boolean;
+    questions: Question[];
+  } | null>(null);
   
+  // Load exam data from Supabase
   useEffect(() => {
-    if (exam) {
-      setTimeRemaining(exam.duration * 60);
-      setStartTime(new Date());
-    }
-  }, [exam]);
+    const loadExam = async () => {
+      if (!examId) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch exam details
+        const examData = await fetchExamById(examId);
+        
+        if (!examData) {
+          setError("Exam not found");
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch questions
+        const questionsData = await fetchQuestionsForExam(examId);
+        
+        if (!questionsData || questionsData.length === 0) {
+          setError("No questions found for this exam");
+          setLoading(false);
+          return;
+        }
+        
+        // Format questions to match the Question interface
+        const formattedQuestions = questionsData.map(q => ({
+          id: q.id,
+          text: q.question_text,
+          options: [
+            { id: "a", text: q.option_a },
+            { id: "b", text: q.option_b },
+            { id: "c", text: q.option_c },
+            { id: "d", text: q.option_d }
+          ],
+          correctAnswer: q.correct_answer
+        }));
+        
+        // Set exam data
+        setExam({
+          id: examData.id,
+          title: examData.title,
+          board: examData.board,
+          chapter: examData.chapter,
+          year: examData.year,
+          duration: examData.duration,
+          isPremium: examData.is_premium,
+          questions: formattedQuestions
+        });
+        
+        // Initialize timer
+        setTimeRemaining(examData.duration * 60);
+        setStartTime(new Date());
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading exam:", error);
+        setError("Failed to load exam");
+        setLoading(false);
+      }
+    };
+    
+    loadExam();
+  }, [examId]);
   
   useEffect(() => {
     if (!timeRemaining || timeRemaining <= 0 || examCompleted) return;
@@ -161,7 +158,7 @@ const ExamPage = () => {
   };
   
   const handleNext = () => {
-    if (currentQuestionIndex < (exam?.questions.length || 0) - 1) {
+    if (exam && currentQuestionIndex < exam.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -173,7 +170,9 @@ const ExamPage = () => {
   };
   
   const handleSubmit = () => {
-    if (Object.keys(userAnswers).length < (exam?.questions.length || 0)) {
+    if (!exam) return;
+    
+    if (Object.keys(userAnswers).length < exam.questions.length) {
       setShowSubmitDialog(true);
       return;
     }
@@ -194,15 +193,13 @@ const ExamPage = () => {
       };
     });
     
-    setQuestionsWithFeedback(questionsWithResults);
-    
-    const calculatedScore = Math.round((correctAnswers / (exam?.questions.length || 1)) * 100);
+    const calculatedScore = Math.round((correctAnswers / (exam.questions.length || 1)) * 100);
     setScore(calculatedScore);
     
     const endTime = new Date();
     const timeTakenSeconds = startTime 
       ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) 
-      : (exam?.duration || 0) * 60 - (timeRemaining || 0);
+      : (exam.duration || 0) * 60 - (timeRemaining || 0);
     
     setTimeTaken(timeTakenSeconds);
     setExamCompleted(true);
@@ -213,57 +210,24 @@ const ExamPage = () => {
           user_id: user.id,
           exam_id: examId,
           score: calculatedScore,
-          total_questions: exam?.questions.length || 0,
+          total_questions: exam.questions.length || 0,
           time_taken: timeTakenSeconds
         });
 
-        const { data: existingExams, error: fetchError } = await supabase
-          .from('exams')
-          .select('id')
-          .eq('title', exam.title)
-          .limit(1);
-
-        let validExamId: string;
-        
-        if (fetchError || !existingExams || existingExams.length === 0) {
-          const { data: newExam, error: insertError } = await supabase
-            .from('exams')
-            .insert({
-              title: exam.title,
-              board: exam.board,
-              chapter: exam.chapter,
-              year: exam.year,
-              class: '10',
-              duration: exam.duration,
-              is_premium: exam.isPremium
-            })
-            .select()
-            .single();
-            
-          if (insertError || !newExam) {
-            throw new Error(insertError?.message || 'Failed to create exam record');
-          }
-          
-          validExamId = newExam.id;
-        } else {
-          validExamId = existingExams[0].id;
-        }
-        
-        const { error, data } = await supabase
+        const { error } = await supabase
           .from('user_results')
           .insert({
             user_id: user.id,
-            exam_id: validExamId,
+            exam_id: examId,
             score: calculatedScore,
-            total_questions: exam?.questions.length || 0,
+            total_questions: exam.questions.length || 0,
             time_taken: timeTakenSeconds
-          })
-          .select();
+          });
           
         if (error) {
           throw error;
         } else {
-          console.log("Result saved successfully:", data);
+          console.log("Result saved successfully");
           setResultSaved(true);
           toast.success(`Exam completed! Your score: ${calculatedScore}% has been saved.`);
         }
@@ -284,12 +248,45 @@ const ExamPage = () => {
     finishExam();
   };
   
-  if (!exam) {
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-grow flex items-center justify-center">
-          <p className="text-xl text-gray-600">Exam not found</p>
+        <div className="flex-grow flex flex-col items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-mathprimary mb-4" />
+          <p className="text-xl text-gray-600">Loading exam...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (error || !exam) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex flex-col items-center justify-center p-6">
+          <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+          <h1 className="text-2xl font-bold text-center mb-2">
+            {error || "Exam not found"}
+          </h1>
+          <p className="text-gray-600 text-center mb-6">
+            We couldn't find the exam you're looking for. It might have been removed or doesn't exist.
+          </p>
+          <div className="flex gap-4">
+            <Button variant="outline" asChild>
+              <Link to="/exams">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Exams
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/">
+                <Home className="mr-2 h-4 w-4" />
+                Go Home
+              </Link>
+            </Button>
+          </div>
         </div>
         <Footer />
       </div>
@@ -315,7 +312,7 @@ const ExamPage = () => {
                     <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-1">
                         <BookOpen size={14} />
-                        <span>{exam.board} - {exam.chapter}</span>
+                        <span>{exam.board}{exam.chapter ? ` - ${exam.chapter}` : ''}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <CheckSquare size={14} />
@@ -423,7 +420,7 @@ const ExamPage = () => {
                 <h3 className="text-lg font-medium mb-4">Review Your Answers</h3>
                 
                 <div className="space-y-4 max-h-96 overflow-y-auto mb-8">
-                  {questionsWithFeedback.map((question, index) => (
+                  {exam.questions.map((question, index) => (
                     <QuestionCard
                       key={question.id}
                       question={question}

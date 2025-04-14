@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Save, PlusCircle } from "lucide-react";
@@ -43,13 +42,26 @@ const UnifiedExamForm = ({
 
   const handleSaveQuestion = (questionData: QuestionData) => {
     onSaveQuestion(questionData);
-    // Don't hide the form after saving, so users can add multiple questions
+    
+    // Clear the form after saving to allow adding another question
     setEditingQuestionIndex(null);
+    
+    // Keep the form visible after saving, but reset it for a new question
+    if (editingQuestionIndex !== null) {
+      toast.success("Question updated successfully!");
+    } else {
+      toast.success("Question added successfully!");
+    }
   };
 
   const handleCancelQuestion = () => {
     setEditingQuestionIndex(null);
     setShowQuestionForm(false);
+  };
+  
+  const handleAddAnotherQuestion = () => {
+    setEditingQuestionIndex(null);
+    setShowQuestionForm(true);
   };
 
   return (
@@ -99,7 +111,7 @@ const UnifiedExamForm = ({
           </Card>
         )}
         
-        {(editingQuestionIndex !== null || showQuestionForm) ? (
+        {showQuestionForm ? (
           <QuestionForm
             initialData={editingQuestionIndex !== null ? questions[editingQuestionIndex] : undefined}
             onSave={handleSaveQuestion}
@@ -108,12 +120,12 @@ const UnifiedExamForm = ({
           />
         ) : (
           <Button 
-            onClick={() => setShowQuestionForm(true)} 
+            onClick={handleAddAnotherQuestion} 
             variant="outline" 
             className="w-full"
           >
             <PlusCircle className="h-4 w-4 mr-2" />
-            Add Another Question
+            Add {questions.length > 0 ? "Another" : "First"} Question
           </Button>
         )}
       </div>
