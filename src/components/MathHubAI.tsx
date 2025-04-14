@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { Send, Sparkles, MessageSquare, Loader2, AlertCircle, BookOpen } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Database } from "@/integrations/supabase/types";
 
 type Message = {
   role: "user" | "assistant";
@@ -39,6 +41,11 @@ type DoubtsUsage = {
   updated_at: string;
 };
 
+type ChatHistoryItem = {
+  question: string;
+  answer: string;
+};
+
 const DOUBTS_LIMIT = 5;
 
 const MathHubAI: React.FC = () => {
@@ -51,7 +58,7 @@ const MathHubAI: React.FC = () => {
   const [doubtsUsage, setDoubtsUsage] = useState<DoubtsUsage | null>(null);
   const [doubtsRemaining, setDoubtsRemaining] = useState<number>(DOUBTS_LIMIT);
   const [view, setView] = useState<"chat" | "history">("chat");
-  const [history, setHistory] = useState<{ question: string; answer: string }[]>([]);
+  const [history, setHistory] = useState<ChatHistoryItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -72,12 +79,12 @@ const MathHubAI: React.FC = () => {
         }
 
         if (data) {
-          setDoubtsUsage(data);
+          setDoubtsUsage(data as DoubtsUsage);
           setDoubtsRemaining(Math.max(0, DOUBTS_LIMIT - data.total_used));
         } else {
           const { data: newRecord, error: insertError } = await supabase
             .from("user_ai_doubts")
-            .insert([{ user_id: user.id, total_used: 0 }])
+            .insert({ user_id: user.id, total_used: 0 })
             .select("*")
             .single();
 
@@ -86,8 +93,10 @@ const MathHubAI: React.FC = () => {
             return;
           }
 
-          setDoubtsUsage(newRecord);
-          setDoubtsRemaining(DOUBTS_LIMIT);
+          if (newRecord) {
+            setDoubtsUsage(newRecord as DoubtsUsage);
+            setDoubtsRemaining(DOUBTS_LIMIT);
+          }
         }
       } catch (err) {
         console.error("Error in doubts usage fetch:", err);
@@ -113,7 +122,9 @@ const MathHubAI: React.FC = () => {
           return;
         }
 
-        setHistory(data || []);
+        if (data) {
+          setHistory(data as ChatHistoryItem[]);
+        }
       } catch (err) {
         console.error("Error in chat history fetch:", err);
       }
@@ -163,9 +174,8 @@ const MathHubAI: React.FC = () => {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          message: prompt,
+          question: prompt,
           model: selectedModel,
-          userId: user.id,
         }),
       });
 
@@ -175,29 +185,33 @@ const MathHubAI: React.FC = () => {
       }
 
       const data = await response.json();
-      const aiMessage = { role: "assistant" as const, content: data.message };
+      const aiMessage = { role: "assistant" as const, content: data.answer };
       setMessages((prev) => [...prev, aiMessage]);
 
       if (doubtsUsage) {
         const newUsage = doubtsUsage.total_used + 1;
-        await supabase
+        const { error: updateError } = await supabase
           .from("user_ai_doubts")
-          .update({ total_used: newUsage })
+          .update({ total_used: newUsage, updated_at: new Date().toISOString() })
           .eq("id", doubtsUsage.id);
 
-        setDoubtsUsage({ ...doubtsUsage, total_used: newUsage });
-        setDoubtsRemaining(Math.max(0, DOUBTS_LIMIT - newUsage));
+        if (updateError) {
+          console.error("Error updating doubts usage:", updateError);
+        } else {
+          setDoubtsUsage({ ...doubtsUsage, total_used: newUsage });
+          setDoubtsRemaining(Math.max(0, DOUBTS_LIMIT - newUsage));
+        }
       }
 
       if (view === "history") {
-        const { data: updatedHistory } = await supabase
+        const { data: updatedHistory, error: historyError } = await supabase
           .from("ai_chat_history")
           .select("question, answer")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
-        if (updatedHistory) {
-          setHistory(updatedHistory);
+        if (!historyError && updatedHistory) {
+          setHistory(updatedHistory as ChatHistoryItem[]);
         }
       }
     } catch (err: any) {
