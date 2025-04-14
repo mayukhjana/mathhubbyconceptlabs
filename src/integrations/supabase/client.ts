@@ -21,6 +21,34 @@ export const supabase = createClient<Database>(
       headers: {
         'Content-Type': 'application/json'
       }
+    },
+    db: {
+      schema: 'public',
+    },
+    // Add more detailed error logging
+    logger: {
+      error: (error) => {
+        console.error('Supabase Error:', error);
+      },
+      warn: (message) => {
+        console.warn('Supabase Warning:', message);
+      },
     }
   }
 );
+
+// Check if we can connect to Supabase
+export const checkSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('exams').select('id').limit(1);
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return false;
+    }
+    console.log('Supabase connection successful');
+    return true;
+  } catch (err) {
+    console.error('Supabase connection test exception:', err);
+    return false;
+  }
+};
