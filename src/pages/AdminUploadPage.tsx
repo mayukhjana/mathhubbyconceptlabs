@@ -1,69 +1,28 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import QuestionForm, { QuestionData } from "@/components/QuestionForm";
-import { Upload, File, Check, Plus, Save, Pencil, Trash } from "lucide-react";
+import { Save, Pencil, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  EXAM_TYPES, 
-  BOARD_OPTIONS, 
-  ENTRANCE_OPTIONS, 
-  createExam, 
-  createQuestions 
-} from "@/services/examService";
-
-// Type for exam information
-interface ExamData {
-  title: string;
-  board: string;
-  class: string;
-  chapter: string;
-  year: string;
-  duration: number;
-  is_premium: boolean;
-}
-
-// Define interface for the exam database record
-interface ExamRecord extends ExamData {
-  id: string;
-  created_at?: string;
-  created_by?: string;
-}
+import { createExam, createQuestions } from "@/services/examService";
+import ExamTypeSelector from "@/components/admin/ExamTypeSelector";
+import FileUploadZone from "@/components/admin/FileUploadZone";
+import RecentUploads from "@/components/admin/RecentUploads";
+import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
+import UploadInstructions from "@/components/admin/UploadInstructions";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
-  // Exam basics state
+  
+  // State management
   const [activeTab, setActiveTab] = useState("upload");
-  const [examType, setExamType] = useState<string>(EXAM_TYPES.ENTRANCE);
+  const [examType, setExamType] = useState("board");
   const [selectedBoard, setSelectedBoard] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
@@ -73,12 +32,8 @@ const AdminUploadPage = () => {
   const [isPremium, setIsPremium] = useState(true);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [solutionFile, setSolutionFile] = useState<File | null>(null);
-  
-  // Questions state
   const [questions, setQuestions] = useState<QuestionData[]>([]);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
-  
-  // API states
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [recentUploads, setRecentUploads] = useState<{
@@ -87,21 +42,9 @@ const AdminUploadPage = () => {
     board: string;
     class: string;
     year: string;
-    url: string;
   }[]>([]);
-  
-  // Available classes
-  const classes = ["10", "12"];
-  const chapters = {
-    "10": ["algebra", "geometry", "statistics", "trigonometry", "calculus"],
-    "12": ["algebra", "calculus", "statistics", "vectors", "matrices", "probability"]
-  };
-  
-  useEffect(() => {
-    // Reset board selection when exam type changes
-    setSelectedBoard("");
-  }, [examType]);
 
+  // File handling
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) {
       setUploadedFile(null);
@@ -117,27 +60,23 @@ const AdminUploadPage = () => {
     }
     setSolutionFile(event.target.files[0]);
   };
-  
-  // Add or update question
+
+  // Question management
   const handleSaveQuestion = (questionData: QuestionData) => {
     if (editingQuestionIndex !== null) {
-      // Update existing question
       const updatedQuestions = [...questions];
       updatedQuestions[editingQuestionIndex] = questionData;
       setQuestions(updatedQuestions);
       setEditingQuestionIndex(null);
       toast.success("Question updated!");
     } else {
-      // Add new question
       setQuestions([...questions, questionData]);
       toast.success("Question added!");
     }
   };
-  
-  // Remove question
+
   const handleRemoveQuestion = (index: number) => {
     const updatedQuestions = questions.filter((_, i) => i !== index);
-    // Re-number remaining questions
     const renumberedQuestions = updatedQuestions.map((q, i) => ({
       ...q,
       order_number: i + 1
@@ -145,13 +84,12 @@ const AdminUploadPage = () => {
     setQuestions(renumberedQuestions);
     toast.success("Question removed");
   };
-  
-  // Edit question
+
   const handleEditQuestion = (index: number) => {
     setEditingQuestionIndex(index);
   };
-  
-  // Check if form is valid
+
+  // Form validation
   const isExamFormValid = () => {
     return (
       examTitle && 
@@ -161,8 +99,8 @@ const AdminUploadPage = () => {
       examDuration > 0
     );
   };
-  
-  // Create a new MCQ exam
+
+  // Create MCQ exam
   const handleCreateMCQExam = async () => {
     if (!user) {
       toast.error("You must be logged in to create an exam");
@@ -183,19 +121,6 @@ const AdminUploadPage = () => {
     setUploadProgress(0);
     
     try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          const next = prev + 10;
-          if (next >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return next;
-        });
-      }, 300);
-      
-      // Prepare exam data
       const examPayload = {
         title: examTitle,
         board: selectedBoard,
@@ -206,10 +131,8 @@ const AdminUploadPage = () => {
         is_premium: isPremium
       };
       
-      // Create the exam
       const insertedExam = await createExam(examPayload);
       
-      // Insert questions
       const questionsWithExamId = questions.map(question => ({
         ...question,
         exam_id: insertedExam.id
@@ -217,7 +140,6 @@ const AdminUploadPage = () => {
       
       await createQuestions(questionsWithExamId);
       
-      // Add to recent uploads
       setRecentUploads(prev => [
         {
           id: insertedExam.id,
@@ -227,13 +149,11 @@ const AdminUploadPage = () => {
           year: insertedExam.year,
           url: `/exams/${insertedExam.id}`
         },
-        ...prev.slice(0, 4) // Keep only 5 most recent
+        ...prev.slice(0, 4)
       ]);
       
-      // Complete progress bar
       setUploadProgress(100);
       
-      // Reset form
       setExamTitle("");
       setSelectedBoard("");
       setSelectedClass("");
@@ -252,7 +172,7 @@ const AdminUploadPage = () => {
       setUploadProgress(0);
     }
   };
-  
+
   // Upload PDF paper
   const handleUploadPDF = async () => {
     if (!user) {
@@ -269,19 +189,6 @@ const AdminUploadPage = () => {
     setUploadProgress(0);
     
     try {
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          const next = prev + 10;
-          if (next >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return next;
-        });
-      }, 400);
-      
-      // Create the exam record
       const examPayload = {
         title: examTitle || `${selectedBoard} Mathematics ${selectedYear}`,
         board: selectedBoard,
@@ -294,21 +201,18 @@ const AdminUploadPage = () => {
       
       const examData = await createExam(examPayload);
       
-      // Upload paper file
       if (uploadedFile) {
         await supabase.storage
           .from('exam_papers')
           .upload(`${selectedBoard.replace(/\s/g, '_').toLowerCase()}_paper_${examData.id}.${uploadedFile.name.split('.').pop()}`, uploadedFile);
       }
       
-      // Upload solution file if provided
       if (solutionFile) {
         await supabase.storage
           .from('exam_papers')
           .upload(`${selectedBoard.replace(/\s/g, '_').toLowerCase()}_solution_${examData.id}.${solutionFile.name.split('.').pop()}`, solutionFile);
       }
       
-      // Add to recent uploads
       setRecentUploads(prev => [
         {
           id: examData.id,
@@ -316,14 +220,13 @@ const AdminUploadPage = () => {
           board: selectedBoard,
           class: selectedClass,
           year: selectedYear,
-          url: examType === EXAM_TYPES.ENTRANCE ? 
+          url: examType === 'entrance' ? 
             `/exam-papers?board=${selectedBoard}` : 
             `/boards/${selectedBoard.toLowerCase().replace(/\s/g, '-')}/${selectedChapter || 'full-tests'}`
         },
-        ...prev.slice(0, 4) // Keep only 5 most recent
+        ...prev.slice(0, 4)
       ]);
       
-      // Reset form
       setExamTitle("");
       setSelectedBoard("");
       setSelectedClass("");
@@ -331,8 +234,7 @@ const AdminUploadPage = () => {
       setUploadedFile(null);
       setSolutionFile(null);
       
-      // Show success message
-      toast.success(`File uploaded successfully! The exam will now appear in the ${examType === EXAM_TYPES.ENTRANCE ? 'Entrance' : 'Board'} Exams section.`);
+      toast.success(`File uploaded successfully! The exam will now appear in the ${examType === 'entrance' ? 'Entrance' : 'Board'} Exams section.`);
     } catch (error: any) {
       console.error("Error uploading file:", error);
       toast.error(`Failed to upload file: ${error.message}`);
@@ -362,7 +264,6 @@ const AdminUploadPage = () => {
               
               <TabsContent value="upload">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Upload Form */}
                   <div className="lg:col-span-2">
                     <Card>
                       <CardHeader>
@@ -372,189 +273,41 @@ const AdminUploadPage = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="exam-type">Exam Type</Label>
-                          <Select 
-                            value={examType} 
-                            onValueChange={setExamType}
-                          >
-                            <SelectTrigger id="exam-type">
-                              <SelectValue placeholder="Select Exam Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={EXAM_TYPES.BOARD}>Board Exam</SelectItem>
-                              <SelectItem value={EXAM_TYPES.ENTRANCE}>Entrance Exam</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="board">Board</Label>
-                            <Select 
-                              value={selectedBoard} 
-                              onValueChange={setSelectedBoard}
-                            >
-                              <SelectTrigger id="board">
-                                <SelectValue placeholder="Select Board" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {examType === EXAM_TYPES.ENTRANCE ? 
-                                  ENTRANCE_OPTIONS.map(board => (
-                                    <SelectItem key={board} value={board}>
-                                      {board}
-                                    </SelectItem>
-                                  )) :
-                                  BOARD_OPTIONS.map(board => (
-                                    <SelectItem key={board} value={board}>
-                                      {board}
-                                    </SelectItem>
-                                  ))
-                                }
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="class">Class</Label>
-                            <Select 
-                              value={selectedClass} 
-                              onValueChange={setSelectedClass}
-                            >
-                              <SelectTrigger id="class">
-                                <SelectValue placeholder="Select Class" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {classes.map(cls => (
-                                  <SelectItem key={cls} value={cls}>
-                                    Class {cls}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="year">Year</Label>
-                            <Input
-                              id="year"
-                              type="text"
-                              value={selectedYear}
-                              onChange={(e) => setSelectedYear(e.target.value)}
-                              placeholder="e.g., 2025"
-                            />
-                          </div>
-                        </div>
+                        <ExamTypeSelector 
+                          examType={examType}
+                          selectedBoard={selectedBoard}
+                          onExamTypeChange={setExamType}
+                          onBoardChange={setSelectedBoard}
+                        />
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="title">Paper Title (Optional)</Label>
-                          <Input
-                            id="title"
-                            value={examTitle}
-                            onChange={(e) => setExamTitle(e.target.value)}
-                            placeholder="e.g., Mathematics Final Exam 2025"
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            If not provided, a title will be generated automatically
-                          </p>
-                        </div>
+                        <ExamDetailsForm 
+                          examTitle={examTitle}
+                          selectedClass={selectedClass}
+                          selectedChapter={selectedChapter}
+                          selectedYear={selectedYear}
+                          examDuration={examDuration}
+                          isPremium={isPremium}
+                          onExamTitleChange={setExamTitle}
+                          onClassChange={setSelectedClass}
+                          onChapterChange={setSelectedChapter}
+                          onYearChange={setSelectedYear}
+                          onDurationChange={setExamDuration}
+                          onPremiumChange={setIsPremium}
+                        />
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="chapter">Chapter (Optional)</Label>
-                          <Select
-                            value={selectedChapter}
-                            onValueChange={setSelectedChapter}
-                            disabled={!selectedClass}
-                          >
-                            <SelectTrigger id="chapter">
-                              <SelectValue placeholder="Select Chapter or leave empty for full exam" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {selectedClass && (
-                                chapters[selectedClass as "10" | "12"].map(chapter => (
-                                  <SelectItem key={chapter} value={chapter}>
-                                    {chapter.charAt(0).toUpperCase() + chapter.slice(1)}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <p className="text-sm text-muted-foreground">
-                            If no chapter is selected, this will be considered a full mock test
-                          </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="duration">Duration (minutes)</Label>
-                          <Input
-                            id="duration"
-                            type="number"
-                            min="5"
-                            value={examDuration}
-                            onChange={(e) => setExamDuration(Number(e.target.value))}
-                          />
-                        </div>
+                        <FileUploadZone 
+                          id="file-upload"
+                          label="Exam Paper (PDF)"
+                          file={uploadedFile}
+                          onChange={handleFileChange}
+                        />
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="file-upload">Exam Paper (PDF)</Label>
-                          <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
-                            {uploadedFile ? (
-                              <div className="flex items-center gap-2">
-                                <File size={24} className="text-mathprimary" />
-                                <span>{uploadedFile.name}</span>
-                              </div>
-                            ) : (
-                              <div className="text-center">
-                                <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">
-                                  Drag and drop your file here, or click to select
-                                </p>
-                              </div>
-                            )}
-                            <Input 
-                              id="file-upload" 
-                              type="file" 
-                              accept=".pdf" 
-                              onChange={handleFileChange}
-                              className="hidden" 
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="solution-upload">Solution (PDF, Optional)</Label>
-                          <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
-                            {solutionFile ? (
-                              <div className="flex items-center gap-2">
-                                <File size={24} className="text-mathprimary" />
-                                <span>{solutionFile.name}</span>
-                              </div>
-                            ) : (
-                              <div className="text-center">
-                                <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">
-                                  Drag and drop your solution file here, or click to select
-                                </p>
-                              </div>
-                            )}
-                            <Input 
-                              id="solution-upload" 
-                              type="file" 
-                              accept=".pdf" 
-                              onChange={handleSolutionFileChange}
-                              className="hidden" 
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="premium"
-                            checked={isPremium}
-                            onCheckedChange={setIsPremium}
-                          />
-                          <Label htmlFor="premium">Mark as Premium Content</Label>
-                        </div>
+                        <FileUploadZone 
+                          id="solution-upload"
+                          label="Solution (PDF, Optional)"
+                          file={solutionFile}
+                          onChange={handleSolutionFileChange}
+                        />
                         
                         {isUploading && (
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -577,63 +330,17 @@ const AdminUploadPage = () => {
                     </Card>
                   </div>
                   
-                  {/* Recent Uploads */}
                   <div>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Recent Uploads</CardTitle>
-                        <CardDescription>
-                          Recently uploaded exam papers
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {recentUploads.length > 0 ? (
-                          <ul className="space-y-3">
-                            {recentUploads.map(upload => (
-                              <li key={upload.id} className="border rounded-md p-3">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <div className="font-medium">{upload.name}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {upload.board} Class {upload.class}, {upload.year}
-                                    </div>
-                                  </div>
-                                  <div className="bg-green-100 text-green-800 p-1 rounded">
-                                    <Check size={14} />
-                                  </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-muted-foreground text-sm">No recent uploads</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="mt-4">
-                      <CardHeader>
-                        <CardTitle>Upload Instructions</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="list-disc pl-5 space-y-2 text-sm">
-                          <li>Upload files in PDF format</li>
-                          <li>Maximum file size: 10MB</li>
-                          <li>Name format will be automatically generated</li>
-                          <li>For board exams, select a chapter or leave empty for full mock test</li>
-                          <li>For entrance exams, select the appropriate entrance exam board</li>
-                          <li>Upload solutions to help students learn from their mistakes</li>
-                          <li>For premium papers, students will need a subscription to access</li>
-                        </ul>
-                      </CardContent>
-                    </Card>
+                    <RecentUploads uploads={recentUploads} />
+                    <div className="mt-4">
+                      <UploadInstructions type="pdf" />
+                    </div>
                   </div>
                 </div>
               </TabsContent>
               
               <TabsContent value="mcq">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* MCQ Creation Form */}
                   <div className="lg:col-span-2">
                     <Card>
                       <CardHeader>
@@ -646,135 +353,27 @@ const AdminUploadPage = () => {
                         <div className="space-y-4">
                           <h3 className="font-medium">Exam Details</h3>
                           
-                          <div className="space-y-2">
-                            <Label htmlFor="exam-title">Exam Title</Label>
-                            <Input
-                              id="exam-title"
-                              value={examTitle}
-                              onChange={(e) => setExamTitle(e.target.value)}
-                              placeholder="E.g., WBJEE Mathematics 2024"
-                            />
-                          </div>
+                          <ExamTypeSelector 
+                            examType={examType}
+                            selectedBoard={selectedBoard}
+                            onExamTypeChange={setExamType}
+                            onBoardChange={setSelectedBoard}
+                          />
                           
-                          <div className="space-y-2">
-                            <Label htmlFor="exam-type-mcq">Exam Type</Label>
-                            <Select 
-                              value={examType} 
-                              onValueChange={setExamType}
-                            >
-                              <SelectTrigger id="exam-type-mcq">
-                                <SelectValue placeholder="Select Exam Type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value={EXAM_TYPES.BOARD}>Board Exam</SelectItem>
-                                <SelectItem value={EXAM_TYPES.ENTRANCE}>Entrance Exam</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="mcq-board">Board</Label>
-                              <Select 
-                                value={selectedBoard} 
-                                onValueChange={setSelectedBoard}
-                              >
-                                <SelectTrigger id="mcq-board">
-                                  <SelectValue placeholder="Select Board" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {examType === EXAM_TYPES.ENTRANCE ? 
-                                    ENTRANCE_OPTIONS.map(board => (
-                                      <SelectItem key={board} value={board}>
-                                        {board}
-                                      </SelectItem>
-                                    )) :
-                                    BOARD_OPTIONS.map(board => (
-                                      <SelectItem key={board} value={board}>
-                                        {board}
-                                      </SelectItem>
-                                    ))
-                                  }
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor="mcq-class">Class</Label>
-                              <Select 
-                                value={selectedClass} 
-                                onValueChange={setSelectedClass}
-                              >
-                                <SelectTrigger id="mcq-class">
-                                  <SelectValue placeholder="Select Class" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {classes.map(cls => (
-                                    <SelectItem key={cls} value={cls}>
-                                      Class {cls}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor="mcq-year">Year</Label>
-                              <Input
-                                id="mcq-year"
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                                placeholder="e.g., 2025"
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="mcq-chapter">Chapter (Optional)</Label>
-                              <Select 
-                                value={selectedChapter} 
-                                onValueChange={setSelectedChapter}
-                                disabled={!selectedClass}
-                              >
-                                <SelectTrigger id="mcq-chapter">
-                                  <SelectValue placeholder="Select Chapter" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {selectedClass && (
-                                    chapters[selectedClass as "10" | "12"].map(chapter => (
-                                      <SelectItem key={chapter} value={chapter}>
-                                        {chapter.charAt(0).toUpperCase() + chapter.slice(1)}
-                                      </SelectItem>
-                                    ))
-                                  )}
-                                </SelectContent>
-                              </Select>
-                              <p className="text-sm text-muted-foreground">
-                                If no chapter is selected, this will be considered a full exam
-                              </p>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor="mcq-duration">Duration (minutes)</Label>
-                              <Input
-                                id="mcq-duration"
-                                type="number"
-                                min="5"
-                                value={examDuration}
-                                onChange={(e) => setExamDuration(Number(e.target.value))}
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id="premium"
-                              checked={isPremium}
-                              onCheckedChange={setIsPremium}
-                            />
-                            <Label htmlFor="premium">Mark as Premium Content</Label>
-                          </div>
+                          <ExamDetailsForm 
+                            examTitle={examTitle}
+                            selectedClass={selectedClass}
+                            selectedChapter={selectedChapter}
+                            selectedYear={selectedYear}
+                            examDuration={examDuration}
+                            isPremium={isPremium}
+                            onExamTitleChange={setExamTitle}
+                            onClassChange={setSelectedClass}
+                            onChapterChange={setSelectedChapter}
+                            onYearChange={setSelectedYear}
+                            onDurationChange={setExamDuration}
+                            onPremiumChange={setIsPremium}
+                          />
                         </div>
                         
                         <div className="border-t pt-6 space-y-4">
@@ -785,7 +384,6 @@ const AdminUploadPage = () => {
                             </span>
                           </div>
                           
-                          {/* List of existing questions */}
                           {questions.length > 0 && editingQuestionIndex === null && (
                             <div className="space-y-4 mb-4">
                               {questions.map((question, index) => (
@@ -815,29 +413,27 @@ const AdminUploadPage = () => {
                                   </div>
                                   <p className="mb-2">{question.question_text}</p>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                                    <div className={`p-2 rounded ${question.correct_answer === 'a' ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                      A: {question.option_a}
-                                      {question.correct_answer === 'a' && <span className="ml-2 text-green-600 font-medium">(Correct)</span>}
-                                    </div>
-                                    <div className={`p-2 rounded ${question.correct_answer === 'b' ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                      B: {question.option_b}
-                                      {question.correct_answer === 'b' && <span className="ml-2 text-green-600 font-medium">(Correct)</span>}
-                                    </div>
-                                    <div className={`p-2 rounded ${question.correct_answer === 'c' ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                      C: {question.option_c}
-                                      {question.correct_answer === 'c' && <span className="ml-2 text-green-600 font-medium">(Correct)</span>}
-                                    </div>
-                                    <div className={`p-2 rounded ${question.correct_answer === 'd' ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                      D: {question.option_d}
-                                      {question.correct_answer === 'd' && <span className="ml-2 text-green-600 font-medium">(Correct)</span>}
-                                    </div>
+                                    {['a', 'b', 'c', 'd'].map((option) => (
+                                      <div 
+                                        key={option}
+                                        className={`p-2 rounded ${
+                                          question.correct_answer === option 
+                                            ? 'bg-green-100' 
+                                            : 'bg-gray-100'
+                                        }`}
+                                      >
+                                        {option.toUpperCase()}: {question[`option_${option}` as keyof typeof question]}
+                                        {question.correct_answer === option && (
+                                          <span className="ml-2 text-green-600 font-medium">(Correct)</span>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               ))}
                             </div>
                           )}
                           
-                          {/* Question form */}
                           {editingQuestionIndex !== null ? (
                             <QuestionForm
                               initialData={questions[editingQuestionIndex]}
@@ -892,55 +488,15 @@ const AdminUploadPage = () => {
                     </Card>
                   </div>
                   
-                  {/* Tips and Recent Uploads */}
                   <div>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Recent MCQ Exams</CardTitle>
-                        <CardDescription>
-                          Recently created multiple-choice exams
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {recentUploads.length > 0 ? (
-                          <ul className="space-y-3">
-                            {recentUploads.map(upload => (
-                              <li key={upload.id} className="border rounded-md p-3">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <div className="font-medium">{upload.name}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {upload.board} Class {upload.class}
-                                    </div>
-                                  </div>
-                                  <div className="bg-green-100 text-green-800 p-1 rounded">
-                                    <Check size={14} />
-                                  </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-muted-foreground text-sm">No recent MCQ exams</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="mt-4">
-                      <CardHeader>
-                        <CardTitle>Creating Good MCQs</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="list-disc pl-5 space-y-2 text-sm">
-                          <li>Keep questions clear and concise</li>
-                          <li>Make sure there is only one correct answer</li>
-                          <li>Avoid using "All of the above" or "None of the above"</li>
-                          <li>Make distractors plausible</li>
-                          <li>Use consistent grammar across all options</li>
-                          <li>Aim for 20-25 questions per exam for an hour</li>
-                        </ul>
-                      </CardContent>
-                    </Card>
+                    <RecentUploads 
+                      uploads={recentUploads} 
+                      title="Recent MCQ Exams"
+                      description="Recently created multiple-choice exams"
+                    />
+                    <div className="mt-4">
+                      <UploadInstructions type="mcq" />
+                    </div>
                   </div>
                 </div>
               </TabsContent>
