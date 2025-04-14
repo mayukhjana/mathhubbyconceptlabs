@@ -214,13 +214,31 @@ export const fetchExam = async (examId: string) => {
 export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution', board: string) => {
   try {
     const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
-    return `/exam_papers/${boardFormatted}_${fileType}_${examId}.pdf`;
+    const bucketName = fileType === 'paper' ? 
+      `${boardFormatted}_papers` : 
+      `${boardFormatted}_solutions`;
+    
+    const fileName = `${boardFormatted}_${fileType}_${examId}.pdf`;
+    
+    // Check if file exists in the specified bucket
+    const { data, error } = await supabase
+      .storage
+      .from(bucketName)
+      .createSignedUrl(fileName, 60 * 60); // URL valid for 1 hour
+    
+    if (error) {
+      console.error(`Error getting ${fileType} download URL:`, error);
+      return null;
+    }
+    
+    return data.signedUrl;
   } catch (error) {
     console.error(`Error getting ${fileType} download URL:`, error);
     return null;
   }
 };
 
+// Update the uploadExamFile function for proper storage
 export const uploadExamFile = async (
   file: File, 
   examId: string, 
@@ -228,21 +246,24 @@ export const uploadExamFile = async (
   board: string
 ) => {
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${board.replace(/\s/g, '_').toLowerCase()}_${fileType}_${examId}.${fileExt}`;
-    const filePath = `exam_papers/${fileName}`;
+    const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
+    const bucketName = fileType === 'paper' ? 
+      `${boardFormatted}_papers` : 
+      `${boardFormatted}_solutions`;
     
-    // In a real implementation with Supabase storage:
-    // const { data, error } = await supabase
-    //   .storage
-    //   .from('exam_papers')
-    //   .upload(fileName, file);
+    const fileName = `${boardFormatted}_${fileType}_${examId}.pdf`;
     
-    // if (error) throw error;
+    const { data, error } = await supabase
+      .storage
+      .from(bucketName)
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
     
-    console.log(`Uploading ${fileType} for exam ${examId} to ${filePath}`);
+    if (error) throw error;
     
-    return filePath;
+    return fileName;
   } catch (error) {
     console.error(`Error uploading ${fileType}:`, error);
     throw error;

@@ -9,6 +9,7 @@ interface FileUploadZoneProps {
   file: File | null;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   description?: string;
+  acceptFormats?: string;
 }
 
 const FileUploadZone = ({ 
@@ -16,12 +17,40 @@ const FileUploadZone = ({
   label, 
   file, 
   onChange, 
-  description 
+  description,
+  acceptFormats = ".pdf"
 }: FileUploadZoneProps) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // Create a synthetic event to pass to the onChange handler
+      const fileList = e.dataTransfer.files;
+      const syntheticEvent = {
+        target: {
+          files: fileList
+        }
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      
+      onChange(syntheticEvent);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
+      <div 
+        className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-mathprimary transition-colors"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => document.getElementById(id)?.click()}
+      >
         {file ? (
           <div className="flex items-center gap-2">
             <File size={24} className="text-mathprimary" />
@@ -38,7 +67,7 @@ const FileUploadZone = ({
         <Input 
           id={id} 
           type="file" 
-          accept=".pdf" 
+          accept={acceptFormats}
           onChange={onChange}
           className="hidden" 
         />
