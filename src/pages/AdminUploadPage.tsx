@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -5,16 +6,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import QuestionForm, { QuestionData } from "@/components/QuestionForm";
-import { Save, Pencil, Trash, Play } from "lucide-react";
+import { Save } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { createExam, createQuestions, uploadExamFile, fetchEntranceExams } from "@/services/examService";
 import ExamTypeSelector from "@/components/admin/ExamTypeSelector";
-import FileUploadZone from "@/components/admin/FileUploadZone";
 import RecentUploads from "@/components/admin/RecentUploads";
 import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
 import UploadInstructions from "@/components/admin/UploadInstructions";
+import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
+import type { QuestionData } from "@/components/QuestionForm";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
@@ -31,7 +31,6 @@ const AdminUploadPage = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [solutionFile, setSolutionFile] = useState<File | null>(null);
   const [questions, setQuestions] = useState<QuestionData[]>([]);
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [recentUploads, setRecentUploads] = useState<{
@@ -54,7 +53,6 @@ const AdminUploadPage = () => {
     setUploadedFile(null);
     setSolutionFile(null);
     setQuestions([]);
-    setEditingQuestionIndex(null);
   };
 
   // Load recent uploads
@@ -101,11 +99,11 @@ const AdminUploadPage = () => {
 
   // Question management
   const handleSaveQuestion = (questionData: QuestionData) => {
-    if (editingQuestionIndex !== null) {
+    const existingIndex = questions.findIndex(q => q.order_number === questionData.order_number);
+    if (existingIndex !== -1) {
       const updatedQuestions = [...questions];
-      updatedQuestions[editingQuestionIndex] = questionData;
+      updatedQuestions[existingIndex] = questionData;
       setQuestions(updatedQuestions);
-      setEditingQuestionIndex(null);
       toast.success("Question updated!");
     } else {
       setQuestions([...questions, questionData]);
@@ -121,10 +119,6 @@ const AdminUploadPage = () => {
     }));
     setQuestions(renumberedQuestions);
     toast.success("Question removed");
-  };
-
-  const handleEditQuestion = (index: number) => {
-    setEditingQuestionIndex(index);
   };
 
   // Form validation
@@ -206,10 +200,7 @@ const AdminUploadPage = () => {
       ]);
       
       setUploadProgress(100);
-      
-      // Reset the form
       resetForm();
-      
       toast.success("Exam created successfully with PDF and MCQs!");
     } catch (error: any) {
       console.error("Error creating unified exam:", error);
@@ -268,106 +259,17 @@ const AdminUploadPage = () => {
                       />
                     </div>
                     
-                    <div className="border-t pt-6 space-y-4">
-                      <h3 className="font-medium">PDF Papers</h3>
-                      
-                      <FileUploadZone 
-                        id="file-upload"
-                        label="Exam Paper (PDF)"
-                        file={uploadedFile}
-                        onChange={handleFileChange}
-                        required={true}
-                      />
-                      
-                      <FileUploadZone 
-                        id="solution-upload"
-                        label="Solution (PDF, Optional)"
-                        file={solutionFile}
-                        onChange={handleSolutionFileChange}
-                      />
-                    </div>
-                    
-                    <div className="border-t pt-6 space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-medium">MCQ Questions (Optional)</h3>
-                        <span className="text-sm text-muted-foreground">
-                          {questions.length} questions added
-                        </span>
-                      </div>
-                      
-                      {questions.length > 0 && editingQuestionIndex === null && (
-                        <div className="space-y-4 mb-4">
-                          {questions.map((question, index) => (
-                            <div 
-                              key={index} 
-                              className="border rounded-md p-4 hover:border-mathprimary/50 transition-colors"
-                            >
-                              <div className="flex justify-between mb-2">
-                                <h4 className="font-medium">Question #{question.order_number}</h4>
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => handleEditQuestion(index)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => handleRemoveQuestion(index)}
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                              <p className="mb-2">{question.question_text}</p>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                                {['a', 'b', 'c', 'd'].map((option) => (
-                                  <div 
-                                    key={option}
-                                    className={`p-2 rounded ${
-                                      question.correct_answer === option 
-                                        ? 'bg-green-100' 
-                                        : 'bg-gray-100'
-                                    }`}
-                                  >
-                                    {option.toUpperCase()}: {question[`option_${option}` as keyof typeof question]}
-                                    {question.correct_answer === option && (
-                                      <span className="ml-2 text-green-600 font-medium">(Correct)</span>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {editingQuestionIndex !== null ? (
-                        <QuestionForm
-                          initialData={questions[editingQuestionIndex]}
-                          onSave={handleSaveQuestion}
-                          onCancel={() => setEditingQuestionIndex(null)}
-                          index={editingQuestionIndex}
-                        />
-                      ) : (
-                        <QuestionForm
-                          onSave={handleSaveQuestion}
-                          index={questions.length}
-                        />
-                      )}
-                    </div>
-                    
-                    {isUploading && (
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div 
-                          className="bg-mathprimary h-2.5 rounded-full" 
-                          style={{ width: `${uploadProgress}%` }}
-                        ></div>
-                      </div>
-                    )}
+                    <UnifiedExamForm
+                      uploadedFile={uploadedFile}
+                      solutionFile={solutionFile}
+                      questions={questions}
+                      isUploading={isUploading}
+                      uploadProgress={uploadProgress}
+                      onFileChange={handleFileChange}
+                      onSolutionFileChange={handleSolutionFileChange}
+                      onSaveQuestion={handleSaveQuestion}
+                      onRemoveQuestion={handleRemoveQuestion}
+                    />
                   </CardContent>
                   <CardFooter>
                     <Button 
