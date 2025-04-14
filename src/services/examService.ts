@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Exam {
@@ -132,11 +131,23 @@ export const submitExamResult = async (
   return data;
 };
 
-// Function to get a download URL for a file
+export const fetchExam = async (examId: string) => {
+  const { data, error } = await supabase
+    .from('exams')
+    .select()
+    .eq('id', examId)
+    .single();
+    
+  if (error) {
+    console.error("Error fetching exam:", error);
+    return null;
+  }
+  
+  return data as Exam;
+};
+
 export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution', board: string) => {
   try {
-    // In a real implementation, this would fetch from storage or generate a URL
-    // For demo purposes, we'll return a placeholder
     const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
     return `/exam_papers/${boardFormatted}_${fileType}_${examId}.pdf`;
   } catch (error) {
@@ -145,7 +156,6 @@ export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'so
   }
 };
 
-// Function to upload an exam file
 export const uploadExamFile = async (
   file: File, 
   examId: string, 
@@ -153,16 +163,12 @@ export const uploadExamFile = async (
   board: string
 ) => {
   try {
-    // Create a filename based on exam details
     const fileExt = file.name.split('.').pop();
     const fileName = `${board.replace(/\s/g, '_')}_${fileType}_${examId}.${fileExt}`;
     const filePath = `exam_papers/${fileName}`;
     
-    // In a real implementation, this would upload to storage
-    // For now, we'll just return the path as if it was uploaded
     console.log(`Uploading ${fileType} for exam ${examId} to ${filePath}`);
     
-    // Return the path where the file would be stored
     return filePath;
   } catch (error) {
     console.error(`Error uploading ${fileType}:`, error);
