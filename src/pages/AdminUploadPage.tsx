@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,10 +6,10 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import QuestionForm, { QuestionData } from "@/components/QuestionForm";
-import { Save, Pencil, Trash, FileText, FileDown, Play } from "lucide-react";
+import { Save, Pencil, Trash, Play } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { createExam, createQuestions, uploadExamFile, fetchEntranceExams, ENTRANCE_OPTIONS } from "@/services/examService";
+import { createExam, createQuestions, uploadExamFile, fetchEntranceExams } from "@/services/examService";
 import ExamTypeSelector from "@/components/admin/ExamTypeSelector";
 import FileUploadZone from "@/components/admin/FileUploadZone";
 import RecentUploads from "@/components/admin/RecentUploads";
@@ -43,13 +42,26 @@ const AdminUploadPage = () => {
     year: string;
   }[]>([]);
 
-  // Clear WBJEE exams on initial load
+  // Reset form to initial state
+  const resetForm = () => {
+    setExamTitle("");
+    setSelectedBoard("WBJEE");
+    setSelectedClass("11-12");
+    setSelectedChapter("");
+    setSelectedYear(new Date().getFullYear().toString());
+    setExamDuration(60);
+    setIsPremium(false);
+    setUploadedFile(null);
+    setSolutionFile(null);
+    setQuestions([]);
+    setEditingQuestionIndex(null);
+  };
+
+  // Load recent uploads
   useEffect(() => {
-    // Load recent exams but filter out WBJEE ones (they'll be re-added as the user creates them)
     const loadRecentUploads = async () => {
       try {
         const exams = await fetchEntranceExams();
-        // Filter out WBJEE exams - they will be re-added when created by the admin
         const filteredExams = exams.filter(exam => exam.board !== "WBJEE");
         
         const formattedUploads = filteredExams.slice(0, 5).map(exam => ({
@@ -196,13 +208,7 @@ const AdminUploadPage = () => {
       setUploadProgress(100);
       
       // Reset the form
-      setExamTitle("");
-      setSelectedYear(new Date().getFullYear().toString());
-      setExamDuration(60);
-      setIsPremium(false);
-      setUploadedFile(null);
-      setSolutionFile(null);
-      setQuestions([]);
+      resetForm();
       
       toast.success("Exam created successfully with PDF and MCQs!");
     } catch (error: any) {
@@ -262,7 +268,6 @@ const AdminUploadPage = () => {
                       />
                     </div>
                     
-                    {/* PDF Upload Section */}
                     <div className="border-t pt-6 space-y-4">
                       <h3 className="font-medium">PDF Papers</h3>
                       
@@ -282,7 +287,6 @@ const AdminUploadPage = () => {
                       />
                     </div>
                     
-                    {/* MCQ Section */}
                     <div className="border-t pt-6 space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium">MCQ Questions (Optional)</h3>
@@ -370,18 +374,7 @@ const AdminUploadPage = () => {
                       variant="outline" 
                       disabled={isUploading}
                       className="mr-auto"
-                      onClick={() => {
-                        setExamTitle("");
-                        setSelectedBoard("WBJEE");
-                        setSelectedClass("11-12");
-                        setSelectedChapter("");
-                        setSelectedYear(new Date().getFullYear().toString());
-                        setExamDuration(60);
-                        setIsPremium(false);
-                        setUploadedFile(null);
-                        setSolutionFile(null);
-                        setQuestions([]);
-                      }}
+                      onClick={resetForm}
                     >
                       Clear Form
                     </Button>
