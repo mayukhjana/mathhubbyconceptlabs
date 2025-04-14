@@ -1,12 +1,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
+import { Save, PlusCircle } from "lucide-react";
 import { QuestionData } from "@/components/QuestionForm";
 import { toast } from "sonner";
 import QuestionForm from "@/components/QuestionForm";
 import FileUploadZone from "@/components/admin/FileUploadZone";
 import MCQQuestionsList from "@/components/admin/MCQQuestionsList";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UnifiedExamFormProps {
   uploadedFile: File | null;
@@ -32,14 +34,22 @@ const UnifiedExamForm = ({
   onRemoveQuestion,
 }: UnifiedExamFormProps) => {
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+  const [showQuestionForm, setShowQuestionForm] = useState(false);
 
   const handleEditQuestion = (index: number) => {
     setEditingQuestionIndex(index);
+    setShowQuestionForm(true);
   };
 
   const handleSaveQuestion = (questionData: QuestionData) => {
     onSaveQuestion(questionData);
+    // Don't hide the form after saving, so users can add multiple questions
     setEditingQuestionIndex(null);
+  };
+
+  const handleCancelQuestion = () => {
+    setEditingQuestionIndex(null);
+    setShowQuestionForm(false);
   };
 
   return (
@@ -77,27 +87,48 @@ const UnifiedExamForm = ({
           onRemoveQuestion={onRemoveQuestion}
         />
         
-        {editingQuestionIndex !== null ? (
+        {!showQuestionForm && questions.length === 0 && (
+          <Card className="border-dashed">
+            <CardContent className="py-6 text-center">
+              <p className="text-muted-foreground mb-4">No questions added yet</p>
+              <Button onClick={() => setShowQuestionForm(true)} variant="outline">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add First Question
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        
+        {(editingQuestionIndex !== null || showQuestionForm) ? (
           <QuestionForm
-            initialData={questions[editingQuestionIndex]}
+            initialData={editingQuestionIndex !== null ? questions[editingQuestionIndex] : undefined}
             onSave={handleSaveQuestion}
-            onCancel={() => setEditingQuestionIndex(null)}
-            index={editingQuestionIndex}
+            onCancel={handleCancelQuestion}
+            index={editingQuestionIndex !== null ? editingQuestionIndex : questions.length}
           />
         ) : (
-          <QuestionForm
-            onSave={handleSaveQuestion}
-            index={questions.length}
-          />
+          <Button 
+            onClick={() => setShowQuestionForm(true)} 
+            variant="outline" 
+            className="w-full"
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add Another Question
+          </Button>
         )}
       </div>
       
       {isUploading && (
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-mathprimary h-2.5 rounded-full" 
-            style={{ width: `${uploadProgress}%` }}
-          ></div>
+        <div className="space-y-2">
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-mathprimary h-2.5 rounded-full transition-all duration-300" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+          <p className="text-sm text-center text-muted-foreground">
+            Uploading... {uploadProgress}%
+          </p>
         </div>
       )}
     </div>

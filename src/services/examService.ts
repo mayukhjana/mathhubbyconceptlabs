@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Exam {
@@ -213,11 +212,11 @@ export const fetchExam = async (examId: string) => {
 
 export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'solution', board: string) => {
   try {
-    const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
-    const bucketName = fileType === 'paper' ? 
-      `${boardFormatted}_papers` : 
-      `${boardFormatted}_solutions`;
+    // Use a consistent bucket name instead of dynamically generated ones
+    const bucketName = fileType === 'paper' ? 'exam_papers' : 'solutions';
     
+    // Create a standardized file naming convention
+    const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
     const fileName = `${boardFormatted}_${fileType}_${examId}.pdf`;
     
     console.log(`Attempting to get ${fileType} from bucket: ${bucketName}, file: ${fileName}`);
@@ -248,11 +247,11 @@ export const uploadExamFile = async (
   board: string
 ) => {
   try {
-    const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
-    const bucketName = fileType === 'paper' ? 
-      `${boardFormatted}_papers` : 
-      `${boardFormatted}_solutions`;
+    // Use a consistent bucket name instead of dynamically generated ones
+    const bucketName = fileType === 'paper' ? 'exam_papers' : 'solutions';
     
+    // Create a standardized file naming convention
+    const boardFormatted = board.replace(/\s/g, '_').toLowerCase();
     const fileName = `${boardFormatted}_${fileType}_${examId}.pdf`;
     
     console.log(`Uploading ${fileType} to bucket: ${bucketName}, file: ${fileName}`);
@@ -307,7 +306,6 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
   return data as Question[];
 };
 
-// Add a function to check if an exam has MCQs
 export const examHasMCQs = async (examId: string): Promise<boolean> => {
   const { count, error } = await supabase
     .from('questions')
@@ -322,7 +320,6 @@ export const examHasMCQs = async (examId: string): Promise<boolean> => {
   return count !== null && count > 0;
 };
 
-// Add a function to delete all WBJEE exams (used for initial cleanup)
 export const deleteWBJEEExams = async () => {
   try {
     // First delete all questions associated with WBJEE exams

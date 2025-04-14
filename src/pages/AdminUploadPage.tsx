@@ -15,6 +15,8 @@ import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
 import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
 import type { QuestionData } from "@/components/QuestionForm";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
@@ -33,6 +35,7 @@ const AdminUploadPage = () => {
   const [questions, setQuestions] = useState<QuestionData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [recentUploads, setRecentUploads] = useState<{
     id: string;
     name: string;
@@ -53,6 +56,7 @@ const AdminUploadPage = () => {
     setUploadedFile(null);
     setSolutionFile(null);
     setQuestions([]);
+    setError(null);
   };
 
   // Load recent uploads
@@ -147,6 +151,7 @@ const AdminUploadPage = () => {
     
     setIsUploading(true);
     setUploadProgress(10);
+    setError(null);
     
     try {
       // Create the exam record first
@@ -200,14 +205,15 @@ const AdminUploadPage = () => {
       ]);
       
       setUploadProgress(100);
-      resetForm();
       toast.success("Exam created successfully with PDF and MCQs!");
+      resetForm();
     } catch (error: any) {
       console.error("Error creating unified exam:", error);
+      setError(error.message || "Failed to create exam");
       toast.error(`Failed to create exam: ${error.message}`);
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -233,6 +239,14 @@ const AdminUploadPage = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    {error && (
+                      <Alert variant="destructive" className="mb-6">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+                    
                     <div className="space-y-4">
                       <h3 className="font-medium">Exam Details</h3>
                       
