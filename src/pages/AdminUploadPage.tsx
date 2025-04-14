@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
-import { createExam, createQuestions, uploadExamFile, fetchEntranceExams, ensureStorageBuckets } from "@/services/examService";
+import { createExam, createQuestions, fetchEntranceExams } from "@/services/exam";
+import { uploadExamFile, ensureStorageBuckets } from "@/services/exam/storage";
 import ExamTypeSelector from "@/components/admin/ExamTypeSelector";
 import RecentUploads from "@/components/admin/RecentUploads";
 import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
@@ -21,7 +21,6 @@ import { AlertCircle } from "lucide-react";
 const AdminUploadPage = () => {
   const { user } = useAuth();
   
-  // State management
   const [examType, setExamType] = useState("entrance");
   const [selectedBoard, setSelectedBoard] = useState("WBJEE");
   const [selectedClass, setSelectedClass] = useState("11-12");
@@ -45,10 +44,10 @@ const AdminUploadPage = () => {
     year: string;
   }[]>([]);
 
-  // Ensure buckets exist when page loads
   useEffect(() => {
     const initBuckets = async () => {
       try {
+        console.log("Initializing storage buckets...");
         const result = await ensureStorageBuckets();
         setBucketsReady(result);
         if (!result) {
@@ -56,16 +55,16 @@ const AdminUploadPage = () => {
         } else {
           console.log("Storage buckets initialized successfully");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error initializing buckets:", err);
-        setError("Failed to initialize storage buckets. Please try again later.");
+        setError(`Failed to initialize storage buckets: ${err.message}`);
+        toast.error(`Storage initialization failed: ${err.message}`);
       }
     };
     
     initBuckets();
   }, []);
 
-  // Reset form to initial state
   const resetForm = () => {
     setExamTitle("");
     setSelectedBoard("WBJEE");
@@ -80,7 +79,6 @@ const AdminUploadPage = () => {
     setError(null);
   };
 
-  // Load recent uploads
   useEffect(() => {
     const loadRecentUploads = async () => {
       try {
@@ -105,7 +103,6 @@ const AdminUploadPage = () => {
     loadRecentUploads();
   }, []);
 
-  // File handling
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) {
       setUploadedFile(null);
@@ -122,7 +119,6 @@ const AdminUploadPage = () => {
     setSolutionFile(event.target.files[0]);
   };
 
-  // Question management
   const handleSaveQuestion = (questionData: QuestionData) => {
     const existingIndex = questions.findIndex(q => q.order_number === questionData.order_number);
     if (existingIndex !== -1) {
@@ -146,7 +142,6 @@ const AdminUploadPage = () => {
     toast.success("Question removed");
   };
 
-  // Form validation
   const isExamFormValid = () => {
     return (
       examTitle && 
@@ -159,7 +154,6 @@ const AdminUploadPage = () => {
     );
   };
 
-  // Create unified exam with both PDF and MCQs
   const handleCreateUnifiedExam = async () => {
     if (!user) {
       toast.error("You must be logged in to create an exam");
@@ -169,9 +163,18 @@ const AdminUploadPage = () => {
     if (!bucketsReady) {
       toast.error("Storage is not ready. Please try again in a moment.");
       // Try to reinitialize buckets
-      const result = await ensureStorageBuckets();
-      setBucketsReady(result);
-      if (!result) {
+      try {
+        console.log("Retrying bucket initialization...");
+        const result = await ensureStorageBuckets();
+        setBucketsReady(result);
+        if (!result) {
+          toast.error("Storage initialization failed. Please try again later.");
+          return;
+        }
+        toast.success("Storage initialized successfully");
+      } catch (err: any) {
+        console.error("Error reinitializing buckets:", err);
+        toast.error(`Storage initialization failed: ${err.message}`);
         return;
       }
     }
@@ -186,7 +189,6 @@ const AdminUploadPage = () => {
     setError(null);
     
     try {
-      // Create the exam record first
       const examPayload = {
         title: examTitle || `${selectedBoard} Mathematics ${selectedYear}`,
         board: selectedBoard,
@@ -200,19 +202,26 @@ const AdminUploadPage = () => {
       const insertedExam = await createExam(examPayload);
       setUploadProgress(30);
       
-      // Upload the question paper PDF
       if (uploadedFile) {
-        await uploadExamFile(uploadedFile, insertedExam.id, 'paper', selectedBoard);
+        try {
+          await uploadExamFile(uploadedFile, insertedExam.id, 'paper', selectedBoard);
+        } catch (err: any) {
+          console.error("Error uploading paper:", err);
+          toast.error(`Failed to upload paper: ${err.message}`);
+        }
       }
       setUploadProgress(50);
       
-      // Upload the solution PDF if provided
       if (solutionFile) {
-        await uploadExamFile(solutionFile, insertedExam.id, 'solution', selectedBoard);
+        try {
+          await uploadExamFile(solutionFile, insertedExam.id, 'solution', selectedBoard);
+        } catch (err: any) {
+          console.error("Error uploading solution:", err);
+          toast.error(`Failed to upload solution: ${err.message}`);
+        }
       }
       setUploadProgress(70);
       
-      // Create MCQ questions if provided
       if (questions.length > 0) {
         const questionsWithExamId = questions.map(question => ({
           ...question,
@@ -223,15 +232,13 @@ const AdminUploadPage = () => {
       }
       setUploadProgress(90);
       
-      // Add to recent uploads
       setRecentUploads(prev => [
         {
           id: insertedExam.id,
           name: insertedExam.title,
           board: insertedExam.board,
           class: insertedExam.class,
-          year: insertedExam.year,
-          url: `/exams/${insertedExam.id}`
+          year: insertedExam.year
         },
         ...prev.filter(upload => upload.board !== "WBJEE" || upload.id !== insertedExam.id).slice(0, 4)
       ]);
