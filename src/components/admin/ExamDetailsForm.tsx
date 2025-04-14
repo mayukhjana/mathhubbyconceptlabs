@@ -34,7 +34,7 @@ const ExamDetailsForm = ({
   onPremiumChange,
 }: ExamDetailsFormProps) => {
   const classes = ["10", "12"];
-  const chapters = {
+  const chapters: Record<string, string[]> = {
     "10": ["algebra", "geometry", "statistics", "trigonometry", "calculus"],
     "12": ["algebra", "calculus", "statistics", "vectors", "matrices", "probability"]
   };
@@ -75,13 +75,13 @@ const ExamDetailsForm = ({
               <SelectValue placeholder="Select Chapter" />
             </SelectTrigger>
             <SelectContent>
-              {selectedClass && (
-                chapters[selectedClass as "10" | "12"].map(chapter => (
+              {selectedClass && chapters[selectedClass] ? (
+                chapters[selectedClass].map(chapter => (
                   <SelectItem key={chapter} value={chapter}>
                     {chapter.charAt(0).toUpperCase() + chapter.slice(1)}
                   </SelectItem>
                 ))
-              )}
+              ) : null}
             </SelectContent>
           </Select>
         </div>
