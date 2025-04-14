@@ -34,27 +34,34 @@ export const ensureStorageBuckets = async () => {
     });
     
     // Create buckets that don't exist
+    const creationPromises = [];
     for (const bucketName of requiredBuckets) {
       if (!existingBuckets.has(bucketName)) {
         console.log(`Creating bucket: ${bucketName}`);
-        try {
-          const { error: createError } = await supabase.storage.createBucket(bucketName, {
-            public: true, // Make bucket publicly accessible
-            fileSizeLimit: 1024 * 1024 * 10 // 10MB
-          });
-          
-          if (createError) {
-            console.error(`Error creating bucket ${bucketName}:`, createError);
-            // Continue trying to create other buckets even if one fails
-          } else {
-            console.log(`Successfully created bucket: ${bucketName}`);
-          }
-        } catch (err) {
-          console.error(`Exception creating bucket ${bucketName}:`, err);
-          // Continue with other buckets
-        }
+        creationPromises.push(
+          createSpecificBucket(bucketName)
+            .then(success => {
+              return { bucketName, success };
+            })
+            .catch(err => {
+              console.error(`Error creating bucket ${bucketName}:`, err);
+              return { bucketName, success: false, error: err };
+            })
+        );
       }
     }
+    
+    // Wait for all bucket creations to complete
+    const results = await Promise.all(creationPromises);
+    
+    // Log results
+    results.forEach(result => {
+      if (result.success) {
+        console.log(`Successfully created bucket: ${result.bucketName}`);
+      } else {
+        console.error(`Failed to create bucket ${result.bucketName}:`, result.error);
+      }
+    });
     
     // Verify buckets after creation attempts
     const { data: verifyBuckets, error: verifyError } = await supabase.storage.listBuckets();
@@ -67,7 +74,7 @@ export const ensureStorageBuckets = async () => {
     return true;
   } catch (error) {
     console.error("Error ensuring storage buckets:", error);
-    return false; // Return false if we fail to ensure buckets
+    return false;
   }
 };
 
@@ -75,19 +82,46 @@ export const ensureStorageBuckets = async () => {
 export const createSpecificBucket = async (bucketName: string): Promise<boolean> => {
   try {
     console.log(`Directly creating bucket: ${bucketName}`);
-    const { error } = await supabase.storage.createBucket(bucketName, {
+    
+    // First check if the bucket already exists
+    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error("Error checking existing buckets:", listError);
+      // Continue with creation attempt anyway
+    } else {
+      const bucketExists = existingBuckets?.some(b => b.name === bucketName);
+      if (bucketExists) {
+        console.log(`Bucket ${bucketName} already exists, skipping creation`);
+        return true;
+      }
+    }
+    
+    // Create the bucket
+    const { data, error } = await supabase.storage.createBucket(bucketName, {
       public: true,
       fileSizeLimit: 1024 * 1024 * 10 // 10MB
     });
     
     if (error) {
       // If error is about bucket already existing, consider it a success
-      if (error.message.includes('already exists')) {
+      if (error.message && error.message.includes('already exists')) {
         console.log(`Bucket ${bucketName} already exists, continuing...`);
         return true;
       }
       console.error(`Error creating bucket ${bucketName}:`, error);
       return false;
+    }
+    
+    // Update the bucket to be publicly accessible
+    const { error: updateError } = await supabase.storage.updateBucket(bucketName, {
+      public: true,
+      fileSizeLimit: 1024 * 1024 * 10 // 10MB
+    });
+    
+    if (updateError) {
+      console.error(`Error updating bucket ${bucketName}:`, updateError);
+      // Consider it a partial success as the bucket was created
     }
     
     console.log(`Successfully created bucket: ${bucketName}`);
@@ -107,7 +141,29 @@ export const getFileDownloadUrl = async (examId: string, fileType: 'paper' | 'so
     console.log(`Attempting to get ${fileType} from bucket: ${bucketName}, file: ${fileName}`);
     
     // Try to create the bucket if it doesn't exist
-    await createSpecificBucket(bucketName);
+    const bucketCreated = await createSpecificBucket(bucketName);
+    if (!bucketCreated) {
+      console.error(`Failed to create or verify bucket: ${bucketName}`);
+      return null;
+    }
+    
+    // Check if the file exists before creating a signed URL
+    const { data: fileExists, error: fileCheckError } = await supabase
+      .storage
+      .from(bucketName)
+      .list('', { 
+        search: fileName 
+      });
+    
+    if (fileCheckError) {
+      console.error(`Error checking if file exists:`, fileCheckError);
+      return null;
+    }
+    
+    if (!fileExists || fileExists.length === 0) {
+      console.log(`File ${fileName} does not exist in bucket ${bucketName}`);
+      return null;
+    }
     
     const { data, error } = await supabase
       .storage
@@ -143,7 +199,10 @@ export const uploadExamFile = async (
     // First, ensure the specific bucket exists before uploading
     const bucketCreated = await createSpecificBucket(bucketName);
     if (!bucketCreated) {
-      throw new Error(`Failed to create or verify bucket: ${bucketName}`);
+      const errorMsg = `Failed to create or verify bucket: ${bucketName}`;
+      console.error(errorMsg);
+      toast.error(`Failed to upload ${fileType}: ${errorMsg}`);
+      throw new Error(errorMsg);
     }
     
     // Now attempt the upload
@@ -162,6 +221,7 @@ export const uploadExamFile = async (
     }
     
     console.log(`Successfully uploaded ${fileType}:`, data);
+    toast.success(`Successfully uploaded ${fileType}`);
     return fileName;
   } catch (error: any) {
     console.error(`Error uploading ${fileType}:`, error);

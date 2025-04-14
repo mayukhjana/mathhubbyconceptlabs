@@ -21,9 +21,6 @@ export const supabase = createClient<Database>(
       headers: {
         'Content-Type': 'application/json'
       }
-    },
-    db: {
-      schema: 'public',
     }
   }
 );
