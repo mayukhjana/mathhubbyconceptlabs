@@ -71,15 +71,15 @@ const Footer = () => {
             <ul className="space-y-2">
               <li className="flex items-start space-x-2">
                 <MapPin size={18} className="shrink-0 mt-1" />
-                <span className="text-gray-300">123 Math Street, Knowledge City, India</span>
+                <span className="text-gray-300">205M Raja Rammohan Roy Road,Kolkata-700008</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone size={18} className="shrink-0" />
-                <span className="text-gray-300">+91 1234567890</span>
+                <span className="text-gray-300">+91  7595971688</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail size={18} className="shrink-0" />
-                <span className="text-gray-300">info@mathhub.com</span>
+                <span className="text-gray-300"> mayukhjana27@gmail.com</span>
               </li>
             </ul>
           </div>
