@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
-// Helper function to get proper content type
+// Enhanced helper function to get the correct content type based on file extension
 const getContentTypeFromFile = (file: File): string => {
   const extension = file.name.split('.').pop()?.toLowerCase();
   
@@ -99,17 +99,22 @@ const ProfilePage = () => {
         return;
       }
       
-      // IMPORTANT: Make sure we're setting the content type explicitly as an option
-      // Upload image to Supabase Storage with correct content type
+      // Create a blob with the correct content type
+      const blob = new Blob([await file.arrayBuffer()], { type: contentType });
+      
+      // IMPORTANT: Upload with the correct content type
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, {
+        .upload(filePath, blob, {
           cacheControl: '3600',
           upsert: true,
           contentType: contentType // Explicitly set content type here
         });
         
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
       
       // Get public URL
       const { data } = await supabase.storage
@@ -123,14 +128,22 @@ const ProfilePage = () => {
         
       try {
         // Update profile with new avatar URL
-        await supabase
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ avatar_url: publicUrl })
           .eq('id', user.id);
           
+        if (updateError) {
+          console.error("Profile update error:", updateError);
+          throw updateError;
+        }
+        
         setAvatarUrl(publicUrl);
         toast.success("Avatar updated successfully");
-      } catch (error) {
+        
+        // Refresh the page to ensure the avatar is displayed correctly
+        window.location.reload();
+      } catch (error: any) {
         console.error("Error updating profile:", error);
         toast.error("Failed to update avatar in profile");
       }
