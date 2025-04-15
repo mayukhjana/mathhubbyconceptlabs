@@ -105,11 +105,11 @@ export const uploadExamFile = async (
     
     console.log(`Uploading ${fileType} to bucket: ${bucketName}, file: ${fileName}`);
     
-    // Set the correct content type based on file type
+    // Set the correct content type
     const options = {
       cacheControl: '3600',
       upsert: true,
-      contentType: file.type || 'application/pdf' // Use file's type or default to PDF
+      contentType: file.type || 'application/pdf'
     };
     
     const { data, error } = await supabase

@@ -14,6 +14,7 @@ import {
 } from "@/services/examService";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const ExamPapersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,7 +25,6 @@ const ExamPapersPage = () => {
   const [userIsPremium, setUserIsPremium] = useState(false);
   
   useEffect(() => {
-    // For demo, check if user is premium from localStorage
     const isPremium = localStorage.getItem("userIsPremium") === "true";
     setUserIsPremium(isPremium);
     
@@ -33,7 +33,6 @@ const ExamPapersPage = () => {
       const examData = await fetchEntranceExams();
       console.log("Loaded entrance exams:", examData);
       
-      // Fetch attempted exams for the current user
       if (user) {
         const { data: attemptedExams } = await supabase
           .from('user_results')
@@ -42,7 +41,6 @@ const ExamPapersPage = () => {
           
         const attemptedExamIds = new Set(attemptedExams?.map(result => result.exam_id) || []);
         
-        // Add isAttempted flag to each exam
         const examDataWithAttempted = examData.map(exam => ({
           ...exam,
           isAttempted: attemptedExamIds.has(exam.id)
@@ -58,7 +56,6 @@ const ExamPapersPage = () => {
     loadExams();
   }, [user]);
   
-  // Define entrance exam tabs
   const examBoardTabs = [
     { id: "all", label: "All Entrance Exams" },
     ...ENTRANCE_OPTIONS.map(board => ({ id: board, label: board }))
@@ -173,9 +170,10 @@ const ExamsList = ({
 const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boolean }) => {
   const [paperUrl, setPaperUrl] = useState<string | null>(null);
   const [solutionUrl, setSolutionUrl] = useState<string | null>(null);
+  const [isAttempted, setIsAttempted] = useState(false);
+  const { user } = useAuth();
   
   useEffect(() => {
-    // Get paper and solution URLs
     const fetchUrls = async () => {
       try {
         const paperDownloadUrl = await getFileDownloadUrl(exam.id, 'paper', exam.board);
@@ -187,9 +185,23 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
         console.error("Error fetching download URLs:", error);
       }
     };
+
+    const checkAttempted = async () => {
+      if (user) {
+        const { data: results } = await supabase
+          .from('user_results')
+          .select('id')
+          .eq('exam_id', exam.id)
+          .eq('user_id', user.id)
+          .single();
+        
+        setIsAttempted(!!results);
+      }
+    };
     
     fetchUrls();
-  }, [exam.id, exam.board]);
+    checkAttempted();
+  }, [exam.id, exam.board, user]);
   
   return (
     <PaperCard 
@@ -202,6 +214,7 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       solutionUrl={solutionUrl || undefined}
       practiceUrl={`/exams/${exam.id}`}
       examBoard={exam.board}
+      isAttempted={isAttempted}
     />
   );
 };

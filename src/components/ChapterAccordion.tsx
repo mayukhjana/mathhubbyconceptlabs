@@ -18,6 +18,7 @@ export interface Chapter {
     isPremium: boolean;
     downloadUrl?: string;
     practiceUrl?: string;
+    examBoard: string;
   }[];
 }
 
@@ -46,6 +47,7 @@ const ChapterAccordion = ({ chapters, userIsPremium = false }: ChapterAccordionP
                   userIsPremium={userIsPremium}
                   downloadUrl={paper.downloadUrl}
                   practiceUrl={paper.practiceUrl}
+                  examBoard={paper.examBoard}
                 />
               ))}
             </div>

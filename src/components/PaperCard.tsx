@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Download, Eye, FileText, Lock } from "lucide-react";
@@ -26,7 +25,6 @@ const PaperCard = ({
   downloadUrl,
   solutionUrl,
   practiceUrl,
-  examBoard,
   isAttempted = false
 }: PaperCardProps) => {
   return (
