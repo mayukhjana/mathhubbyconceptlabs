@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -14,7 +13,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
-// Enhanced helper function to get the correct content type based on file extension
 const getContentTypeFromFile = (file: File): string => {
   const extension = file.name.split('.').pop()?.toLowerCase();
   
@@ -63,8 +61,6 @@ const ProfilePage = () => {
           if ('username' in data) setUsername(data.username || "");
           if ('avatar_url' in data) setAvatarUrl(data.avatar_url);
           
-          // In real app, this would check subscription status
-          // For now, we're just mocking premium status
           setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
         }
       } catch (error) {
@@ -85,33 +81,46 @@ const ProfilePage = () => {
       setUploading(true);
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop()?.toLowerCase();
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.png`;
       const filePath = `${fileName}`;
       
-      // Get the correct content type based on file extension
-      const contentType = getContentTypeFromFile(file);
-      console.log(`Uploading avatar with content type: ${contentType}`);
-      
-      // Validate file is an image
-      if (!contentType.startsWith('image/')) {
+      if (!file.type.startsWith('image/')) {
         toast.error("Please upload an image file (PNG, JPG, etc.)");
         setUploading(false);
         return;
       }
       
-      // Read file as an ArrayBuffer to preserve binary data
-      const fileArrayBuffer = await file.arrayBuffer();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
       
-      // Create a properly typed blob using the correct content type
-      const blob = new Blob([fileArrayBuffer], { type: contentType });
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx?.drawImage(img, 0, 0);
+          resolve(true);
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
       
-      // Upload with explicit content type
+      const blob = await new Promise<Blob>((resolve) => 
+        canvas.toBlob(
+          (b) => resolve(b as Blob), 
+          'image/png', 
+          0.95
+        )
+      );
+      
+      console.log("Uploading avatar with content type: image/png");
+      
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, blob, {
           cacheControl: '3600',
           upsert: true,
-          contentType: contentType // Explicitly set content type
+          contentType: 'image/png'
         });
         
       if (uploadError) {
@@ -119,7 +128,6 @@ const ProfilePage = () => {
         throw uploadError;
       }
       
-      // Get public URL with the right content type
       const { data } = await supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
@@ -127,10 +135,8 @@ const ProfilePage = () => {
       const publicUrl = data.publicUrl;
       
       console.log("Avatar uploaded successfully, public URL:", publicUrl);
-      console.log("Content type used:", contentType);
         
       try {
-        // Update profile with new avatar URL
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ avatar_url: publicUrl })
@@ -144,7 +150,6 @@ const ProfilePage = () => {
         setAvatarUrl(publicUrl);
         toast.success("Avatar updated successfully");
         
-        // Force reload to ensure fresh image loading
         window.location.reload();
       } catch (error: any) {
         console.error("Error updating profile:", error);
@@ -183,7 +188,6 @@ const ProfilePage = () => {
     }
   };
   
-  // Always navigate to premium page when clicked
   const navigateToPremium = () => {
     navigate("/premium");
   };
@@ -214,7 +218,6 @@ const ProfilePage = () => {
           <h1 className="text-3xl font-bold mb-8">User Profile</h1>
           
           <div className="grid gap-8 md:grid-cols-[1fr_2fr]">
-            {/* Avatar Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Profile Picture</CardTitle>
@@ -253,7 +256,6 @@ const ProfilePage = () => {
               </CardContent>
             </Card>
             
-            {/* User Info Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
