@@ -3,9 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
 export const createExam = async (examData: Omit<Exam, 'id' | 'created_at'>) => {
+  const examToInsert: any = {
+    title: examData.title,
+    board: examData.board,
+    chapter: examData.chapter,
+    year: examData.year,
+    class: examData.class,
+    duration: examData.duration,
+    is_premium: examData.is_premium
+  };
+
   const { data, error } = await supabase
     .from('exams')
-    .insert(examData)
+    .insert(examToInsert)
     .select()
     .single();
     
@@ -18,9 +28,22 @@ export const createExam = async (examData: Omit<Exam, 'id' | 'created_at'>) => {
 };
 
 export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
+  const questionsToInsert = questions.map(q => ({
+    exam_id: q.exam_id,
+    question_text: q.question_text,
+    option_a: q.option_a,
+    option_b: q.option_b,
+    option_c: q.option_c,
+    option_d: q.option_d,
+    correct_answer: q.correct_answer,
+    order_number: q.order_number,
+    marks: q.marks,
+    negative_marks: q.negative_marks
+  }));
+
   const { data, error } = await supabase
     .from('questions')
-    .insert(questions)
+    .insert(questionsToInsert)
     .select();
     
   if (error) {

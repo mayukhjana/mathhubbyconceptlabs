@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -24,18 +25,8 @@ import { ExamResult } from "@/services/exam/types";
 const BOARD_EXAMS = ["ICSE", "CBSE", "West Bengal Board"];
 const ENTRANCE_EXAMS = ["WBJEE", "JEE MAINS", "JEE ADVANCED"];
 
-type ExamResultWithExam = ExamResult & {
-  exams: {
-    title: string;
-    board: string;
-    chapter: string | null;
-    year: string;
-    class: string;
-  };
-};
-
 type ExamResultProps = {
-  results: ExamResultWithExam[];
+  results: ExamResult[];
   loading: boolean;
 };
 
@@ -48,12 +39,12 @@ const ExamResultsByType = ({ results, loading }: ExamResultProps) => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
   
-  const calculateTotalMarks = (result: ExamResultWithExam) => {
+  const calculateTotalMarks = (result: ExamResult) => {
     return result.total_marks || 0;
   };
 
-  const calculateObtainedMarks = (result: ExamResultWithExam) => {
-    return Math.round((result.score / 100) * calculateTotalMarks(result));
+  const calculateObtainedMarks = (result: ExamResult) => {
+    return result.obtained_marks || 0;
   };
   
   const filterResults = (type: string) => {

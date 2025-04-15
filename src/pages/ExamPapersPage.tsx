@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,10 +9,9 @@ import { Search } from "lucide-react";
 import PaperCard from "@/components/PaperCard";
 import { 
   fetchEntranceExams, 
-  getFileDownloadUrl, 
-  Exam, 
-  ENTRANCE_OPTIONS 
+  getFileDownloadUrl
 } from "@/services/examService";
+import { Exam, ENTRANCE_OPTIONS } from "@/services/exam/types";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";

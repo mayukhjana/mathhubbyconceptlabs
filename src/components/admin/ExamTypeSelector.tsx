@@ -1,7 +1,6 @@
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { EXAM_TYPES, BOARD_OPTIONS, ENTRANCE_OPTIONS } from "@/services/examService";
+import { EXAM_TYPES, BOARD_OPTIONS, ENTRANCE_OPTIONS } from "@/services/exam/types";
 
 interface ExamTypeSelectorProps {
   examType: string;

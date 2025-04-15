@@ -6,7 +6,9 @@ export const submitExamResult = async (
   examId: string, 
   score: number, 
   totalQuestions: number,
-  timeTaken: number
+  timeTaken: number,
+  totalMarks: number = 0,
+  obtainedMarks: number = 0
 ) => {
   try {
     const { data, error } = await supabase
@@ -17,6 +19,8 @@ export const submitExamResult = async (
         score,
         total_questions: totalQuestions,
         time_taken: timeTaken,
+        total_marks: totalMarks,
+        obtained_marks: obtainedMarks
       })
       .select()
       .single();

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,20 +40,9 @@ type AnalysisData = {
   progressOverTime: {date: string; score: number}[];
 };
 
-// This is the extended type that includes exam details after join
-type ExamResultWithExam = ExamResult & {
-  exams: {
-    title: string;
-    board: string;
-    chapter: string | null;
-    year: string;
-    class: string;
-  };
-};
-
 const ResultsPage = () => {
   const { user } = useAuth();
-  const [results, setResults] = useState<ExamResultWithExam[]>([]);
+  const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData>({
@@ -79,8 +67,8 @@ const ResultsPage = () => {
         
         console.log("Fetched results:", data);
         
-        // Explicitly casting the data to the correct type
-        const typedResults = data as ExamResultWithExam[];
+        // Explicitly cast the data to the correct type
+        const typedResults = data as ExamResult[];
         setResults(typedResults || []);
         
         // Analyze the data for detailed insights
@@ -99,7 +87,7 @@ const ResultsPage = () => {
     fetchResults();
   }, [user]);
 
-  const analyzeResultsData = (data: ExamResultWithExam[]) => {
+  const analyzeResultsData = (data: ExamResult[]) => {
     if (!data || data.length === 0) return;
     
     // Basic stats
@@ -205,7 +193,6 @@ const ResultsPage = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                {/* Summary Cards */}
                 <Card>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
@@ -284,11 +271,9 @@ const ResultsPage = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Chapter Performance Chart */}
                 <ChapterPerformanceChart />
               </div>
               
-              {/* Exam Results by Type */}
               <ExamResultsByType results={results} loading={false} />
               
               <div className="mt-8 flex justify-end">
