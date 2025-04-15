@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,8 +68,8 @@ const ResultsPage = () => {
         
         console.log("Fetched results:", data);
         
-        // Explicitly cast the data to the correct type
-        const typedResults = data as ExamResult[];
+        // Ensure the data matches our ExamResult type
+        const typedResults = data as unknown as ExamResult[];
         setResults(typedResults || []);
         
         // Analyze the data for detailed insights

@@ -180,7 +180,9 @@ const getMockQuestions = (examId: string): Question[] => {
       option_c: "49",
       option_d: "61",
       correct_answer: "c",
-      order_number: 1
+      order_number: 1,
+      marks: 2,
+      negative_marks: 0.5
     },
     {
       id: "q2",
@@ -191,7 +193,9 @@ const getMockQuestions = (examId: string): Question[] => {
       option_c: "x = 2, x = 1/3",
       option_d: "x = -2, x = -1/3",
       correct_answer: "a",
-      order_number: 2
+      order_number: 2,
+      marks: 2,
+      negative_marks: 0.5
     },
     {
       id: "q3",
@@ -202,7 +206,9 @@ const getMockQuestions = (examId: string): Question[] => {
       option_c: "6n - 2",
       option_d: "6n",
       correct_answer: "a",
-      order_number: 3
+      order_number: 3,
+      marks: 2,
+      negative_marks: 0.5
     },
     {
       id: "q4",
@@ -213,7 +219,9 @@ const getMockQuestions = (examId: string): Question[] => {
       option_c: "36",
       option_d: "49",
       correct_answer: "b",
-      order_number: 4
+      order_number: 4,
+      marks: 2,
+      negative_marks: 0.5
     },
     {
       id: "q5",
@@ -224,7 +232,9 @@ const getMockQuestions = (examId: string): Question[] => {
       option_c: "±8",
       option_d: "±12",
       correct_answer: "c",
-      order_number: 5
+      order_number: 5,
+      marks: 2,
+      negative_marks: 0.5
     }
   ];
 };

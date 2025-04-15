@@ -41,7 +41,10 @@ export const fetchExamResults = async (userId: string) => {
   try {
     const { data, error } = await supabase
       .from('user_results')
-      .select('*, exams(*)')
+      .select(`
+        *,
+        exams(*)
+      `)
       .eq('user_id', userId)
       .order('completed_at', { ascending: false });
       
@@ -50,7 +53,14 @@ export const fetchExamResults = async (userId: string) => {
       return [];
     }
     
-    return data || [];
+    // Transform the data to match the ExamResult interface
+    const formattedData = (data || []).map(result => ({
+      ...result,
+      total_marks: result.total_marks || 0,
+      obtained_marks: result.obtained_marks || 0
+    }));
+    
+    return formattedData;
   } catch (err) {
     console.error("Exception when fetching exam results:", err);
     return [];
