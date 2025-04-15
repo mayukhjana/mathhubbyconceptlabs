@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for file handling and content type detection
  */
@@ -32,16 +31,19 @@ export const getContentTypeFromFile = (file: File): string => {
     // Other types can be added as needed
   };
   
-  // Try to get the content type from the extension map first,
-  // then fall back to the file.type if available,
-  // or use octet-stream as the last resort
+  // Try to get the content type from the extension map first
   if (extension && contentTypeMap[extension]) {
     return contentTypeMap[extension];
   }
   
   // If file.type is set and doesn't look wrong, use it
-  if (file.type && file.type !== 'application/octet-stream') {
+  if (file.type && file.type !== 'application/octet-stream' && !file.type.includes('application/json')) {
     return file.type;
+  }
+  
+  // For image files, try to determine by extension
+  if (extension && ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'].includes(extension)) {
+    return contentTypeMap[extension];
   }
   
   // Last resort fallback

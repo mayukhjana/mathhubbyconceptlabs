@@ -13,7 +13,7 @@ import { Pencil, Upload, User, Mail, Crown, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
-import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
+import { getContentTypeFromFile, fileToTypedBlob, isImageFile } from "@/utils/fileUtils";
 
 const ProfilePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -55,8 +55,14 @@ const ProfilePage = () => {
           if ('full_name' in data) setFullName(data.full_name || "");
           if ('username' in data) setUsername(data.username || "");
           if ('avatar_url' in data && data.avatar_url) {
-            setAvatarUrl(data.avatar_url);
-            console.log("Retrieved avatar URL:", data.avatar_url);
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const url = data.avatar_url.includes('?') 
+              ? `${data.avatar_url}&t=${timestamp}` 
+              : `${data.avatar_url}?t=${timestamp}`;
+              
+            setAvatarUrl(url);
+            console.log("Retrieved avatar URL:", url);
           }
         }
       } catch (error) {
@@ -77,7 +83,7 @@ const ProfilePage = () => {
       setUploading(true);
       const file = event.target.files[0];
       
-      if (!file.type.startsWith('image/')) {
+      if (!isImageFile(file)) {
         toast.error("Please upload an image file (PNG, JPG, etc.)");
         setUploading(false);
         return;
@@ -118,14 +124,17 @@ const ProfilePage = () => {
         .from('avatars')
         .getPublicUrl(fileName);
       
-      const publicUrl = data.publicUrl;
+      let publicUrl = data.publicUrl;
+      
+      // Add a timestamp parameter to prevent caching
+      publicUrl = `${publicUrl}?t=${new Date().getTime()}`;
       
       console.log("Avatar uploaded successfully, public URL:", publicUrl);
         
       try {
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ avatar_url: publicUrl })
+          .update({ avatar_url: data.publicUrl }) // Store without timestamp in DB
           .eq('id', user.id);
           
         if (updateError) {
@@ -134,13 +143,17 @@ const ProfilePage = () => {
           throw updateError;
         }
         
-        setAvatarUrl(publicUrl);
+        setAvatarUrl(publicUrl); // Use with timestamp for display
         toast.success("Avatar updated successfully");
+        
+        // Force a refresh of other components that use the avatar
+        const event = new CustomEvent('avatar-updated', { detail: { url: publicUrl }});
+        window.dispatchEvent(event);
         
         // Reload page to refresh avatar cache after a short delay
         setTimeout(() => {
           window.location.reload();
-        }, 1500);
+        }, 1000);
       } catch (error: any) {
         console.error("Error updating profile:", error);
         toast.error(`Failed to update avatar in profile: ${error.message}`);
@@ -218,7 +231,7 @@ const ProfilePage = () => {
                   <Avatar className="w-32 h-32 border-4 border-background">
                     {avatarUrl ? (
                       <AvatarImage 
-                        src={`${avatarUrl}?t=${new Date().getTime()}`} 
+                        src={avatarUrl} 
                         alt="User avatar" 
                         onError={(e) => {
                           console.error("Error loading avatar:", e);

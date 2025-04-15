@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
-import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
 import { toast } from "sonner";
 
 /**
@@ -64,8 +63,7 @@ export const uploadExamFile = async (
     console.log(`Setting content type: ${contentType} for file: ${file.name}`);
     
     // Convert file to properly typed blob
-    const fileArrayBuffer = await file.arrayBuffer();
-    const blob = new Blob([fileArrayBuffer], { type: contentType });
+    const typedBlob = await fileToTypedBlob(file);
     
     // Set the correct content type in upload options
     const options = {
@@ -77,7 +75,7 @@ export const uploadExamFile = async (
     const { data, error } = await supabase
       .storage
       .from(bucketName)
-      .upload(fileName, blob, options);
+      .upload(fileName, typedBlob, options);
     
     if (error) {
       console.error(`Error uploading ${fileType}:`, error);

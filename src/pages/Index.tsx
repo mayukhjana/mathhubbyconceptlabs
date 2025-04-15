@@ -4,9 +4,10 @@ import { BookOpen, FileText, GraduationCap, Users, Award, CheckCircle, ChevronRi
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useState } from "react";
-import SchoolLogosMarquee from "@/components/SchoolLogosMarquee";
+import AboutUsSection from "@/components/AboutUsSection";
 import { motion } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+
 const features = [{
   icon: <Database className="h-6 w-6 text-mathprimary dark:text-blue-400" />,
   title: "5000+ Practice Papers",
@@ -24,6 +25,7 @@ const features = [{
   title: "AI-Powered Learning",
   description: "Our system recommends personalized learning resources based on your performance patterns."
 }];
+
 const testimonials = [{
   name: "Rajiv Kumar",
   role: "CBSE Student, Class 12",
@@ -45,6 +47,7 @@ const testimonials = [{
   content: "The JEE papers with detailed solutions were instrumental in my preparation. I could practice anytime and track my improvement daily.",
   avatar: "/placeholder.svg"
 }];
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState<'monthly' | 'yearly'>('monthly');
   return <div className="min-h-screen flex flex-col bg-background">
@@ -203,8 +206,8 @@ const Index = () => {
         </div>
       </section>
       
-      {/* School Logos Marquee */}
-      <SchoolLogosMarquee />
+      {/* Replace SchoolLogosMarquee with About Us Section */}
+      <AboutUsSection />
       
       {/* Features Section */}
       <section className="py-20 bg-white dark:bg-gray-900">

@@ -48,7 +48,12 @@ const UserProfileMenu = () => {
           console.log("Avatar URL from database:", data.avatar_url);
           
           // Add timestamp to URL to prevent caching
-          const url = `${data.avatar_url}?t=${new Date().getTime()}`;
+          const timestamp = new Date().getTime();
+          // Ensure we have the correct URL format by checking for existing query parameters
+          const url = data.avatar_url.includes('?') 
+            ? `${data.avatar_url}&t=${timestamp}` 
+            : `${data.avatar_url}?t=${timestamp}`;
+            
           setAvatarUrl(url);
           setAvatarError(false);
         } else {
@@ -62,6 +67,12 @@ const UserProfileMenu = () => {
     };
     
     fetchUserAvatar();
+    
+    // Set up polling to refresh avatar every 30 seconds
+    const intervalId = setInterval(fetchUserAvatar, 30000);
+    
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
   }, [user]);
   
   if (!isAuthenticated) {
