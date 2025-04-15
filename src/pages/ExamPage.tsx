@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +62,6 @@ const ExamPage = () => {
     questions: Question[];
   } | null>(null);
   
-  // Load exam data from Supabase
   useEffect(() => {
     const loadExam = async () => {
       if (!examId) return;
@@ -72,7 +70,6 @@ const ExamPage = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch exam details
         const examData = await fetchExamById(examId);
         
         if (!examData) {
@@ -81,7 +78,6 @@ const ExamPage = () => {
           return;
         }
         
-        // Fetch questions
         const questionsData = await fetchQuestionsForExam(examId);
         
         if (!questionsData || questionsData.length === 0) {
@@ -90,7 +86,6 @@ const ExamPage = () => {
           return;
         }
         
-        // Format questions to match the Question interface
         const formattedQuestions = questionsData.map(q => ({
           id: q.id,
           text: q.question_text,
@@ -100,10 +95,11 @@ const ExamPage = () => {
             { id: "c", text: q.option_c },
             { id: "d", text: q.option_d }
           ],
-          correctAnswer: q.correct_answer
+          correctAnswer: q.correct_answer,
+          marks: q.marks,
+          negative_marks: q.negative_marks
         }));
         
-        // Set exam data
         setExam({
           id: examData.id,
           title: examData.title,
@@ -115,7 +111,6 @@ const ExamPage = () => {
           questions: formattedQuestions
         });
         
-        // Initialize timer
         setTimeRemaining(examData.duration * 60);
         setStartTime(new Date());
         
@@ -184,9 +179,18 @@ const ExamPage = () => {
     if (!exam) return;
     
     let correctAnswers = 0;
+    let totalObtainedMarks = 0;
+    let totalPossibleMarks = 0;
+    
     const questionsWithResults = exam.questions.map(question => {
       const isCorrect = userAnswers[question.id] === question.correctAnswer;
-      if (isCorrect) correctAnswers++;
+      if (isCorrect) {
+        correctAnswers++;
+        totalObtainedMarks += question.marks;
+      } else if (userAnswers[question.id]) {
+        totalObtainedMarks -= question.negative_marks;
+      }
+      totalPossibleMarks += question.marks;
       return {
         ...question,
         isCorrect
@@ -211,7 +215,9 @@ const ExamPage = () => {
           exam_id: examId,
           score: calculatedScore,
           total_questions: exam.questions.length || 0,
-          time_taken: timeTakenSeconds
+          time_taken: timeTakenSeconds,
+          total_marks: totalPossibleMarks,
+          obtained_marks: totalObtainedMarks
         });
 
         const { error } = await supabase
@@ -221,7 +227,9 @@ const ExamPage = () => {
             exam_id: examId,
             score: calculatedScore,
             total_questions: exam.questions.length || 0,
-            time_taken: timeTakenSeconds
+            time_taken: timeTakenSeconds,
+            total_marks: totalPossibleMarks,
+            obtained_marks: totalObtainedMarks
           });
           
         if (error) {
@@ -229,14 +237,14 @@ const ExamPage = () => {
         } else {
           console.log("Result saved successfully");
           setResultSaved(true);
-          toast.success(`Exam completed! Your score: ${calculatedScore}% has been saved.`);
+          toast.success(`Exam completed! Your score: ${calculatedScore}% (${totalObtainedMarks}/${totalPossibleMarks} marks)`);
         }
       } catch (error: any) {
         console.error('Error saving exam result:', error);
         toast.error(`Failed to save your result: ${error.message}`);
       }
     } else {
-      toast.success(`Exam completed! Your score: ${calculatedScore}%`);
+      toast.success(`Exam completed! Your score: ${calculatedScore}% (${totalObtainedMarks}/${totalPossibleMarks} marks)`);
       if (!user) {
         toast.info("Sign in to save your results and track your progress!");
       }
@@ -391,8 +399,8 @@ const ExamPage = () => {
                   <h2 className="text-lg font-medium mb-4">Your Results</h2>
                   
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-gray-600 dark:text-gray-300">Score:</span>
-                    <span className="text-xl font-bold">{score}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">Total Marks:</span>
+                    <span className="font-medium">{totalObtainedMarks} / {totalPossibleMarks}</span>
                   </div>
                   
                   <div className="flex justify-between items-center mb-3">
