@@ -50,6 +50,8 @@ const ExamPage = () => {
   const [resultSaved, setResultSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalObtainedMarks, setTotalObtainedMarks] = useState(0);
+  const [totalPossibleMarks, setTotalPossibleMarks] = useState(0);
   
   const [exam, setExam] = useState<{
     id: string;
@@ -179,18 +181,18 @@ const ExamPage = () => {
     if (!exam) return;
     
     let correctAnswers = 0;
-    let totalObtainedMarks = 0;
-    let totalPossibleMarks = 0;
+    let calculatedObtainedMarks = 0;
+    let calculatedPossibleMarks = 0;
     
     const questionsWithResults = exam.questions.map(question => {
       const isCorrect = userAnswers[question.id] === question.correctAnswer;
       if (isCorrect) {
         correctAnswers++;
-        totalObtainedMarks += question.marks;
+        calculatedObtainedMarks += question.marks;
       } else if (userAnswers[question.id]) {
-        totalObtainedMarks -= question.negative_marks;
+        calculatedObtainedMarks -= question.negative_marks;
       }
-      totalPossibleMarks += question.marks;
+      calculatedPossibleMarks += question.marks;
       return {
         ...question,
         isCorrect
@@ -199,6 +201,8 @@ const ExamPage = () => {
     
     const calculatedScore = Math.round((correctAnswers / (exam.questions.length || 1)) * 100);
     setScore(calculatedScore);
+    setTotalObtainedMarks(calculatedObtainedMarks);
+    setTotalPossibleMarks(calculatedPossibleMarks);
     
     const endTime = new Date();
     const timeTakenSeconds = startTime 
@@ -216,8 +220,8 @@ const ExamPage = () => {
           score: calculatedScore,
           total_questions: exam.questions.length || 0,
           time_taken: timeTakenSeconds,
-          total_marks: totalPossibleMarks,
-          obtained_marks: totalObtainedMarks
+          total_marks: calculatedPossibleMarks,
+          obtained_marks: calculatedObtainedMarks
         });
 
         const { error } = await supabase
@@ -228,8 +232,8 @@ const ExamPage = () => {
             score: calculatedScore,
             total_questions: exam.questions.length || 0,
             time_taken: timeTakenSeconds,
-            total_marks: totalPossibleMarks,
-            obtained_marks: totalObtainedMarks
+            total_marks: calculatedPossibleMarks,
+            obtained_marks: calculatedObtainedMarks
           });
           
         if (error) {
@@ -237,14 +241,14 @@ const ExamPage = () => {
         } else {
           console.log("Result saved successfully");
           setResultSaved(true);
-          toast.success(`Exam completed! Your score: ${calculatedScore}% (${totalObtainedMarks}/${totalPossibleMarks} marks)`);
+          toast.success(`Exam completed! Your score: ${calculatedScore}% (${calculatedObtainedMarks}/${calculatedPossibleMarks} marks)`);
         }
       } catch (error: any) {
         console.error('Error saving exam result:', error);
         toast.error(`Failed to save your result: ${error.message}`);
       }
     } else {
-      toast.success(`Exam completed! Your score: ${calculatedScore}% (${totalObtainedMarks}/${totalPossibleMarks} marks)`);
+      toast.success(`Exam completed! Your score: ${calculatedScore}% (${calculatedObtainedMarks}/${calculatedPossibleMarks} marks)`);
       if (!user) {
         toast.info("Sign in to save your results and track your progress!");
       }

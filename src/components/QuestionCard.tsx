@@ -12,6 +12,8 @@ export interface Question {
     text: string;
   }[];
   correctAnswer: string;
+  marks: number;
+  negative_marks: number;
 }
 
 interface QuestionCardProps {
