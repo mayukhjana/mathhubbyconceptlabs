@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -12,22 +13,8 @@ import { Pencil, Upload, User, Mail, Crown, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
-
-const getContentTypeFromFile = (file: File): string => {
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  
-  const contentTypeMap: Record<string, string> = {
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'webp': 'image/webp',
-    'svg': 'image/svg+xml',
-    'bmp': 'image/bmp'
-  };
-  
-  return contentTypeMap[extension || ''] || file.type || 'application/octet-stream';
-};
+import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { createSpecificBucket } from "@/services/exam/storage";
 
 const ProfilePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -43,6 +30,13 @@ const ProfilePage = () => {
     if (!isLoading && !isAuthenticated) {
       navigate("/auth");
     }
+    
+    // Ensure avatars bucket exists
+    const checkBuckets = async () => {
+      await createSpecificBucket('avatars');
+    };
+    
+    checkBuckets();
     
     const fetchProfile = async () => {
       if (!user) return;
@@ -80,9 +74,9 @@ const ProfilePage = () => {
     try {
       setUploading(true);
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      
+      // Generate a unique file name with UUID-like random string
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.png`;
-      const filePath = `${fileName}`;
       
       if (!file.type.startsWith('image/')) {
         toast.error("Please upload an image file (PNG, JPG, etc.)");
@@ -90,6 +84,7 @@ const ProfilePage = () => {
         return;
       }
       
+      // Convert image to PNG using canvas
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
@@ -115,9 +110,12 @@ const ProfilePage = () => {
       
       console.log("Uploading avatar with content type: image/png");
       
-      const { error: uploadError } = await supabase.storage
+      // Ensure the avatars bucket exists before uploading
+      await createSpecificBucket('avatars');
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, blob, {
+        .upload(fileName, blob, {
           cacheControl: '3600',
           upsert: true,
           contentType: 'image/png'
@@ -125,12 +123,15 @@ const ProfilePage = () => {
         
       if (uploadError) {
         console.error("Upload error:", uploadError);
+        toast.error(`Failed to upload avatar: ${uploadError.message}`);
         throw uploadError;
       }
       
+      console.log("Upload successful:", uploadData);
+      
       const { data } = await supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
       
       const publicUrl = data.publicUrl;
       
@@ -144,16 +145,18 @@ const ProfilePage = () => {
           
         if (updateError) {
           console.error("Profile update error:", updateError);
+          toast.error(`Failed to update profile: ${updateError.message}`);
           throw updateError;
         }
         
         setAvatarUrl(publicUrl);
         toast.success("Avatar updated successfully");
         
+        // Force reload to ensure fresh image loading
         window.location.reload();
       } catch (error: any) {
         console.error("Error updating profile:", error);
-        toast.error("Failed to update avatar in profile");
+        toast.error(`Failed to update avatar in profile: ${error.message}`);
       }
       
     } catch (error: any) {

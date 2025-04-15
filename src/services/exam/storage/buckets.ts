@@ -30,6 +30,10 @@ export const ensureStorageBuckets = async () => {
     
     if (missingBuckets.length > 0) {
       console.warn(`Missing buckets: ${missingBuckets.join(', ')}`);
+      // Try to create the missing avatars bucket if needed
+      if (missingBuckets.includes('avatars')) {
+        await createSpecificBucket('avatars');
+      }
     }
     
     return true;

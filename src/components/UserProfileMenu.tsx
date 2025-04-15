@@ -15,17 +15,25 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createSpecificBucket } from "@/services/exam/storage";
 
 const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
+    // Ensure the avatars bucket exists
+    const checkBucket = async () => {
+      await createSpecificBucket('avatars');
+    };
+    
+    checkBucket();
+    
     // In a real app, this would fetch premium status from a subscription service
-    // For demo, we're using localStorage
     setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
     
     // Fetch user avatar if authenticated
@@ -46,12 +54,18 @@ const UserProfileMenu = () => {
         
         if (data && data.avatar_url) {
           console.log("Avatar URL from database:", data.avatar_url);
-          setAvatarUrl(data.avatar_url);
+          
+          // Validate URL before setting
+          const validUrl = data.avatar_url.startsWith('http') ? data.avatar_url : null;
+          setAvatarUrl(validUrl);
+          setAvatarError(false);
         } else {
           console.log("No avatar URL found in profile data:", data);
+          setAvatarError(true);
         }
       } catch (error) {
         console.error('Error fetching user avatar:', error);
+        setAvatarError(true);
       }
     };
     
@@ -78,11 +92,13 @@ const UserProfileMenu = () => {
   
   const handleImageLoad = () => {
     setAvatarLoaded(true);
+    setAvatarError(false);
   };
   
   const handleImageError = () => {
     console.error("Error loading avatar image from URL:", avatarUrl);
     setAvatarLoaded(false);
+    setAvatarError(true);
   };
   
   return (
@@ -90,7 +106,7 @@ const UserProfileMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            {avatarUrl && (
+            {avatarUrl && !avatarError && (
               <AvatarImage 
                 src={avatarUrl} 
                 alt="User avatar"
