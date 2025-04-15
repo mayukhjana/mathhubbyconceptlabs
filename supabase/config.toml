@@ -39,3 +39,5 @@ verify_jwt = true
 [functions.sql-execute]
 verify_jwt = true
 
+[functions.create-avatars-bucket]
+verify_jwt = true
