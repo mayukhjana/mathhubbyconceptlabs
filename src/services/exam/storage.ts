@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getContentTypeFromFile } from "@/utils/fileUtils";
 
 // Function to ensure all required buckets exist (now redundant, but kept for consistency)
 export const ensureStorageBuckets = async () => {
@@ -93,32 +94,6 @@ export const getFileDownloadUrl = async (
   }
 };
 
-// Enhanced function to determine the correct content type based on file extension
-const getContentType = (file: File): string => {
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  
-  // Enhanced map of extensions to content types
-  const contentTypeMap: Record<string, string> = {
-    'pdf': 'application/pdf',
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'webp': 'image/webp',
-    'svg': 'image/svg+xml',
-    'bmp': 'image/bmp',
-    'txt': 'text/plain',
-    'doc': 'application/msword',
-    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'xls': 'application/vnd.ms-excel',
-    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  };
-  
-  const contentType = contentTypeMap[extension || ''] || file.type || 'application/octet-stream';
-  console.log(`Determined content type for ${file.name}: ${contentType}`);
-  return contentType;
-};
-
 export const uploadExamFile = async (
   file: File, 
   examId: string, 
@@ -139,9 +114,13 @@ export const uploadExamFile = async (
       throw error;
     }
     
-    // Get the correct content type for the file
-    const contentType = getContentType(file);
+    // Get the correct content type for the file using our utility
+    const contentType = getContentTypeFromFile(file);
     console.log(`Setting content type: ${contentType} for file: ${file.name}`);
+    
+    // Convert file to properly typed blob
+    const fileArrayBuffer = await file.arrayBuffer();
+    const blob = new Blob([fileArrayBuffer], { type: contentType });
     
     // Set the correct content type in upload options
     const options = {
@@ -153,7 +132,7 @@ export const uploadExamFile = async (
     const { data, error } = await supabase
       .storage
       .from(bucketName)
-      .upload(fileName, file, options);
+      .upload(fileName, blob, options);
     
     if (error) {
       console.error(`Error uploading ${fileType}:`, error);

@@ -2,6 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { File, Upload } from "lucide-react";
+import { getContentTypeFromFile } from "@/utils/fileUtils";
 
 interface FileUploadZoneProps {
   id: string;
@@ -12,32 +13,6 @@ interface FileUploadZoneProps {
   acceptFormats?: string;
   required?: boolean;
 }
-
-// Enhanced helper function to get the correct content type based on file extension
-const getContentType = (file: File): string => {
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  
-  // Enhanced map of extensions to content types
-  const contentTypeMap: Record<string, string> = {
-    'pdf': 'application/pdf',
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'webp': 'image/webp',
-    'svg': 'image/svg+xml',
-    'bmp': 'image/bmp',
-    'txt': 'text/plain',
-    'doc': 'application/msword',
-    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'xls': 'application/vnd.ms-excel',
-    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  };
-  
-  const contentType = contentTypeMap[extension || ''] || file.type || 'application/octet-stream';
-  console.log(`Determined content type for ${file.name}: ${contentType}`);
-  return contentType;
-};
 
 const FileUploadZone = ({ 
   id, 
@@ -75,7 +50,7 @@ const FileUploadZone = ({
     if (!file) return "";
     
     // Use our content type helper to get a more accurate content type
-    const contentType = getContentType(file);
+    const contentType = getContentTypeFromFile(file);
     const extension = file.name.split(".").pop()?.toLowerCase();
     
     switch (extension) {
@@ -109,7 +84,7 @@ const FileUploadZone = ({
       }
       
       // Log the file details for debugging purposes
-      const contentType = getContentType(selectedFile);
+      const contentType = getContentTypeFromFile(selectedFile);
       console.log(`Selected file: ${selectedFile.name}, type: ${contentType}`);
       
       onChange(event);

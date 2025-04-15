@@ -20,6 +20,7 @@ const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -40,24 +41,12 @@ const UserProfileMenu = () => {
           
         if (error) {
           console.error("Error fetching avatar URL:", error);
-          throw error;
+          return;
         }
         
         if (data && data.avatar_url) {
           console.log("Avatar URL from database:", data.avatar_url);
-          
-          // Check if the URL is accessible and valid
-          try {
-            const response = await fetch(data.avatar_url, { method: 'HEAD' });
-            if (response.ok) {
-              console.log("Avatar URL is valid and accessible");
-              setAvatarUrl(data.avatar_url);
-            } else {
-              console.error("Avatar URL returned status:", response.status);
-            }
-          } catch (fetchError) {
-            console.error("Error checking avatar URL:", fetchError);
-          }
+          setAvatarUrl(data.avatar_url);
         } else {
           console.log("No avatar URL found in profile data:", data);
         }
@@ -87,11 +76,13 @@ const UserProfileMenu = () => {
     navigate('/premium');
   };
   
-  // Format the avatar URL correctly if it's a relative URL
-  const getFormattedAvatarUrl = () => {
-    if (!avatarUrl) return undefined;
-    console.log("Current avatar URL:", avatarUrl);
-    return avatarUrl;
+  const handleImageLoad = () => {
+    setAvatarLoaded(true);
+  };
+  
+  const handleImageError = () => {
+    console.error("Error loading avatar image from URL:", avatarUrl);
+    setAvatarLoaded(false);
   };
   
   return (
@@ -99,15 +90,14 @@ const UserProfileMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage 
-              src={getFormattedAvatarUrl()} 
-              alt="User avatar"
-              onError={(e) => {
-                console.error("Error loading avatar image from URL:", avatarUrl);
-                const imgElement = e.currentTarget as HTMLImageElement;
-                imgElement.style.display = 'none';
-              }}
-            />
+            {avatarUrl && (
+              <AvatarImage 
+                src={avatarUrl} 
+                alt="User avatar"
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+              />
+            )}
             <AvatarFallback className="bg-mathprimary text-white">
               {getInitials()}
             </AvatarFallback>

@@ -99,16 +99,19 @@ const ProfilePage = () => {
         return;
       }
       
-      // Create a blob with the correct content type
-      const blob = new Blob([await file.arrayBuffer()], { type: contentType });
+      // Read file as an ArrayBuffer to preserve binary data
+      const fileArrayBuffer = await file.arrayBuffer();
       
-      // IMPORTANT: Upload with the correct content type
+      // Create a properly typed blob using the correct content type
+      const blob = new Blob([fileArrayBuffer], { type: contentType });
+      
+      // Upload with explicit content type
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, blob, {
           cacheControl: '3600',
           upsert: true,
-          contentType: contentType // Explicitly set content type here
+          contentType: contentType // Explicitly set content type
         });
         
       if (uploadError) {
@@ -116,7 +119,7 @@ const ProfilePage = () => {
         throw uploadError;
       }
       
-      // Get public URL
+      // Get public URL with the right content type
       const { data } = await supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
@@ -141,7 +144,7 @@ const ProfilePage = () => {
         setAvatarUrl(publicUrl);
         toast.success("Avatar updated successfully");
         
-        // Refresh the page to ensure the avatar is displayed correctly
+        // Force reload to ensure fresh image loading
         window.location.reload();
       } catch (error: any) {
         console.error("Error updating profile:", error);
