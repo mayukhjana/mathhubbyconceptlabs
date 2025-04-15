@@ -2,6 +2,7 @@
 import { Database, BookOpen, Trophy, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import SubjectProgress from "@/components/SubjectProgress";
 
 const DashboardPreview = () => {
   return (

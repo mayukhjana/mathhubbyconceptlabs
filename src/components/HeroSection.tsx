@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Database, BookOpen, Star } from "lucide-react";
+import DashboardPreview from "@/components/DashboardPreview";
 
 const HeroSection = () => {
   return (
