@@ -103,6 +103,20 @@ const ProfilePage = () => {
       const typedBlob = await fileToTypedBlob(file);
       console.log("Created typed blob with type:", typedBlob.type);
       
+      // Ensure avatars bucket exists
+      try {
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
+        
+        if (!avatarBucketExists) {
+          console.log("Avatars bucket does not exist yet, creating it...");
+          await supabase.storage.createBucket('avatars', { public: true });
+        }
+      } catch (error) {
+        console.log("Error checking/creating avatars bucket:", error);
+        // Continue anyway as the bucket might already exist
+      }
+      
       // Upload with explicit content type
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
@@ -149,16 +163,10 @@ const ProfilePage = () => {
         // Force a refresh of other components that use the avatar
         const event = new CustomEvent('avatar-updated', { detail: { url: publicUrl }});
         window.dispatchEvent(event);
-        
-        // Reload page to refresh avatar cache after a short delay
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       } catch (error: any) {
         console.error("Error updating profile:", error);
         toast.error(`Failed to update avatar in profile: ${error.message}`);
       }
-      
     } catch (error: any) {
       console.error("Error uploading avatar:", error);
       toast.error(`Failed to upload avatar: ${error.message || "Unknown error"}`);

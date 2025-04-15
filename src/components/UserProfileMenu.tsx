@@ -71,8 +71,22 @@ const UserProfileMenu = () => {
     // Set up polling to refresh avatar every 30 seconds
     const intervalId = setInterval(fetchUserAvatar, 30000);
     
-    // Clear interval on component unmount
-    return () => clearInterval(intervalId);
+    // Listen for avatar update events
+    const handleAvatarUpdated = (event: CustomEvent) => {
+      console.log("Avatar updated event received:", event.detail);
+      if (event.detail?.url) {
+        setAvatarUrl(event.detail.url);
+        setAvatarError(false);
+      }
+    };
+    
+    window.addEventListener('avatar-updated', handleAvatarUpdated as EventListener);
+    
+    // Clear interval and event listener on component unmount
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('avatar-updated', handleAvatarUpdated as EventListener);
+    };
   }, [user]);
   
   if (!isAuthenticated) {

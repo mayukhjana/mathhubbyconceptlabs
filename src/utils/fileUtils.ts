@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for file handling and content type detection
  */
@@ -36,8 +37,10 @@ export const getContentTypeFromFile = (file: File): string => {
     return contentTypeMap[extension];
   }
   
-  // If file.type is set and doesn't look wrong, use it
-  if (file.type && file.type !== 'application/octet-stream' && !file.type.includes('application/json')) {
+  // If file.type is set and isn't application/json or octet-stream, use it
+  if (file.type && 
+      file.type !== 'application/octet-stream' && 
+      file.type !== 'application/json') {
     return file.type;
   }
   
@@ -63,6 +66,14 @@ export const isImageFile = (file: File): boolean => {
  */
 export const fileToTypedBlob = async (file: File): Promise<Blob> => {
   const contentType = getContentTypeFromFile(file);
+  console.log(`Converting file to blob with content type: ${contentType}`);
+  
+  // Read file as ArrayBuffer
   const arrayBuffer = await file.arrayBuffer();
-  return new Blob([arrayBuffer], { type: contentType });
+  
+  // Create new Blob with correct content type
+  const blob = new Blob([arrayBuffer], { type: contentType });
+  console.log(`Created blob with type: ${blob.type}, size: ${blob.size}`);
+  
+  return blob;
 };
