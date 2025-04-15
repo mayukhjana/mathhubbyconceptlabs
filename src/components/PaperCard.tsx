@@ -55,6 +55,12 @@ const PaperCard = ({
                   Download
                 </Button>
               )}
+              {solutionUrl && (
+                <Button variant="outline" className="w-full" onClick={() => window.open(solutionUrl)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Solutions
+                </Button>
+              )}
             </div>
             
             <div className="w-full">
@@ -91,3 +97,4 @@ const PaperCard = ({
 };
 
 export default PaperCard;
+
