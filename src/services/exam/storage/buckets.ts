@@ -30,10 +30,8 @@ export const ensureStorageBuckets = async () => {
     
     if (missingBuckets.length > 0) {
       console.warn(`Missing buckets: ${missingBuckets.join(', ')}`);
-      // Try to create the missing avatars bucket if needed
-      if (missingBuckets.includes('avatars')) {
-        await createSpecificBucket('avatars');
-      }
+      // Don't try to create buckets automatically - it requires admin permissions
+      // Just log the warning so developers are aware
     }
     
     return true;
@@ -60,20 +58,28 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
       return true;
     }
     
-    const { error } = await supabase
-      .storage
-      .createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 1024 * 1024 * 10 // 10MB
-      });
-    
-    if (error) {
-      console.error(`Error creating bucket ${bucketName}:`, error);
+    // Note: Creating buckets requires admin privileges in Supabase
+    // Regular users will get an error here
+    try {
+      const { error } = await supabase
+        .storage
+        .createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 1024 * 1024 * 10 // 10MB
+        });
+      
+      if (error) {
+        // Log but don't throw - this is expected for non-admin users
+        console.error(`Error creating bucket ${bucketName}:`, error);
+        return false;
+      }
+      
+      console.log(`Successfully created bucket: ${bucketName}`);
+      return true;
+    } catch (createError) {
+      console.error(`Error creating bucket ${bucketName}:`, createError);
       return false;
     }
-    
-    console.log(`Successfully created bucket: ${bucketName}`);
-    return true;
   } catch (error) {
     console.error(`Error creating bucket ${bucketName}:`, error);
     return false;

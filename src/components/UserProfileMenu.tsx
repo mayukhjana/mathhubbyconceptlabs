@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,7 +14,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { createSpecificBucket } from "@/services/exam/storage";
 
 const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
@@ -26,13 +24,6 @@ const UserProfileMenu = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Ensure the avatars bucket exists
-    const checkBucket = async () => {
-      await createSpecificBucket('avatars');
-    };
-    
-    checkBucket();
-    
     // In a real app, this would fetch premium status from a subscription service
     setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
     
@@ -55,9 +46,9 @@ const UserProfileMenu = () => {
         if (data && data.avatar_url) {
           console.log("Avatar URL from database:", data.avatar_url);
           
-          // Validate URL before setting
-          const validUrl = data.avatar_url.startsWith('http') ? data.avatar_url : null;
-          setAvatarUrl(validUrl);
+          // Add timestamp to URL to prevent caching
+          const url = `${data.avatar_url}?t=${new Date().getTime()}`;
+          setAvatarUrl(url);
           setAvatarError(false);
         } else {
           console.log("No avatar URL found in profile data:", data);

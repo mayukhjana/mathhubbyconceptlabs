@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -14,7 +13,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { getContentTypeFromFile } from "@/utils/fileUtils";
-import { createSpecificBucket } from "@/services/exam/storage";
 
 const ProfilePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -31,17 +29,19 @@ const ProfilePage = () => {
       navigate("/auth");
     }
     
-    // Ensure avatars bucket exists
-    const checkBuckets = async () => {
-      await createSpecificBucket('avatars');
-    };
-    
-    checkBuckets();
+    setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
     
     const fetchProfile = async () => {
       if (!user) return;
       
       try {
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
+        
+        if (!avatarBucketExists) {
+          console.log("Avatars bucket does not exist yet");
+        }
+        
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -53,9 +53,10 @@ const ProfilePage = () => {
         if (data) {
           if ('full_name' in data) setFullName(data.full_name || "");
           if ('username' in data) setUsername(data.username || "");
-          if ('avatar_url' in data) setAvatarUrl(data.avatar_url);
-          
-          setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
+          if ('avatar_url' in data && data.avatar_url) {
+            setAvatarUrl(data.avatar_url);
+            console.log("Retrieved avatar URL:", data.avatar_url);
+          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -75,16 +76,16 @@ const ProfilePage = () => {
       setUploading(true);
       const file = event.target.files[0];
       
-      // Generate a unique file name with UUID-like random string
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.png`;
-      
       if (!file.type.startsWith('image/')) {
         toast.error("Please upload an image file (PNG, JPG, etc.)");
         setUploading(false);
         return;
       }
       
-      // Convert image to PNG using canvas
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.png`;
+      
+      console.log("Starting avatar upload process...");
+      
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
@@ -108,10 +109,15 @@ const ProfilePage = () => {
         )
       );
       
-      console.log("Uploading avatar with content type: image/png");
+      console.log("Image converted to PNG, preparing for upload");
       
-      // Ensure the avatars bucket exists before uploading
-      await createSpecificBucket('avatars');
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
+      
+      if (!avatarBucketExists) {
+        console.log("Avatars bucket doesn't exist. File upload may fail.");
+        toast.warning("Avatar storage not configured properly. Contact support.");
+      }
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
@@ -152,7 +158,6 @@ const ProfilePage = () => {
         setAvatarUrl(publicUrl);
         toast.success("Avatar updated successfully");
         
-        // Force reload to ensure fresh image loading
         window.location.reload();
       } catch (error: any) {
         console.error("Error updating profile:", error);
@@ -161,7 +166,7 @@ const ProfilePage = () => {
       
     } catch (error: any) {
       console.error("Error uploading avatar:", error);
-      toast.error(`Failed to upload avatar: ${error.message}`);
+      toast.error(`Failed to upload avatar: ${error.message || "Unknown error"}`);
     } finally {
       setUploading(false);
     }
@@ -229,7 +234,16 @@ const ProfilePage = () => {
               <CardContent className="flex flex-col items-center">
                 <div className="relative mb-4">
                   <Avatar className="w-32 h-32 border-4 border-background">
-                    <AvatarImage src={avatarUrl || undefined} />
+                    {avatarUrl ? (
+                      <AvatarImage 
+                        src={`${avatarUrl}?t=${new Date().getTime()}`} 
+                        alt="User avatar" 
+                        onError={(e) => {
+                          console.error("Error loading avatar:", e);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : null}
                     <AvatarFallback className="bg-mathprimary text-white text-xl">
                       {getInitials()}
                     </AvatarFallback>
