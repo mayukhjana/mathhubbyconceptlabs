@@ -54,10 +54,12 @@ export const fetchExamResults = async (userId: string) => {
     }
     
     // Transform the data to match the ExamResult interface
+    // Use type assertion to provide the compiler with the expected shape
     const formattedData = (data || []).map(result => ({
       ...result,
-      total_marks: result.total_marks || 0,
-      obtained_marks: result.obtained_marks || 0
+      // Use optional chaining and nullish coalescing to safely access properties
+      total_marks: (result as any).total_marks ?? 0,
+      obtained_marks: (result as any).obtained_marks ?? 0
     }));
     
     return formattedData;
