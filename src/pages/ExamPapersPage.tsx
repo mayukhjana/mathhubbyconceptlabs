@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -33,12 +32,31 @@ const ExamPapersPage = () => {
       setLoading(true);
       const examData = await fetchEntranceExams();
       console.log("Loaded entrance exams:", examData);
-      setExams(examData);
+      
+      // Fetch attempted exams for the current user
+      if (user) {
+        const { data: attemptedExams } = await supabase
+          .from('user_results')
+          .select('exam_id')
+          .eq('user_id', user.id);
+          
+        const attemptedExamIds = new Set(attemptedExams?.map(result => result.exam_id) || []);
+        
+        // Add isAttempted flag to each exam
+        const examDataWithAttempted = examData.map(exam => ({
+          ...exam,
+          isAttempted: attemptedExamIds.has(exam.id)
+        }));
+        
+        setExams(examDataWithAttempted);
+      } else {
+        setExams(examData);
+      }
       setLoading(false);
     };
     
     loadExams();
-  }, []);
+  }, [user]);
   
   // Define entrance exam tabs
   const examBoardTabs = [
