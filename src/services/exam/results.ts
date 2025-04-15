@@ -37,7 +37,7 @@ export const fetchExamResults = async (userId: string) => {
   try {
     const { data, error } = await supabase
       .from('user_results')
-      .select('*, exams(title, board, year, chapter, class)')
+      .select('*, exams(*)')
       .eq('user_id', userId)
       .order('completed_at', { ascending: false });
       
