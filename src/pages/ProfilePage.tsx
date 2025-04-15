@@ -92,6 +92,13 @@ const ProfilePage = () => {
       const contentType = getContentTypeFromFile(file);
       console.log(`Uploading avatar with content type: ${contentType}`);
       
+      // Validate file is an image
+      if (!contentType.startsWith('image/')) {
+        toast.error("Please upload an image file (PNG, JPG, etc.)");
+        setUploading(false);
+        return;
+      }
+      
       // Upload image to Supabase Storage with correct content type
       const { error: uploadError } = await supabase.storage
         .from('avatars')
