@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -82,17 +83,27 @@ const ProfilePage = () => {
         return;
       }
       
-      const fileExt = file.name.split('.').pop();
+      // Determine file extension and create a unique filename
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       console.log(`Starting avatar upload process... File type: ${file.type}, Extension: ${fileExt}`);
       
+      // Get correct content type and prepare the blob
+      const contentType = getContentTypeFromFile(file);
+      console.log("Using content type:", contentType);
+      
+      // Convert file to properly typed blob
+      const typedBlob = await fileToTypedBlob(file);
+      console.log("Created typed blob with type:", typedBlob.type);
+      
+      // Upload with explicit content type
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
+        .upload(fileName, typedBlob, {
           cacheControl: '3600',
           upsert: true,
-          contentType: file.type
+          contentType: contentType
         });
         
       if (uploadError) {
@@ -126,6 +137,7 @@ const ProfilePage = () => {
         setAvatarUrl(publicUrl);
         toast.success("Avatar updated successfully");
         
+        // Reload page to refresh avatar cache after a short delay
         setTimeout(() => {
           window.location.reload();
         }, 1500);

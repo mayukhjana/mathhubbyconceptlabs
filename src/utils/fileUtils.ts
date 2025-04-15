@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for file handling and content type detection
  */
@@ -31,8 +32,20 @@ export const getContentTypeFromFile = (file: File): string => {
     // Other types can be added as needed
   };
   
-  // Return the mapped content type, fallback to file.type, or use octet-stream as last resort
-  return contentTypeMap[extension || ''] || file.type || 'application/octet-stream';
+  // Try to get the content type from the extension map first,
+  // then fall back to the file.type if available,
+  // or use octet-stream as the last resort
+  if (extension && contentTypeMap[extension]) {
+    return contentTypeMap[extension];
+  }
+  
+  // If file.type is set and doesn't look wrong, use it
+  if (file.type && file.type !== 'application/octet-stream') {
+    return file.type;
+  }
+  
+  // Last resort fallback
+  return 'application/octet-stream';
 };
 
 /**

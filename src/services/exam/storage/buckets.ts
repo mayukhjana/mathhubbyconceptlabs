@@ -61,12 +61,24 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
     // Note: Creating buckets requires admin privileges in Supabase
     // Regular users will get an error here
     try {
+      // Define allowed MIME types based on bucket type
+      let allowedMimeTypes: string[];
+      
+      if (bucketName === 'avatars') {
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+      } else if (bucketName.includes('papers') || bucketName.includes('solutions')) {
+        allowedMimeTypes = ['application/pdf'];
+      } else {
+        // Default allowed types
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+      }
+      
       const { error } = await supabase
         .storage
         .createBucket(bucketName, {
           public: true,
           fileSizeLimit: 1024 * 1024 * 10, // 10MB
-          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+          allowedMimeTypes: allowedMimeTypes
         });
       
       if (error) {
