@@ -1,7 +1,5 @@
 
-import { Award, CheckCircle, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Award, CheckCircle } from "lucide-react";
 
 const PremiumFeatures = () => {
   const features = [
@@ -51,9 +49,17 @@ const PremiumFeatures = () => {
         ))}
       </div>
       
-      <Button className="w-full bg-white text-mathdark hover:bg-gray-100 dark:hover:bg-gray-200" size="lg" asChild>
-        <Link to="/premium">Get Started Today</Link>
-      </Button>
+      <div className="aspect-video w-full rounded-lg overflow-hidden">
+        <iframe
+          width="100%"
+          height="100%"
+          src="https://www.youtube.com/embed/ZQElzjCsl9o"
+          title="MathHub Tutorial"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="w-full h-full"
+        ></iframe>
+      </div>
     </div>
   );
 };

@@ -6,22 +6,22 @@ const testimonials = [{
   name: "Rajiv Kumar",
   role: "CBSE Student, Class 12",
   content: "MathHub helped me score 95% in my math board exam. The practice papers organized by chapter were exactly what I needed!",
-  avatar: "/placeholder.svg"
+  avatar: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=150&h=150"
 }, {
   name: "Priya Sharma",
   role: "ICSE Student, Class 10",
   content: "The MCQ practice exams gave me confidence before my finals. The instant feedback helped me understand my weak areas.",
-  avatar: "/placeholder.svg"
+  avatar: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=150&h=150"
 }, {
   name: "Ananya Roy",
   role: "West Bengal Board Student",
   content: "Finding previous year papers used to be so difficult. Now I have everything in one place. The premium subscription is worth every rupee!",
-  avatar: "/placeholder.svg"
+  avatar: "https://images.unsplash.com/photo-1466721591366-2d5fba72006d?auto=format&fit=crop&w=150&h=150"
 }, {
   name: "Vikram Mehta",
   role: "JEE Advanced Qualifier",
   content: "The JEE papers with detailed solutions were instrumental in my preparation. I could practice anytime and track my improvement daily.",
-  avatar: "/placeholder.svg"
+  avatar: "https://images.unsplash.com/photo-1452960962994-acf4fd70b632?auto=format&fit=crop&w=150&h=150"
 }];
 
 const TestimonialsSection = () => {
