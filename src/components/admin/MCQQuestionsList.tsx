@@ -12,15 +12,30 @@ interface MCQQuestionsListProps {
 const MCQQuestionsList = ({ questions, onEditQuestion, onRemoveQuestion }: MCQQuestionsListProps) => {
   if (!questions.length) return null;
 
+  const calculateTotalMarks = () => {
+    const totalPositive = questions.reduce((sum, q) => sum + q.marks, 0);
+    return totalPositive;
+  };
+
   return (
     <div className="space-y-4 mb-4">
+      <div className="flex justify-between items-center bg-muted/50 p-3 rounded-md">
+        <span className="font-medium">Total Questions: {questions.length}</span>
+        <span className="font-medium text-mathprimary">Maximum Marks: {calculateTotalMarks()}</span>
+      </div>
+      
       {questions.map((question, index) => (
         <div 
           key={index} 
           className="border rounded-md p-4 hover:border-mathprimary/50 transition-colors"
         >
           <div className="flex justify-between mb-2">
-            <h4 className="font-medium">Question #{question.order_number}</h4>
+            <div>
+              <h4 className="font-medium">Question #{question.order_number}</h4>
+              <div className="text-sm text-muted-foreground mt-1">
+                Marks: +{question.marks} | Wrong Answer: -{question.negative_marks}
+              </div>
+            </div>
             <div className="flex space-x-2">
               <Button 
                 variant="ghost" 

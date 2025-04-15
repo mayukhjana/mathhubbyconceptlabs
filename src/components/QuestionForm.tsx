@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { X, PlusCircle, Save } from "lucide-react";
+import { X, Save } from "lucide-react";
 
 export type QuestionData = {
   id?: string;
@@ -16,6 +15,8 @@ export type QuestionData = {
   option_d: string;
   correct_answer: "a" | "b" | "c" | "d";
   order_number: number;
+  marks: number;
+  negative_marks: number;
 };
 
 interface QuestionFormProps {
@@ -35,13 +36,15 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
       option_d: "",
       correct_answer: "a",
       order_number: index + 1,
+      marks: 1,
+      negative_marks: 0,
     }
   );
   
-  const handleChange = (field: keyof QuestionData, value: string) => {
+  const handleChange = (field: keyof QuestionData, value: string | number) => {
     setQuestion({
       ...question,
-      [field]: value,
+      [field]: field === 'marks' || field === 'negative_marks' ? Number(value) : value,
     });
   };
   
@@ -56,7 +59,8 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
       question.option_a.trim() !== "" &&
       question.option_b.trim() !== "" &&
       question.option_c.trim() !== "" &&
-      question.option_d.trim() !== "" 
+      question.option_d.trim() !== "" &&
+      question.marks > 0
     );
   };
   
@@ -137,6 +141,37 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
               placeholder="Option D"
               className="mt-1"
               required
+            />
+          </div>
+        </div>
+        
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor={`marks-${index}`}>Marks for Correct Answer</Label>
+            <Input
+              id={`marks-${index}`}
+              type="number"
+              min="0"
+              step="0.5"
+              value={question.marks}
+              onChange={(e) => handleChange("marks", e.target.value)}
+              placeholder="Enter marks"
+              className="mt-1"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor={`negative-marks-${index}`}>Negative Marks (if wrong)</Label>
+            <Input
+              id={`negative-marks-${index}`}
+              type="number"
+              min="0"
+              step="0.5"
+              value={question.negative_marks}
+              onChange={(e) => handleChange("negative_marks", e.target.value)}
+              placeholder="Enter negative marks"
+              className="mt-1"
             />
           </div>
         </div>
