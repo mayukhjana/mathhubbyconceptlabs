@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, ChevronRight } from "lucide-react";
@@ -48,11 +47,41 @@ const HeroSection = () => {
             
             <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start animate-fade-in">
               <div className="flex -space-x-4">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shadow-lg">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{String.fromCharCode(64 + i)}</span>
-                  </div>
-                ))}
+                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
+                  <img 
+                    src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81" 
+                    alt="Student A" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
+                  <img 
+                    src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" 
+                    alt="Student B" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
+                  <img 
+                    src="https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b" 
+                    alt="Student C" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
+                  <img 
+                    src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce" 
+                    alt="Student D" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
+                  <img 
+                    src="https://images.unsplash.com/photo-1629872430082-93d8912beccf" 
+                    alt="Student E" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
               <div>
                 <div className="flex items-center gap-1 mb-1">
