@@ -39,7 +39,8 @@ const UserProfileMenu = () => {
           .single();
           
         if (error) throw error;
-        if (data && 'avatar_url' in data) {
+        if (data && data.avatar_url) {
+          console.log("Avatar URL from database:", data.avatar_url);
           setAvatarUrl(data.avatar_url);
         }
       } catch (error) {
@@ -73,7 +74,13 @@ const UserProfileMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={avatarUrl || undefined} />
+            <AvatarImage 
+              src={avatarUrl || undefined} 
+              alt="User avatar"
+              onError={() => {
+                console.error("Error loading avatar image from URL:", avatarUrl);
+              }}
+            />
             <AvatarFallback className="bg-mathprimary text-white">
               {getInitials()}
             </AvatarFallback>

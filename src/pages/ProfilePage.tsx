@@ -84,7 +84,7 @@ const ProfilePage = () => {
     try {
       setUploading(true);
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
       
@@ -99,13 +99,14 @@ const ProfilePage = () => {
         return;
       }
       
+      // IMPORTANT: Make sure we're setting the content type explicitly as an option
       // Upload image to Supabase Storage with correct content type
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
-          contentType: contentType
+          contentType: contentType // Explicitly set content type here
         });
         
       if (uploadError) throw uploadError;
@@ -116,6 +117,9 @@ const ProfilePage = () => {
         .getPublicUrl(filePath);
       
       const publicUrl = data.publicUrl;
+      
+      console.log("Avatar uploaded successfully, public URL:", publicUrl);
+      console.log("Content type used:", contentType);
         
       try {
         // Update profile with new avatar URL

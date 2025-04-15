@@ -108,6 +108,10 @@ const FileUploadZone = ({
         return;
       }
       
+      // Log the file details for debugging purposes
+      const contentType = getContentType(selectedFile);
+      console.log(`Selected file: ${selectedFile.name}, type: ${contentType}`);
+      
       onChange(event);
     }
   };

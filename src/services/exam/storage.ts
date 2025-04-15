@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -146,7 +147,7 @@ export const uploadExamFile = async (
     const options = {
       cacheControl: '3600',
       upsert: true,
-      contentType: contentType
+      contentType: contentType  // Explicitly set content type
     };
     
     const { data, error } = await supabase
