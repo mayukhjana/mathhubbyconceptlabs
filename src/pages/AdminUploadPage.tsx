@@ -108,7 +108,16 @@ const AdminUploadPage = () => {
       setUploadedFile(null);
       return;
     }
-    setUploadedFile(event.target.files[0]);
+    
+    const file = event.target.files[0];
+    const fileType = file.type;
+    
+    if (!fileType.includes('pdf')) {
+      toast.error("Please upload a PDF document for exam papers");
+      return;
+    }
+    
+    setUploadedFile(file);
   };
   
   const handleSolutionFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +125,16 @@ const AdminUploadPage = () => {
       setSolutionFile(null);
       return;
     }
-    setSolutionFile(event.target.files[0]);
+    
+    const file = event.target.files[0];
+    const fileType = file.type;
+    
+    if (!fileType.includes('pdf')) {
+      toast.error("Please upload a PDF document for solutions");
+      return;
+    }
+    
+    setSolutionFile(file);
   };
 
   const handleSaveQuestion = (questionData: QuestionData) => {
@@ -162,7 +180,6 @@ const AdminUploadPage = () => {
     
     if (!bucketsReady) {
       toast.error("Storage is not ready. Please try again in a moment.");
-      // Try to reinitialize buckets
       try {
         console.log("Retrying bucket initialization...");
         const result = await ensureStorageBuckets();
@@ -203,6 +220,13 @@ const AdminUploadPage = () => {
       setUploadProgress(30);
       
       if (uploadedFile) {
+        const fileExt = uploadedFile.name.split('.').pop()?.toLowerCase();
+        if (fileExt !== 'pdf') {
+          toast.error('Exam papers must be PDF documents');
+          setIsUploading(false);
+          return;
+        }
+        
         try {
           await uploadExamFile(uploadedFile, insertedExam.id, 'paper', selectedBoard);
         } catch (err: any) {
@@ -213,11 +237,16 @@ const AdminUploadPage = () => {
       setUploadProgress(50);
       
       if (solutionFile) {
-        try {
-          await uploadExamFile(solutionFile, insertedExam.id, 'solution', selectedBoard);
-        } catch (err: any) {
-          console.error("Error uploading solution:", err);
-          toast.error(`Failed to upload solution: ${err.message}`);
+        const fileExt = solutionFile.name.split('.').pop()?.toLowerCase();
+        if (fileExt !== 'pdf') {
+          toast.error('Solutions must be PDF documents');
+        } else {
+          try {
+            await uploadExamFile(solutionFile, insertedExam.id, 'solution', selectedBoard);
+          } catch (err: any) {
+            console.error("Error uploading solution:", err);
+            toast.error(`Failed to upload solution: ${err.message}`);
+          }
         }
       }
       setUploadProgress(70);

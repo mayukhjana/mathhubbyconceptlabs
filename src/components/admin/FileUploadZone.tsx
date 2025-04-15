@@ -59,6 +59,28 @@ const FileUploadZone = ({
     }
   };
 
+  // Validate file is PDF for exam uploads
+  const validateFileType = (file: File): boolean => {
+    if (acceptFormats === ".pdf") {
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      return extension === "pdf";
+    }
+    return true;
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const selectedFile = event.target.files[0];
+      
+      if (!validateFileType(selectedFile)) {
+        alert("Please upload a PDF document for exam papers and solutions.");
+        return;
+      }
+      
+      onChange(event);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>
@@ -91,7 +113,7 @@ const FileUploadZone = ({
           id={id} 
           type="file" 
           accept={acceptFormats}
-          onChange={onChange}
+          onChange={handleFileChange}
           className="hidden" 
         />
       </div>

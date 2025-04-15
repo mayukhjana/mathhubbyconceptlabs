@@ -122,6 +122,14 @@ export const uploadExamFile = async (
     
     console.log(`Uploading ${fileType} to bucket: ${bucketName}, file: ${fileName}`);
     
+    // Verify file is a PDF for exam papers and solutions
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (extension !== 'pdf') {
+      const error = new Error(`Only PDF files are accepted for ${fileType}s`);
+      toast.error(`Upload failed: ${error.message}`);
+      throw error;
+    }
+    
     // Determine the correct content type based on the file extension
     const contentType = getContentType(file);
     console.log(`Setting content type: ${contentType} for file: ${file.name}`);

@@ -43,15 +43,12 @@ const UnifiedExamForm = ({
   const handleSaveQuestion = (questionData: QuestionData) => {
     onSaveQuestion(questionData);
     
-    // Clear the form after saving to allow adding another question
     setEditingQuestionIndex(null);
     
-    // Keep the form visible after saving, but reset it for a new question
     if (editingQuestionIndex !== null) {
       toast.success("Question updated successfully!");
     } else {
       toast.success("Question added successfully!");
-      // Don't hide the form so they can keep adding questions
     }
   };
 
@@ -75,6 +72,8 @@ const UnifiedExamForm = ({
           label="Exam Paper (PDF)"
           file={uploadedFile}
           onChange={onFileChange}
+          acceptFormats=".pdf"
+          description="Upload exam paper in PDF format only"
           required={true}
         />
         
@@ -83,6 +82,8 @@ const UnifiedExamForm = ({
           label="Solution (PDF, Optional)"
           file={solutionFile}
           onChange={onSolutionFileChange}
+          acceptFormats=".pdf"
+          description="Upload solution in PDF format only"
         />
       </div>
       
