@@ -50,7 +50,15 @@ const QuestionCard = ({
           {questionNumber}
         </div>
         <div className="w-full">
-          <h3 className="text-lg font-medium mb-4">{question.text}</h3>
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-lg font-medium">{question.text}</h3>
+            <div className="text-sm text-gray-500 shrink-0">
+              <span className="font-medium text-mathprimary">{question.marks} mark{question.marks !== 1 && 's'}</span>
+              {question.negative_marks > 0 && (
+                <span className="ml-1 text-red-500">(-{question.negative_marks})</span>
+              )}
+            </div>
+          </div>
           
           <RadioGroup
             value={selectedOption}
@@ -101,13 +109,14 @@ const QuestionCard = ({
               {isCorrect ? (
                 <div className="flex items-center gap-2">
                   <Check className="h-5 w-5" />
-                  <span>Correct answer!</span>
+                  <span>Correct answer! (+{question.marks} marks)</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <X className="h-5 w-5" />
                   <span>
-                    Incorrect. The correct answer is: {
+                    Incorrect. {question.negative_marks > 0 && `(-${question.negative_marks} marks) `}
+                    The correct answer is: {
                       question.options.find(o => o.id === question.correctAnswer)?.text
                     }
                   </span>

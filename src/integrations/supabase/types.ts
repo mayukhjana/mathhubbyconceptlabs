@@ -244,8 +244,10 @@ export type Database = {
           completed_at: string | null
           exam_id: string
           id: string
+          obtained_marks: number | null
           score: number
           time_taken: number | null
+          total_marks: number | null
           total_questions: number
           user_id: string
         }
@@ -253,8 +255,10 @@ export type Database = {
           completed_at?: string | null
           exam_id: string
           id?: string
+          obtained_marks?: number | null
           score: number
           time_taken?: number | null
+          total_marks?: number | null
           total_questions: number
           user_id: string
         }
@@ -262,8 +266,10 @@ export type Database = {
           completed_at?: string | null
           exam_id?: string
           id?: string
+          obtained_marks?: number | null
           score?: number
           time_taken?: number | null
+          total_marks?: number | null
           total_questions?: number
           user_id?: string
         }
