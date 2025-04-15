@@ -18,20 +18,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Award, Clock, AlertCircle } from "lucide-react";
+import { Award, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ExamResult } from "@/services/exam/types";
 
 // Define exam types
 const BOARD_EXAMS = ["ICSE", "CBSE", "West Bengal Board"];
 const ENTRANCE_EXAMS = ["WBJEE", "JEE MAINS", "JEE ADVANCED"];
 
-type ExamResult = {
-  id: string;
-  exam_id: string;
-  completed_at: string;
-  score: number;
-  total_questions: number;
-  time_taken: number;
+// Define an extended type that includes the related exam data
+type ExamResultWithExam = ExamResult & {
   exams: {
     title: string;
     board: string;
@@ -42,7 +38,7 @@ type ExamResult = {
 };
 
 type ExamResultProps = {
-  results: ExamResult[];
+  results: ExamResultWithExam[];
   loading: boolean;
 };
 

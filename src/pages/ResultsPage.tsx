@@ -21,37 +21,16 @@ import {
   FileText, 
   ArrowRight, 
   Activity, 
-  Calendar
+  Calendar,
+  MapPin,
+  Lightbulb
 } from "lucide-react";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { toast } from "sonner";
-import { 
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer
-} from "recharts";
 import { fetchExamResults } from "@/services/exam/results";
 import ChapterPerformanceChart from "@/components/ChapterPerformanceChart";
 import ExamResultsByType from "@/components/ExamResultsByType";
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
-
-type ExamResult = {
-  id: string;
-  exam_id: string;
-  completed_at: string;
-  score: number;
-  total_questions: number;
-  time_taken: number;
-  exam?: {
-    title: string;
-    board: string;
-    chapter: string;
-    year: string;
-    class: string;
-  };
-};
+import { ExamResult } from "@/services/exam/types";
 
 type AnalysisData = {
   totalExams: number;
@@ -60,23 +39,31 @@ type AnalysisData = {
   examsByBoard: Record<string, number>;
   scoresByBoard: Record<string, number>;
   progressOverTime: {date: string; score: number}[];
-  completedExamsByBoard: {name: string; value: number}[];
+};
+
+// This is the extended type that includes exam details after join
+type ExamResultWithExam = ExamResult & {
+  exams: {
+    title: string;
+    board: string;
+    chapter: string | null;
+    year: string;
+    class: string;
+  };
 };
 
 const ResultsPage = () => {
   const { user } = useAuth();
-  const [results, setResults] = useState<ExamResult[]>([]);
+  const [results, setResults] = useState<ExamResultWithExam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [completedExamIds, setCompletedExamIds] = useState<string[]>([]);
   const [analysisData, setAnalysisData] = useState<AnalysisData>({
     totalExams: 0,
     averageScore: 0,
     bestScore: 0,
     examsByBoard: {},
     scoresByBoard: {},
-    progressOverTime: [],
-    completedExamsByBoard: []
+    progressOverTime: []
   });
 
   useEffect(() => {
@@ -91,16 +78,14 @@ const ResultsPage = () => {
         const data = await fetchExamResults(user.id);
         
         console.log("Fetched results:", data);
-        setResults(data || []);
         
-        // Store completed exam IDs for preventing retakes
-        if (data && data.length > 0) {
-          const examIds = data.map((result: any) => result.exam_id);
-          setCompletedExamIds(examIds);
-          localStorage.setItem('completedExamIds', JSON.stringify(examIds));
-          
-          // Analyze the data for detailed insights
-          analyzeResultsData(data);
+        // Explicitly casting the data to the correct type
+        const typedResults = data as ExamResultWithExam[];
+        setResults(typedResults || []);
+        
+        // Analyze the data for detailed insights
+        if (typedResults && typedResults.length > 0) {
+          analyzeResultsData(typedResults);
         }
       } catch (err) {
         console.error("Error fetching results:", err);
@@ -114,7 +99,7 @@ const ResultsPage = () => {
     fetchResults();
   }, [user]);
 
-  const analyzeResultsData = (data: ExamResult[]) => {
+  const analyzeResultsData = (data: ExamResultWithExam[]) => {
     if (!data || data.length === 0) return;
     
     // Basic stats
@@ -128,7 +113,7 @@ const ResultsPage = () => {
     const boardCounts: Record<string, number> = {};
     
     data.forEach(result => {
-      const board = result.exam?.board || 'Unknown';
+      const board = result.exams?.board || 'Unknown';
       examsByBoard[board] = (examsByBoard[board] || 0) + 1;
       
       // Calculate average score by board
@@ -150,20 +135,13 @@ const ResultsPage = () => {
         score: result.score,
       }));
     
-    // Exams completed by board for pie chart
-    const completedExamsByBoard = Object.entries(examsByBoard).map(([name, value]) => ({
-      name,
-      value
-    }));
-    
     setAnalysisData({
       totalExams,
       averageScore,
       bestScore,
       examsByBoard,
       scoresByBoard,
-      progressOverTime,
-      completedExamsByBoard
+      progressOverTime
     });
   };
 
@@ -280,7 +258,7 @@ const ResultsPage = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-base font-medium">
-                      {results[0]?.exam?.title || "No exams"}
+                      {results[0]?.exams?.title || "No exams"}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {results[0]?.completed_at ? format(new Date(results[0].completed_at), "PPP") : "N/A"}
@@ -290,38 +268,19 @@ const ResultsPage = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <Card>
+                <Card className="h-full">
                   <CardHeader>
-                    <CardTitle>Exams by Board</CardTitle>
-                    <CardDescription>Distribution of exams across boards</CardDescription>
+                    <CardTitle>Suggested Roadmaps</CardTitle>
+                    <CardDescription>Personalized learning paths</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full">
-                      {analysisData.completedExamsByBoard.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={analysisData.completedExamsByBoard}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              outerRadius={100}
-                              fill="#8884d8"
-                              dataKey="value"
-                              label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            >
-                              {analysisData.completedExamsByBoard.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                          </PieChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-full flex items-center justify-center">
-                          <p className="text-muted-foreground">Not enough data to show distribution</p>
-                        </div>
-                      )}
+                  <CardContent className="h-[300px] flex items-center justify-center flex-col">
+                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+                      <MapPin className="h-8 w-8 text-amber-600" />
                     </div>
+                    <h3 className="text-xl font-medium mb-2">Coming Soon</h3>
+                    <p className="text-muted-foreground text-center max-w-[250px]">
+                      Personalized study roadmaps based on your performance will be available soon.
+                    </p>
                   </CardContent>
                 </Card>
                 
