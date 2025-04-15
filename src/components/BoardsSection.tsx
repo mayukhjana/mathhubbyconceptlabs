@@ -8,17 +8,20 @@ const BoardsSection = () => {
     {
       name: "ICSE",
       description: "Access ICSE board papers from the past 10 years organized by chapters.",
-      link: "/boards/icse"
+      link: "/boards/icse",
+      logo: "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b"  // School building or academic-related image
     },
     {
       name: "CBSE",
       description: "Comprehensive collection of CBSE math papers with solutions.",
-      link: "/boards/cbse"
+      link: "/boards/cbse",
+      logo: "https://images.unsplash.com/photo-1519389950473-47ba0277781c"  // Education-related image
     },
     {
       name: "West Bengal",
       description: "All West Bengal board math papers sorted by year and chapter.",
-      link: "/boards/west-bengal"
+      link: "/boards/west-bengal",
+      logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81"  // Another academic-related image
     }
   ];
 
@@ -43,8 +46,13 @@ const BoardsSection = () => {
                 index === 0 ? "from-mathprimary to-mathsecondary dark:from-blue-600 dark:to-purple-700" :
                 index === 1 ? "from-mathsecondary to-mathprimary dark:from-purple-700 dark:to-blue-600" :
                 "from-mathdark via-mathprimary to-mathsecondary dark:from-gray-700 dark:via-blue-600 dark:to-purple-700"
-              } flex items-center justify-center`}>
-                <h3 className="text-3xl font-bold text-white">{board.name}</h3>
+              } flex items-center justify-center relative`}>
+                <img 
+                  src={board.logo} 
+                  alt={`${board.name} Board Logo`} 
+                  className="absolute w-24 h-24 object-cover rounded-full border-4 border-white/20 shadow-lg"
+                />
+                <h3 className="text-3xl font-bold text-white mt-16">{board.name}</h3>
               </div>
               <div className="p-6">
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
