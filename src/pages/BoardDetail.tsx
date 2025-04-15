@@ -43,7 +43,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/icse-alg-2022",
-            practiceUrl: "/exams/icse-alg-2022"
+            practiceUrl: "/exams/icse-alg-2022",
+            examBoard: "ICSE"
           },
           {
             id: "icse-alg-2021",
@@ -52,7 +53,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: false,
             downloadUrl: "/download/icse-alg-2021",
-            practiceUrl: "/exams/icse-alg-2021"
+            practiceUrl: "/exams/icse-alg-2021",
+            examBoard: "ICSE"
           },
           {
             id: "icse-alg-2020",
@@ -61,7 +63,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2020",
             isPremium: true,
             downloadUrl: "/download/icse-alg-2020",
-            practiceUrl: "/exams/icse-alg-2020"
+            practiceUrl: "/exams/icse-alg-2020",
+            examBoard: "ICSE"
           }
         ]
       },
@@ -76,7 +79,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/icse-geo-2022",
-            practiceUrl: "/exams/icse-geo-2022"
+            practiceUrl: "/exams/icse-geo-2022",
+            examBoard: "ICSE"
           },
           {
             id: "icse-geo-2021",
@@ -85,7 +89,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: true,
             downloadUrl: "/download/icse-geo-2021",
-            practiceUrl: "/exams/icse-geo-2021"
+            practiceUrl: "/exams/icse-geo-2021",
+            examBoard: "ICSE"
           }
         ]
       },
@@ -100,7 +105,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/icse-trig-2022",
-            practiceUrl: "/exams/icse-trig-2022"
+            practiceUrl: "/exams/icse-trig-2022",
+            examBoard: "ICSE"
           },
           {
             id: "icse-trig-2021",
@@ -109,7 +115,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: true,
             downloadUrl: "/download/icse-trig-2021",
-            practiceUrl: "/exams/icse-trig-2021"
+            practiceUrl: "/exams/icse-trig-2021",
+            examBoard: "ICSE"
           }
         ]
       }
@@ -126,7 +133,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/icse-calc-2022",
-            practiceUrl: "/exams/icse-calc-2022"
+            practiceUrl: "/exams/icse-calc-2022",
+            examBoard: "ICSE"
           },
           {
             id: "icse-calc-2021",
@@ -135,7 +143,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: true,
             downloadUrl: "/download/icse-calc-2021",
-            practiceUrl: "/exams/icse-calc-2021"
+            practiceUrl: "/exams/icse-calc-2021",
+            examBoard: "ICSE"
           }
         ]
       }
@@ -154,7 +163,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/cbse-num-2022",
-            practiceUrl: "/exams/cbse-num-2022"
+            practiceUrl: "/exams/cbse-num-2022",
+            examBoard: "CBSE"
           },
           {
             id: "cbse-num-2021",
@@ -163,7 +173,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: true,
             downloadUrl: "/download/cbse-num-2021",
-            practiceUrl: "/exams/cbse-num-2021"
+            practiceUrl: "/exams/cbse-num-2021",
+            examBoard: "CBSE"
           }
         ]
       }
@@ -180,7 +191,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/cbse-rel-2022",
-            practiceUrl: "/exams/cbse-rel-2022"
+            practiceUrl: "/exams/cbse-rel-2022",
+            examBoard: "CBSE"
           },
           {
             id: "cbse-rel-2021",
@@ -189,7 +201,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: true,
             downloadUrl: "/download/cbse-rel-2021",
-            practiceUrl: "/exams/cbse-rel-2021"
+            practiceUrl: "/exams/cbse-rel-2021",
+            examBoard: "CBSE"
           }
         ]
       }
@@ -208,7 +221,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/wb-alg-2022",
-            practiceUrl: "/exams/wb-alg-2022"
+            practiceUrl: "/exams/wb-alg-2022",
+            examBoard: "West Bengal Board"
           },
           {
             id: "wb-alg-2021",
@@ -217,7 +231,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: true,
             downloadUrl: "/download/wb-alg-2021",
-            practiceUrl: "/exams/wb-alg-2021"
+            practiceUrl: "/exams/wb-alg-2021",
+            examBoard: "West Bengal Board"
           }
         ]
       }
@@ -234,7 +249,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2022",
             isPremium: false,
             downloadUrl: "/download/wb-calc-2022",
-            practiceUrl: "/exams/wb-calc-2022"
+            practiceUrl: "/exams/wb-calc-2022",
+            examBoard: "West Bengal Board"
           },
           {
             id: "wb-calc-2021",
@@ -243,7 +259,8 @@ const chaptersByBoard: Record<string, Record<string, Chapter[]>> = {
             year: "2021",
             isPremium: true,
             downloadUrl: "/download/wb-calc-2021",
-            practiceUrl: "/exams/wb-calc-2021"
+            practiceUrl: "/exams/wb-calc-2021",
+            examBoard: "West Bengal Board"
           }
         ]
       }
@@ -375,9 +392,11 @@ const PapersList = ({ boardId, userIsPremium }: { boardId: string; userIsPremium
               year: (2025 - i).toString(),
               isPremium: i >= 2,
               downloadUrl: `/download/${boardId}-class10-${2025 - i}`,
-              practiceUrl: `/exams/${boardId}-class10-${2025 - i}`
+              practiceUrl: `/exams/${boardId}-class10-${2025 - i}`,
+              examBoard: boardId.toUpperCase()
             }))}
             userIsPremium={userIsPremium}
+            boardId={boardId}
           />
         </TabsContent>
         
@@ -390,9 +409,11 @@ const PapersList = ({ boardId, userIsPremium }: { boardId: string; userIsPremium
               year: (2025 - i).toString(),
               isPremium: i >= 2,
               downloadUrl: `/download/${boardId}-class12-${2025 - i}`,
-              practiceUrl: `/exams/${boardId}-class12-${2025 - i}`
+              practiceUrl: `/exams/${boardId}-class12-${2025 - i}`,
+              examBoard: boardId.toUpperCase()
             }))}
             userIsPremium={userIsPremium}
+            boardId={boardId}
           />
         </TabsContent>
       </Tabs>
@@ -400,7 +421,7 @@ const PapersList = ({ boardId, userIsPremium }: { boardId: string; userIsPremium
   );
 };
 
-const PapersGrid = ({ papers, userIsPremium }: { 
+const PapersGrid = ({ papers, userIsPremium, boardId }: { 
   papers: {
     id: string;
     title: string;
@@ -409,8 +430,10 @@ const PapersGrid = ({ papers, userIsPremium }: {
     isPremium: boolean;
     downloadUrl?: string;
     practiceUrl?: string;
+    examBoard: string;
   }[]; 
   userIsPremium: boolean;
+  boardId: string;
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -424,6 +447,7 @@ const PapersGrid = ({ papers, userIsPremium }: {
           userIsPremium={userIsPremium}
           downloadUrl={paper.downloadUrl}
           practiceUrl={paper.practiceUrl}
+          examBoard={paper.examBoard}
         />
       ))}
     </div>
