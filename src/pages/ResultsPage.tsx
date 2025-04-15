@@ -1,20 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Card,
   CardContent,
@@ -30,29 +20,22 @@ import {
   Award, 
   FileText, 
   ArrowRight, 
-  AlertCircle, 
   Activity, 
-  TrendingUp,
-  CalendarRange,
-  Flame,
   Calendar
 } from "lucide-react";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { toast } from "sonner";
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  ResponsiveContainer
 } from "recharts";
+import { fetchExamResults } from "@/services/exam/results";
+import ChapterPerformanceChart from "@/components/ChapterPerformanceChart";
+import ExamResultsByType from "@/components/ExamResultsByType";
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 type ExamResult = {
   id: string;
@@ -66,6 +49,7 @@ type ExamResult = {
     board: string;
     chapter: string;
     year: string;
+    class: string;
   };
 };
 
@@ -76,12 +60,8 @@ type AnalysisData = {
   examsByBoard: Record<string, number>;
   scoresByBoard: Record<string, number>;
   progressOverTime: {date: string; score: number}[];
-  timeByScore: {score: number; time: number}[];
   completedExamsByBoard: {name: string; value: number}[];
-  scoreDistribution: {range: string; count: number}[];
 };
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const ResultsPage = () => {
   const { user } = useAuth();
@@ -96,62 +76,38 @@ const ResultsPage = () => {
     examsByBoard: {},
     scoresByBoard: {},
     progressOverTime: [],
-    timeByScore: [],
-    completedExamsByBoard: [],
-    scoreDistribution: [
-      {range: "0-25%", count: 0},
-      {range: "26-50%", count: 0},
-      {range: "51-75%", count: 0},
-      {range: "76-100%", count: 0}
-    ]
+    completedExamsByBoard: []
   });
 
   useEffect(() => {
     const fetchResults = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        if (!user) return;
-
-        const { data, error } = await supabase
-          .from("user_results")
-          .select(`
-            id,
-            exam_id,
-            completed_at,
-            score,
-            total_questions,
-            time_taken,
-            exam:exams (
-              title,
-              board,
-              chapter,
-              year
-            )
-          `)
-          .eq("user_id", user.id)
-          .order("completed_at", { ascending: false });
-
-        if (error) throw new Error(error.message);
+        setLoading(true);
+        const data = await fetchExamResults(user.id);
         
         console.log("Fetched results:", data);
         setResults(data || []);
         
         // Store completed exam IDs for preventing retakes
-        if (data) {
-          const examIds = data.map(result => result.exam_id);
+        if (data && data.length > 0) {
+          const examIds = data.map((result: any) => result.exam_id);
           setCompletedExamIds(examIds);
-          // Store in localStorage to use in ExamPage
           localStorage.setItem('completedExamIds', JSON.stringify(examIds));
           
           // Analyze the data for detailed insights
           analyzeResultsData(data);
         }
-        
-        setLoading(false);
       } catch (err) {
         console.error("Error fetching results:", err);
         setError("Failed to load your results. Please try again later.");
-        setLoading(false);
         toast.error("Failed to load your results");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -194,32 +150,11 @@ const ResultsPage = () => {
         score: result.score,
       }));
     
-    // Time taken vs score
-    const timeByScore = data.map(result => ({
-      score: result.score,
-      time: Math.round(result.time_taken / 60), // Convert to minutes
-    }));
-    
     // Exams completed by board for pie chart
     const completedExamsByBoard = Object.entries(examsByBoard).map(([name, value]) => ({
       name,
       value
     }));
-    
-    // Score distribution
-    const scoreDistribution = [
-      {range: "0-25%", count: 0},
-      {range: "26-50%", count: 0},
-      {range: "51-75%", count: 0},
-      {range: "76-100%", count: 0}
-    ];
-    
-    data.forEach(result => {
-      if (result.score <= 25) scoreDistribution[0].count++;
-      else if (result.score <= 50) scoreDistribution[1].count++;
-      else if (result.score <= 75) scoreDistribution[2].count++;
-      else scoreDistribution[3].count++;
-    });
     
     setAnalysisData({
       totalExams,
@@ -228,16 +163,8 @@ const ResultsPage = () => {
       examsByBoard,
       scoresByBoard,
       progressOverTime,
-      timeByScore,
-      completedExamsByBoard,
-      scoreDistribution
+      completedExamsByBoard
     });
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   if (loading) {
@@ -362,74 +289,6 @@ const ResultsPage = () => {
                 </Card>
               </div>
               
-              {/* Analytics Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Progress Over Time</CardTitle>
-                    <CardDescription>Your score progression across exams</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full">
-                      {analysisData.progressOverTime.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={analysisData.progressOverTime}
-                            margin={{
-                              top: 5,
-                              right: 30,
-                              left: 20,
-                              bottom: 5,
-                            }}
-                          >
-                            <XAxis dataKey="date" />
-                            <YAxis domain={[0, 100]} />
-                            <Tooltip />
-                            <Legend />
-                            <Line type="monotone" dataKey="score" stroke="#8884d8" activeDot={{ r: 8 }} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-full flex items-center justify-center">
-                          <p className="text-muted-foreground">Not enough data to show progress</p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Score Distribution</CardTitle>
-                    <CardDescription>Breakdown of your score ranges</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={analysisData.scoreDistribution}
-                          margin={{
-                            top: 20,
-                            right: 30,
-                            left: 20,
-                            bottom: 5,
-                          }}
-                        >
-                          <XAxis dataKey="range" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="count" fill="#3498db">
-                            {analysisData.scoreDistribution.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <Card>
                   <CardHeader>
@@ -455,7 +314,6 @@ const ResultsPage = () => {
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))}
                             </Pie>
-                            <Tooltip />
                           </PieChart>
                         </ResponsiveContainer>
                       ) : (
@@ -467,118 +325,21 @@ const ResultsPage = () => {
                   </CardContent>
                 </Card>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Performance by Exam Board</CardTitle>
-                    <CardDescription>Average scores by exam board</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full">
-                      {Object.keys(analysisData.scoresByBoard).length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={Object.entries(analysisData.scoresByBoard).map(([name, value]) => ({
-                              name,
-                              score: value
-                            }))}
-                            margin={{
-                              top: 20,
-                              right: 30,
-                              left: 20,
-                              bottom: 5,
-                            }}
-                          >
-                            <XAxis dataKey="name" />
-                            <YAxis domain={[0, 100]} />
-                            <Tooltip />
-                            <Bar dataKey="score" fill="#82ca9d" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-full flex items-center justify-center">
-                          <p className="text-muted-foreground">Not enough data to show performance</p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Chapter Performance Chart */}
+                <ChapterPerformanceChart />
               </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Exam History</CardTitle>
-                  <CardDescription>
-                    All your previous exam attempts and scores
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Exam Title</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Score</TableHead>
-                        <TableHead>Time Taken</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {results.map((result) => (
-                        <TableRow key={result.id}>
-                          <TableCell className="font-medium">
-                            <div>{result.exam?.title || "Unknown Exam"}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {result.exam?.board} · {result.exam?.chapter} · {result.exam?.year}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {result.completed_at ? format(new Date(result.completed_at), "PPP") : "Unknown"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Award className={`h-4 w-4 ${
-                                result.score >= 80 ? "text-green-500" : 
-                                result.score >= 60 ? "text-yellow-500" : 
-                                "text-red-500"
-                              }`} />
-                              <span>{result.score}%</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span>{formatTime(result.time_taken || 0)}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="gap-1.5"
-                              disabled={true}
-                              title="You have already completed this exam"
-                            >
-                              <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                              Already Completed
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {results.length} of {results.length} results
-                  </p>
-                  <Button variant="outline" asChild>
-                    <Link to="/exam-papers">
-                      Try more exams
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+              
+              {/* Exam Results by Type */}
+              <ExamResultsByType results={results} loading={false} />
+              
+              <div className="mt-8 flex justify-end">
+                <Button variant="outline" asChild>
+                  <Link to="/exam-papers">
+                    Try more exams
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </>
           )}
         </div>

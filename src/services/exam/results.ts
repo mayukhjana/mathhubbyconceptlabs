@@ -8,51 +8,97 @@ export const submitExamResult = async (
   totalQuestions: number,
   timeTaken: number
 ) => {
-  const { data, error } = await supabase
-    .from('user_results')
-    .insert({
-      user_id: userId,
-      exam_id: examId,
-      score,
-      total_questions: totalQuestions,
-      time_taken: timeTaken,
-    })
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('user_results')
+      .insert({
+        user_id: userId,
+        exam_id: examId,
+        score,
+        total_questions: totalQuestions,
+        time_taken: timeTaken,
+      })
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Error submitting exam result:", error);
+      return null;
+    }
     
-  if (error) {
-    console.error("Error submitting exam result:", error);
+    return data;
+  } catch (err) {
+    console.error("Exception when submitting exam result:", err);
     return null;
   }
-  
-  return data;
 };
 
 export const fetchExamResults = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('user_results')
-    .select('*, exams(title, board, year, chapter)')
-    .eq('user_id', userId)
-    .order('completed_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('user_results')
+      .select('*, exams(title, board, year, chapter, class)')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false });
+      
+    if (error) {
+      console.error("Error fetching exam results:", error);
+      return [];
+    }
     
-  if (error) {
-    console.error("Error fetching exam results:", error);
+    return data || [];
+  } catch (err) {
+    console.error("Exception when fetching exam results:", err);
     return [];
   }
-  
-  return data;
 };
 
 export const examHasMCQs = async (examId: string): Promise<boolean> => {
-  const { count, error } = await supabase
-    .from('questions')
-    .select('*', { count: 'exact', head: true })
-    .eq('exam_id', examId);
+  try {
+    const { count, error } = await supabase
+      .from('questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('exam_id', examId);
+      
+    if (error) {
+      console.error("Error checking if exam has MCQs:", error);
+      return false;
+    }
     
-  if (error) {
-    console.error("Error checking if exam has MCQs:", error);
+    return count !== null && count > 0;
+  } catch (err) {
+    console.error("Exception when checking if exam has MCQs:", err);
     return false;
   }
-  
-  return count !== null && count > 0;
+};
+
+// New function to fetch chapter-wise performance
+export const fetchChapterPerformance = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_results')
+      .select(`
+        id, 
+        score, 
+        total_questions,
+        exams!inner(
+          title, 
+          board, 
+          chapter
+        )
+      `)
+      .eq('user_id', userId)
+      .not('exams.chapter', 'is', null)
+      .order('completed_at', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching chapter performance:", error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (err) {
+    console.error("Exception when fetching chapter performance:", err);
+    return [];
+  }
 };

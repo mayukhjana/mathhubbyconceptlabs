@@ -8,17 +8,20 @@ const BoardsSection = () => {
     {
       name: "ICSE",
       description: "Access ICSE board papers from the past 10 years organized by chapters.",
-      link: "/boards/icse"
+      link: "/boards/icse",
+      logo: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
     },
     {
       name: "CBSE",
       description: "Comprehensive collection of CBSE math papers with solutions.",
-      link: "/boards/cbse"
+      link: "/boards/cbse",
+      logo: "https://images.unsplash.com/photo-1599008633840-052c7f756385?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
     },
     {
       name: "West Bengal",
       description: "All West Bengal board math papers sorted by year and chapter.",
-      link: "/boards/west-bengal"
+      link: "/boards/west-bengal",
+      logo: "https://images.unsplash.com/photo-1600025282051-ec0c6bf3137a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
     }
   ];
 
@@ -43,8 +46,17 @@ const BoardsSection = () => {
                 index === 0 ? "from-mathprimary to-mathsecondary dark:from-blue-600 dark:to-purple-700" :
                 index === 1 ? "from-mathsecondary to-mathprimary dark:from-purple-700 dark:to-blue-600" :
                 "from-mathdark via-mathprimary to-mathsecondary dark:from-gray-700 dark:via-blue-600 dark:to-purple-700"
-              } flex items-center justify-center`}>
-                <h3 className="text-3xl font-bold text-white">{board.name}</h3>
+              } flex items-center justify-center relative`}>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden bg-white">
+                    <img 
+                      src={board.logo} 
+                      alt={`${board.name} Board Logo`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-bold text-white mt-16">{board.name}</h3>
               </div>
               <div className="p-6">
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
