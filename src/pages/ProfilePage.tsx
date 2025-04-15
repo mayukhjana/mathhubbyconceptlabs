@@ -14,6 +14,23 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
+// Helper function to get proper content type
+const getContentTypeFromFile = (file: File): string => {
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  
+  const contentTypeMap: Record<string, string> = {
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    'bmp': 'image/bmp'
+  };
+  
+  return contentTypeMap[extension || ''] || file.type || 'application/octet-stream';
+};
+
 const ProfilePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -71,12 +88,17 @@ const ProfilePage = () => {
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
       
-      // Upload image to Supabase Storage
+      // Get the correct content type based on file extension
+      const contentType = getContentTypeFromFile(file);
+      console.log(`Uploading avatar with content type: ${contentType}`);
+      
+      // Upload image to Supabase Storage with correct content type
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true
+          upsert: true,
+          contentType: contentType
         });
         
       if (uploadError) throw uploadError;

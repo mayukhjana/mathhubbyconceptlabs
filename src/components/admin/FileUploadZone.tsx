@@ -13,6 +13,25 @@ interface FileUploadZoneProps {
   required?: boolean;
 }
 
+// Helper function to get the correct content type based on file extension
+const getContentType = (file: File): string => {
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  
+  // Map of extensions to content types
+  const contentTypeMap: Record<string, string> = {
+    'pdf': 'application/pdf',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    'bmp': 'image/bmp'
+  };
+  
+  return contentTypeMap[extension || ''] || file.type || 'application/octet-stream';
+};
+
 const FileUploadZone = ({ 
   id, 
   label, 
@@ -48,14 +67,19 @@ const FileUploadZone = ({
   const getFileTypeDisplay = () => {
     if (!file) return "";
     
+    // Use our content type helper to get a more accurate content type
+    const contentType = getContentType(file);
     const extension = file.name.split(".").pop()?.toLowerCase();
+    
     switch (extension) {
       case "pdf": return "PDF Document";
       case "png": return "PNG Image";
       case "jpg":
       case "jpeg": return "JPEG Image";
       case "gif": return "GIF Image";
-      default: return file.type || "Unknown type";
+      case "webp": return "WebP Image";
+      case "svg": return "SVG Image";
+      default: return contentType || "Unknown type";
     }
   };
 
