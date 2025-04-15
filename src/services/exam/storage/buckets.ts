@@ -65,7 +65,8 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
         .storage
         .createBucket(bucketName, {
           public: true,
-          fileSizeLimit: 1024 * 1024 * 10 // 10MB
+          fileSizeLimit: 1024 * 1024 * 10, // 10MB
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
         });
       
       if (error) {
@@ -83,5 +84,24 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
   } catch (error) {
     console.error(`Error creating bucket ${bucketName}:`, error);
     return false;
+  }
+};
+
+/**
+ * Gets a list of files in a specific bucket
+ */
+export const listBucketFiles = async (bucketName: string) => {
+  try {
+    const { data, error } = await supabase.storage.from(bucketName).list();
+    
+    if (error) {
+      console.error(`Error listing files in bucket ${bucketName}:`, error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error(`Error listing files in bucket ${bucketName}:`, error);
+    return [];
   }
 };

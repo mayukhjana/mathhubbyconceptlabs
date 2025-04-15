@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +12,7 @@ import { Pencil, Upload, User, Mail, Crown, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
-import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
 
 const ProfilePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -82,49 +82,17 @@ const ProfilePage = () => {
         return;
       }
       
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.png`;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
-      console.log("Starting avatar upload process...");
-      
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      await new Promise((resolve, reject) => {
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx?.drawImage(img, 0, 0);
-          resolve(true);
-        };
-        img.onerror = reject;
-        img.src = URL.createObjectURL(file);
-      });
-      
-      const blob = await new Promise<Blob>((resolve) => 
-        canvas.toBlob(
-          (b) => resolve(b as Blob), 
-          'image/png', 
-          0.95
-        )
-      );
-      
-      console.log("Image converted to PNG, preparing for upload");
-      
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
-      
-      if (!avatarBucketExists) {
-        console.log("Avatars bucket doesn't exist. File upload may fail.");
-        toast.warning("Avatar storage not configured properly. Contact support.");
-      }
+      console.log(`Starting avatar upload process... File type: ${file.type}, Extension: ${fileExt}`);
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, blob, {
+        .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true,
-          contentType: 'image/png'
+          contentType: file.type
         });
         
       if (uploadError) {
@@ -158,7 +126,9 @@ const ProfilePage = () => {
         setAvatarUrl(publicUrl);
         toast.success("Avatar updated successfully");
         
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } catch (error: any) {
         console.error("Error updating profile:", error);
         toast.error(`Failed to update avatar in profile: ${error.message}`);
