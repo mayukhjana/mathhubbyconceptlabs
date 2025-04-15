@@ -93,6 +93,23 @@ export const getFileDownloadUrl = async (
   }
 };
 
+// Function to determine the correct content type based on file extension
+const getContentType = (file: File): string => {
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  
+  // Map of extensions to content types
+  const contentTypeMap: Record<string, string> = {
+    'pdf': 'application/pdf',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp'
+  };
+  
+  return contentTypeMap[extension || ''] || file.type || 'application/octet-stream';
+};
+
 export const uploadExamFile = async (
   file: File, 
   examId: string, 
@@ -105,11 +122,15 @@ export const uploadExamFile = async (
     
     console.log(`Uploading ${fileType} to bucket: ${bucketName}, file: ${fileName}`);
     
+    // Determine the correct content type based on the file extension
+    const contentType = getContentType(file);
+    console.log(`Setting content type: ${contentType} for file: ${file.name}`);
+    
     // Set the correct content type
     const options = {
       cacheControl: '3600',
       upsert: true,
-      contentType: file.type || 'application/pdf'
+      contentType: contentType
     };
     
     const { data, error } = await supabase

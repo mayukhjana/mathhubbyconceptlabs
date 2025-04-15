@@ -44,6 +44,21 @@ const FileUploadZone = ({
     }
   };
 
+  // Get the file type description for display
+  const getFileTypeDisplay = () => {
+    if (!file) return "";
+    
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    switch (extension) {
+      case "pdf": return "PDF Document";
+      case "png": return "PNG Image";
+      case "jpg":
+      case "jpeg": return "JPEG Image";
+      case "gif": return "GIF Image";
+      default: return file.type || "Unknown type";
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>
@@ -59,7 +74,10 @@ const FileUploadZone = ({
         {file ? (
           <div className="flex items-center gap-2">
             <File size={24} className="text-mathprimary" />
-            <span>{file.name}</span>
+            <div className="flex flex-col">
+              <span>{file.name}</span>
+              <span className="text-xs text-muted-foreground">{getFileTypeDisplay()}</span>
+            </div>
           </div>
         ) : (
           <div className="text-center">
