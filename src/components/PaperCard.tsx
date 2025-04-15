@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Download, Eye, FileText, Lock } from "lucide-react";
+import { Download, Eye, FileText, Lock, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface PaperCardProps {
@@ -15,6 +15,7 @@ interface PaperCardProps {
   practiceUrl: string;
   examBoard: string;
   isAttempted?: boolean;
+  totalMarks?: number;
 }
 
 const PaperCard = ({
@@ -27,7 +28,8 @@ const PaperCard = ({
   solutionUrl,
   practiceUrl,
   examBoard,
-  isAttempted = false
+  isAttempted = false,
+  totalMarks = 0
 }: PaperCardProps) => {
   return (
     <Card className="flex flex-col h-full">
@@ -36,6 +38,12 @@ const PaperCard = ({
           <div>
             <h3 className="font-semibold mb-2">{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
+            {totalMarks > 0 && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                <Award className="h-4 w-4" />
+                <span>Total Marks: {totalMarks}</span>
+              </div>
+            )}
           </div>
           {isPremium && (
             <div className="shrink-0">
@@ -97,4 +105,3 @@ const PaperCard = ({
 };
 
 export default PaperCard;
-

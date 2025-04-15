@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -22,11 +21,9 @@ import { Award, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExamResult } from "@/services/exam/types";
 
-// Define exam types
 const BOARD_EXAMS = ["ICSE", "CBSE", "West Bengal Board"];
 const ENTRANCE_EXAMS = ["WBJEE", "JEE MAINS", "JEE ADVANCED"];
 
-// Define an extended type that includes the related exam data
 type ExamResultWithExam = ExamResult & {
   exams: {
     title: string;
@@ -51,7 +48,14 @@ const ExamResultsByType = ({ results, loading }: ExamResultProps) => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
   
-  // Filter results based on exam type
+  const calculateTotalMarks = (result: ExamResultWithExam) => {
+    return result.total_marks || 0;
+  };
+
+  const calculateObtainedMarks = (result: ExamResultWithExam) => {
+    return Math.round((result.score / 100) * calculateTotalMarks(result));
+  };
+  
   const filterResults = (type: string) => {
     if (type === "all") return results;
     if (type === "boards") {
@@ -109,6 +113,7 @@ const ExamResultsByType = ({ results, loading }: ExamResultProps) => {
                 <TableHead>Exam Title</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Score</TableHead>
+                <TableHead>Marks</TableHead>
                 <TableHead>Time Taken</TableHead>
               </TableRow>
             </TableHeader>
@@ -146,6 +151,9 @@ const ExamResultsByType = ({ results, loading }: ExamResultProps) => {
                       }`} />
                       <span>{result.score}%</span>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <span>{calculateObtainedMarks(result)}/{calculateTotalMarks(result)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

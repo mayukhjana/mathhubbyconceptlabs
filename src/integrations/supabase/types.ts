@@ -105,6 +105,8 @@ export type Database = {
           created_at: string | null
           exam_id: string
           id: string
+          marks: number
+          negative_marks: number
           option_a: string
           option_b: string
           option_c: string
@@ -117,6 +119,8 @@ export type Database = {
           created_at?: string | null
           exam_id: string
           id?: string
+          marks?: number
+          negative_marks?: number
           option_a: string
           option_b: string
           option_c: string
@@ -129,6 +133,8 @@ export type Database = {
           created_at?: string | null
           exam_id?: string
           id?: string
+          marks?: number
+          negative_marks?: number
           option_a?: string
           option_b?: string
           option_c?: string
