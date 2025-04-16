@@ -47,9 +47,9 @@ export const ExamResults = ({
             <span className="text-gray-600 dark:text-gray-300">Correct Answers:</span>
             <span className="font-medium">
               {questions.filter(q => 
-                Array.isArray(q.correctAnswer) 
-                  ? q.correctAnswer.includes(userAnswers[q.id] || '')
-                  : userAnswers[q.id] === q.correctAnswer
+                Array.isArray(q.correct_answer) 
+                  ? q.correct_answer.includes(userAnswers[q.id] || '')
+                  : userAnswers[q.id] === q.correct_answer
               ).length} / {questions.length}
             </span>
           </div>
@@ -77,7 +77,20 @@ export const ExamResults = ({
           {questions.map((question, index) => (
             <QuestionCard
               key={question.id}
-              question={question}
+              question={{
+                id: question.id,
+                text: question.question_text,
+                options: [
+                  { id: "a", text: question.option_a },
+                  { id: "b", text: question.option_b },
+                  { id: "c", text: question.option_c },
+                  { id: "d", text: question.option_d }
+                ],
+                correctAnswer: question.correct_answer,
+                marks: question.marks,
+                negative_marks: question.negative_marks,
+                is_multi_correct: question.is_multi_correct
+              }}
               onAnswer={() => {}}
               userAnswer={userAnswers[question.id]}
               showResult={true}

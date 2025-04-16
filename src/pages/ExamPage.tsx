@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { fetchExamById, fetchQuestionsForExam } from "@/services/examService";
+import type { Question } from "@/services/exam/types";
 
 const ExamPage = () => {
   const { examId } = useParams<{ examId: string }>();
