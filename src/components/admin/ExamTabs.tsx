@@ -35,6 +35,7 @@ const ExamTabs = ({
               key={`${board}-${lastRefreshTime}`}
               title={board}
               exams={boardExams}
+              lastRefreshTime={lastRefreshTime} // Pass lastRefreshTime prop
               onDeleteExam={onDeleteExam}
               onDeleteComplete={onDeleteComplete}
               onDeleteAll={board === 'WBJEE' ? () => onDeleteBoard(board) : undefined}
@@ -52,6 +53,7 @@ const ExamTabs = ({
               key={`${board}-${lastRefreshTime}`}
               title={board}
               exams={filteredBoardExams}
+              lastRefreshTime={lastRefreshTime} // Pass lastRefreshTime prop
               onDeleteExam={onDeleteExam}
               onDeleteComplete={onDeleteComplete}
             />

@@ -1,4 +1,3 @@
-
 import { AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,15 +12,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface ExamSectionProps {
   title: string;
   exams: Exam[];
+  lastRefreshTime: number;
   onDeleteExam: (examId: string, examTitle: string) => Promise<void>;
   onDeleteComplete?: () => void;
-  onDeleteAll?: () => Promise<any>; // Accept any return type from the promise
+  onDeleteAll?: () => Promise<any>;
   showDeleteAll?: boolean;
 }
 
 const ExamSection = ({ 
   title, 
   exams, 
+  lastRefreshTime,
   onDeleteExam, 
   onDeleteComplete,
   onDeleteAll, 
@@ -34,7 +35,6 @@ const ExamSection = ({
   const [localExams, setLocalExams] = useState<Exam[]>(exams);
   const { toast } = useToast();
 
-  // Update local exams when props change
   useEffect(() => {
     setLocalExams(exams);
   }, [exams]);
@@ -50,7 +50,6 @@ const ExamSection = ({
       await onDeleteAll();
       
       setDeleteStatus('success');
-      // Clear local exams immediately to update UI
       setLocalExams([]);
       
       toast({
@@ -58,12 +57,10 @@ const ExamSection = ({
         description: `All ${title} exams deleted successfully`,
       });
       
-      // Close dialog after a delay
       setTimeout(() => {
         setShowConfirmation(false);
         setIsDeletingAll(false);
         
-        // Notify parent component that deletion is complete
         if (onDeleteComplete) {
           onDeleteComplete();
         }
@@ -82,14 +79,11 @@ const ExamSection = ({
     }
   };
 
-  // Handle individual exam deletion
   const handleExamDelete = async (examId: string, examTitle: string) => {
     try {
       await onDeleteExam(examId, examTitle);
-      // Remove the exam from local state immediately
       setLocalExams(prevExams => prevExams.filter(exam => exam.id !== examId));
       
-      // Call onDeleteComplete to refresh parent data
       if (onDeleteComplete) {
         onDeleteComplete();
       }
