@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,9 @@ export const ExamResults = ({
               {questions.filter(q => 
                 userAnswers[q.id] && (
                   q.is_multi_correct 
-                    ? q.correct_answer.split(',').join(',') === userAnswers[q.id]
+                    ? Array.isArray(q.correct_answer)
+                      ? q.correct_answer.join(',') === userAnswers[q.id]
+                      : q.correct_answer === userAnswers[q.id]
                     : userAnswers[q.id] === q.correct_answer
                 )
               ).length} / {attemptedCount} attempted
