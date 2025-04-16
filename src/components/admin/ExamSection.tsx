@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Exam } from "@/services/exam/types";
 import ExamCard from "./ExamCard";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ExamSectionProps {
   title: string;
@@ -22,16 +24,41 @@ const ExamSection = ({
   onDeleteAll, 
   showDeleteAll = false 
 }: ExamSectionProps) => {
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const { toast } = useToast();
+
+  const handleDeleteAll = async () => {
+    if (!onDeleteAll) return;
+    
+    try {
+      setIsDeletingAll(true);
+      await onDeleteAll();
+      toast({
+        title: "Success",
+        description: `All ${title} exams deleted successfully`,
+      });
+    } catch (error) {
+      console.error(`Error deleting all ${title} exams:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to delete all ${title} exams`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>{title}</CardTitle>
-        {showDeleteAll && onDeleteAll && (
+        {showDeleteAll && onDeleteAll && exams.length > 0 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
+              <Button variant="destructive" size="sm" disabled={isDeletingAll}>
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete All
+                {isDeletingAll ? "Deleting..." : "Delete All"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -44,7 +71,7 @@ const ExamSection = ({
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={onDeleteAll}
+                  onClick={handleDeleteAll}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete All

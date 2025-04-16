@@ -19,27 +19,28 @@ const AdminExamUploadPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadExams = async () => {
-      try {
-        const [entrance, board] = await Promise.all([
-          fetchEntranceExams(),
-          fetchBoardExams()
-        ]);
-        setEntranceExams(entrance);
-        setBoardExamsList(board);
-      } catch (error) {
-        console.error("Error loading exams:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load exams",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadExams = async () => {
+    try {
+      setLoading(true);
+      const [entrance, board] = await Promise.all([
+        fetchEntranceExams(),
+        fetchBoardExams()
+      ]);
+      setEntranceExams(entrance);
+      setBoardExamsList(board);
+    } catch (error) {
+      console.error("Error loading exams:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load exams",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadExams();
   }, [toast]);
 
@@ -47,8 +48,7 @@ const AdminExamUploadPage = () => {
     try {
       if (board === 'WBJEE') {
         await deleteWBJEEExams();
-        const updatedExams = await fetchEntranceExams();
-        setEntranceExams(updatedExams);
+        await loadExams();
         toast({
           title: "Success",
           description: `All ${board} exams deleted successfully`
@@ -66,15 +66,9 @@ const AdminExamUploadPage = () => {
 
   const handleDeleteExam = async (examId: string, examTitle: string) => {
     try {
+      console.log(`Deleting exam with ID: ${examId}`);
       await deleteExamById(examId);
-      
-      const [updatedEntranceExams, updatedBoardExams] = await Promise.all([
-        fetchEntranceExams(),
-        fetchBoardExams()
-      ]);
-      
-      setEntranceExams(updatedEntranceExams);
-      setBoardExamsList(updatedBoardExams);
+      await loadExams();
       
       toast({
         title: "Success",
