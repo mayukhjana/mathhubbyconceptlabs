@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,9 +25,15 @@ export const ExamResults = ({
   resultSaved,
   formatTime,
 }: ExamResultsProps) => {
-  // Calculate attempted vs unattempted questions
   const attemptedCount = Object.keys(userAnswers).length;
   const unattemptedCount = questions.length - attemptedCount;
+
+  const getCorrectAnswerText = (correctAnswer: string | string[]): string => {
+    if (Array.isArray(correctAnswer)) {
+      return correctAnswer.join(', ');
+    }
+    return correctAnswer.includes(',') ? correctAnswer : correctAnswer;
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">

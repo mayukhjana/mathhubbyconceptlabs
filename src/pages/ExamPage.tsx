@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,7 +136,6 @@ const ExamPage = () => {
   };
 
   const skipQuestion = () => {
-    // Just move to the next question without recording an answer
     handleNext();
   };
   
@@ -156,8 +154,6 @@ const ExamPage = () => {
   const handleSubmit = () => {
     if (!exam) return;
     
-    // Instead of checking if all questions are answered,
-    // just show a confirmation dialog if some questions are unattempted
     const unattemptedCount = exam.questions.length - attemptedQuestions.size;
     if (unattemptedCount > 0) {
       setShowSubmitDialog(true);
@@ -176,7 +172,6 @@ const ExamPage = () => {
     
     const questionsWithResults = exam.questions.map(question => {
       const userAnswer = userAnswers[question.id];
-      // Skip calculation for unattempted questions
       if (!userAnswer) {
         calculatedPossibleMarks += question.marks;
         return {
@@ -186,26 +181,29 @@ const ExamPage = () => {
         };
       }
       
-      // Check if answer is correct based on question type
       let isCorrect = false;
       
       if (question.is_multi_correct) {
-        // For multi-correct questions, check if answer matches any of the correct answers
-        const correctAnswers = question.correct_answer.split(',');
-        const userAnswerParts = userAnswer.split(',');
+        const correctAnswerArray = Array.isArray(question.correct_answer) 
+          ? question.correct_answer 
+          : question.correct_answer.split(',').map(a => a.trim());
         
-        // Check if user's answer matches all correct answers
-        isCorrect = correctAnswers.length === userAnswerParts.length && 
-          correctAnswers.every(a => userAnswerParts.includes(a));
+        const userAnswerArray = userAnswer.split(',').map(a => a.trim());
+        
+        isCorrect = correctAnswerArray.length === userAnswerArray.length && 
+          correctAnswerArray.every(a => userAnswerArray.includes(a));
       } else {
-        // For single-correct questions
-        isCorrect = userAnswer === question.correct_answer;
+        isCorrect = userAnswer === (
+          Array.isArray(question.correct_answer) 
+            ? question.correct_answer[0] 
+            : question.correct_answer
+        );
       }
       
       if (isCorrect) {
         correctAnswers++;
         calculatedObtainedMarks += question.marks;
-      } else {
+      } else if (userAnswer) {
         calculatedObtainedMarks -= question.negative_marks;
       }
       

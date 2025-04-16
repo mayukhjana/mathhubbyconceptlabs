@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -32,30 +31,34 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
     // Format the correct_answer based on whether it's a multi-correct answer
     let formattedAnswer: string;
     
-    if (q.is_multi_correct && Array.isArray(q.correct_answer)) {
-      // If it's a multi-correct question and the answer is already an array, sort and join it
-      // Sort to ensure consistent order (a,b,c,d)
-      formattedAnswer = [...q.correct_answer].sort().join(',');
-    } else if (q.is_multi_correct && typeof q.correct_answer === 'string' && q.correct_answer.includes(',')) {
-      // If it's already a comma-separated string, sort and normalize it
-      const answerParts = q.correct_answer.split(',').map(p => p.trim());
-      formattedAnswer = [...answerParts].sort().join(',');
+    if (q.is_multi_correct) {
+      // If it's a multi-correct question, handle both array and string inputs
+      if (Array.isArray(q.correct_answer)) {
+        formattedAnswer = [...q.correct_answer].sort().join(',');
+      } else if (typeof q.correct_answer === 'string') {
+        const answerParts = q.correct_answer.split(',').map(p => p.trim());
+        formattedAnswer = [...answerParts].sort().join(',');
+      } else {
+        formattedAnswer = 'a'; // Default to 'a' if input is invalid
+      }
     } else {
-      // For single answers, convert to string
-      formattedAnswer = String(q.correct_answer);
+      // For single answers, ensure we get a single value
+      formattedAnswer = Array.isArray(q.correct_answer) 
+        ? q.correct_answer[0] 
+        : String(q.correct_answer);
     }
     
     // Make sure formattedAnswer only contains valid option values (a,b,c,d)
     const validOptions = ['a', 'b', 'c', 'd'];
     const answerParts = formattedAnswer.split(',');
-    const validAnswerParts = answerParts.filter(part => validOptions.includes(part.trim()));
+    const validAnswerParts = answerParts.filter(part => 
+      validOptions.includes(part.trim())
+    );
     
     // If no valid options remain, default to 'a'
-    if (validAnswerParts.length === 0) {
-      formattedAnswer = 'a';
-    } else {
-      formattedAnswer = validAnswerParts.join(',');
-    }
+    formattedAnswer = validAnswerParts.length === 0 
+      ? 'a' 
+      : validAnswerParts.join(',');
 
     return {
       exam_id: q.exam_id,
