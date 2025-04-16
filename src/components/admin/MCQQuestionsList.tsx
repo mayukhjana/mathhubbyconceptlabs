@@ -31,7 +31,12 @@ const MCQQuestionsList = ({ questions, onEditQuestion, onRemoveQuestion }: MCQQu
         >
           <div className="flex justify-between mb-2">
             <div>
-              <h4 className="font-medium">Question #{question.order_number}</h4>
+              <h4 className="font-medium">
+                Question #{question.order_number}
+                {question.is_multi_correct && (
+                  <span className="ml-2 text-sm text-blue-600">(Multiple Correct)</span>
+                )}
+              </h4>
               <div className="text-sm text-muted-foreground mt-1">
                 Marks: +{question.marks} | Wrong Answer: -{question.negative_marks}
               </div>
@@ -56,21 +61,27 @@ const MCQQuestionsList = ({ questions, onEditQuestion, onRemoveQuestion }: MCQQu
           </div>
           <p className="mb-2">{question.question_text}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-            {['a', 'b', 'c', 'd'].map((option) => (
-              <div 
-                key={option}
-                className={`p-2 rounded ${
-                  question.correct_answer === option 
-                    ? 'bg-green-100' 
-                    : 'bg-gray-100'
-                }`}
-              >
-                {option.toUpperCase()}: {question[`option_${option}` as keyof typeof question]}
-                {question.correct_answer === option && (
-                  <span className="ml-2 text-green-600 font-medium">(Correct)</span>
-                )}
-              </div>
-            ))}
+            {['a', 'b', 'c', 'd'].map((option) => {
+              const isCorrect = Array.isArray(question.correct_answer)
+                ? question.correct_answer.includes(option)
+                : question.correct_answer === option;
+              
+              return (
+                <div 
+                  key={option}
+                  className={`p-2 rounded ${
+                    isCorrect 
+                      ? 'bg-green-100' 
+                      : 'bg-gray-100'
+                  }`}
+                >
+                  {option.toUpperCase()}: {question[`option_${option}` as keyof typeof question]}
+                  {isCorrect && (
+                    <span className="ml-2 text-green-600 font-medium">(Correct)</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}

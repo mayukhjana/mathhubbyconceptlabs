@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { X, Save } from "lucide-react";
 
 export type QuestionData = {
@@ -13,10 +15,11 @@ export type QuestionData = {
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_answer: "a" | "b" | "c" | "d";
+  correct_answer: string | string[];
   order_number: number;
   marks: number;
   negative_marks: number;
+  is_multi_correct?: boolean;
 };
 
 interface QuestionFormProps {
@@ -38,19 +41,56 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
       order_number: index + 1,
       marks: 1,
       negative_marks: 0,
+      is_multi_correct: false,
     }
   );
+
+  const [isMultiCorrect, setIsMultiCorrect] = useState(initialData?.is_multi_correct || false);
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>(
+    Array.isArray(initialData?.correct_answer) 
+      ? initialData.correct_answer 
+      : initialData?.correct_answer 
+        ? [initialData.correct_answer]
+        : []
+  );
   
-  const handleChange = (field: keyof QuestionData, value: string | number) => {
+  const handleChange = (field: keyof QuestionData, value: string | number | boolean) => {
     setQuestion({
       ...question,
       [field]: field === 'marks' || field === 'negative_marks' ? Number(value) : value,
     });
   };
+
+  const handleMultiCorrectToggle = (checked: boolean) => {
+    setIsMultiCorrect(checked);
+    setSelectedAnswers([]);
+    setQuestion(prev => ({
+      ...prev,
+      correct_answer: checked ? [] : "a",
+      is_multi_correct: checked
+    }));
+  };
+
+  const handleCheckboxChange = (value: string) => {
+    const newSelected = selectedAnswers.includes(value)
+      ? selectedAnswers.filter(item => item !== value)
+      : [...selectedAnswers, value];
+    
+    setSelectedAnswers(newSelected);
+    setQuestion(prev => ({
+      ...prev,
+      correct_answer: newSelected
+    }));
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(question);
+    const finalQuestion = {
+      ...question,
+      correct_answer: isMultiCorrect ? selectedAnswers : question.correct_answer,
+      is_multi_correct: isMultiCorrect
+    };
+    onSave(finalQuestion);
   };
 
   const isFormValid = () => {
@@ -60,7 +100,8 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
       question.option_b.trim() !== "" &&
       question.option_c.trim() !== "" &&
       question.option_d.trim() !== "" &&
-      question.marks > 0
+      question.marks > 0 &&
+      (isMultiCorrect ? selectedAnswers.length > 0 : !!question.correct_answer)
     );
   };
   
@@ -82,6 +123,15 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
       </div>
       
       <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={isMultiCorrect}
+            onCheckedChange={handleMultiCorrectToggle}
+            id={`multi-correct-${index}`}
+          />
+          <Label htmlFor={`multi-correct-${index}`}>Allow multiple correct answers</Label>
+        </div>
+
         <div>
           <Label htmlFor={`question-${index}`}>Question Text</Label>
           <Textarea
@@ -177,29 +227,38 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
         </div>
         
         <div>
-          <Label>Correct Answer</Label>
-          <RadioGroup
-            value={question.correct_answer}
-            onValueChange={(value) => handleChange("correct_answer", value as "a" | "b" | "c" | "d")}
-            className="flex space-x-4 mt-1"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="a" id={`correct-a-${index}`} />
-              <Label htmlFor={`correct-a-${index}`} className="cursor-pointer">A</Label>
+          <Label>Correct Answer{isMultiCorrect ? "s" : ""}</Label>
+          {isMultiCorrect ? (
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              {['a', 'b', 'c', 'd'].map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`correct-${option}-${index}`}
+                    checked={selectedAnswers.includes(option)}
+                    onCheckedChange={() => handleCheckboxChange(option)}
+                  />
+                  <Label htmlFor={`correct-${option}-${index}`} className="cursor-pointer">
+                    Option {option.toUpperCase()}
+                  </Label>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="b" id={`correct-b-${index}`} />
-              <Label htmlFor={`correct-b-${index}`} className="cursor-pointer">B</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="c" id={`correct-c-${index}`} />
-              <Label htmlFor={`correct-c-${index}`} className="cursor-pointer">C</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="d" id={`correct-d-${index}`} />
-              <Label htmlFor={`correct-d-${index}`} className="cursor-pointer">D</Label>
-            </div>
-          </RadioGroup>
+          ) : (
+            <RadioGroup
+              value={question.correct_answer as string}
+              onValueChange={(value) => handleChange("correct_answer", value)}
+              className="flex space-x-4 mt-1"
+            >
+              {['a', 'b', 'c', 'd'].map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option} id={`correct-${option}-${index}`} />
+                  <Label htmlFor={`correct-${option}-${index}`} className="cursor-pointer">
+                    {option.toUpperCase()}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          )}
         </div>
       </div>
       
