@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -163,7 +162,7 @@ export const deleteExamById = async (examId: string) => {
     
     console.log(`Verified exam ${examId} was successfully deleted`);
     
-    return { success: true, message: `Exam deleted successfully` };
+    return { success: true };
   } catch (error) {
     console.error("Error in deleteExamById:", error);
     throw error;
@@ -187,7 +186,7 @@ export const deleteWBJEEExams = async () => {
     
     if (!wbjeeExams || wbjeeExams.length === 0) {
       console.log("No WBJEE exams found to delete");
-      return { success: true, message: "No WBJEE exams to delete" };
+      return { success: true };
     }
     
     console.log(`Found ${wbjeeExams.length} WBJEE exams to delete:`, wbjeeExams.map(e => e.id));
@@ -247,10 +246,9 @@ export const deleteWBJEEExams = async () => {
     
     console.log("Successfully deleted all WBJEE exams and verified deletion");
     
-    return { success: true, message: `Deleted ${wbjeeExams.length} WBJEE exams` };
+    return { success: true };
   } catch (error) {
     console.error("Error in deleteWBJEEExams:", error);
     throw error;
   }
 };
-

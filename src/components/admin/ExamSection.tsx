@@ -14,7 +14,7 @@ interface ExamSectionProps {
   exams: Exam[];
   onDeleteExam: (examId: string, examTitle: string) => Promise<void>;
   onDeleteComplete?: () => void;
-  onDeleteAll?: () => Promise<any>; // Changed from Promise<void> to Promise<any> to accept any return type
+  onDeleteAll?: () => Promise<any>; // Accept any return type from the promise
   showDeleteAll?: boolean;
 }
 

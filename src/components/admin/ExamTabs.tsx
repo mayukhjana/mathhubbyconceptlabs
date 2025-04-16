@@ -9,7 +9,7 @@ interface ExamTabsProps {
   lastRefreshTime: number;
   onDeleteExam: (examId: string, examTitle: string) => Promise<void>;
   onDeleteComplete: () => void;
-  onDeleteBoard: (board: string) => Promise<void>;
+  onDeleteBoard: (board: string) => Promise<any>; // Updated to accept any promise return
 }
 
 const ExamTabs = ({

@@ -46,10 +46,14 @@ export const useExamManagement = () => {
   const handleDeleteBoard = async (board: string) => {
     try {
       if (board === 'WBJEE') {
-        await deleteWBJEEExams();
-        await loadExams(true);
-        return;
+        const result = await deleteWBJEEExams();
+        // Update the local state immediately to reflect the deletion
+        if (result.success) {
+          setEntranceExams(prev => prev.filter(exam => exam.board !== 'WBJEE'));
+        }
+        return result;
       }
+      throw new Error(`Deletion not implemented for board: ${board}`);
     } catch (error) {
       console.error(`Error deleting ${board} exams:`, error);
       toast({
@@ -64,6 +68,11 @@ export const useExamManagement = () => {
   const handleDeleteExam = async (examId: string, examTitle: string) => {
     try {
       await deleteExamById(examId);
+      
+      // Update local state to remove the deleted exam
+      setEntranceExams(prev => prev.filter(exam => exam.id !== examId));
+      setBoardExamsList(prev => prev.filter(exam => exam.id !== examId));
+      
       toast({
         title: "Success",
         description: `Exam "${examTitle}" deleted successfully`
