@@ -1,4 +1,3 @@
-
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ExamSection from "@/components/admin/ExamSection";
 import { ENTRANCE_OPTIONS, BOARD_OPTIONS, Exam } from "@/services/exam/types";
@@ -9,7 +8,7 @@ interface ExamTabsProps {
   lastRefreshTime: number;
   onDeleteExam: (examId: string, examTitle: string) => Promise<void>;
   onDeleteComplete: () => void;
-  onDeleteBoard: (board: string) => Promise<any>; // Updated to accept any promise return
+  onDeleteBoard: (board: string) => Promise<any>;
 }
 
 const ExamTabs = ({
@@ -35,11 +34,11 @@ const ExamTabs = ({
               key={`${board}-${lastRefreshTime}`}
               title={board}
               exams={boardExams}
-              lastRefreshTime={lastRefreshTime} // Pass lastRefreshTime prop
+              lastRefreshTime={lastRefreshTime}
               onDeleteExam={onDeleteExam}
               onDeleteComplete={onDeleteComplete}
-              onDeleteAll={board === 'WBJEE' ? () => onDeleteBoard(board) : undefined}
-              showDeleteAll={board === 'WBJEE'}
+              onDeleteAll={() => onDeleteBoard(board)}
+              showDeleteAll={true}
             />
           );
         })}
@@ -53,7 +52,7 @@ const ExamTabs = ({
               key={`${board}-${lastRefreshTime}`}
               title={board}
               exams={filteredBoardExams}
-              lastRefreshTime={lastRefreshTime} // Pass lastRefreshTime prop
+              lastRefreshTime={lastRefreshTime}
               onDeleteExam={onDeleteExam}
               onDeleteComplete={onDeleteComplete}
             />
