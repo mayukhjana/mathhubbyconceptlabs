@@ -79,6 +79,9 @@ const ProfilePage = () => {
       if (error) throw error;
       
       toast.success('Profile updated successfully');
+      
+      // Navigate to home page after successful save
+      navigate('/');
     } catch (error: any) {
       toast.error(`Error updating profile: ${error.message}`);
     } finally {
@@ -174,6 +177,9 @@ const ProfilePage = () => {
                 />
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   Recommended: Square image, 500x500 pixels or larger
+                </p>
+                <p className="text-xs text-red-500 mt-1">
+                  The website is running in beta phase and hence this feature is not yet available
                 </p>
               </div>
             </CardContent>
