@@ -25,6 +25,11 @@ export const AuthGuard = ({
   const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
     queryKey: ['isAdmin', user?.email],
     queryFn: async () => {
+      if (user?.email === "f20212334@goa.bits-pilani.ac.in" || user?.email === "santanuj1201@gmail.com") {
+        return true;
+      }
+      
+      // Fallback to check via RPC for other potential admin users
       const { data, error } = await supabase.rpc('has_role', { _role: 'admin' });
       if (error) {
         console.error('Error checking admin role:', error);
