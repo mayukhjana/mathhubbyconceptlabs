@@ -1,4 +1,3 @@
-
 import { AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -65,7 +64,10 @@ const ExamSection = ({
         variant: "destructive",
       });
     } finally {
-      setIsDeletingAll(false);
+      // Keep isDeletingAll true if successful to prevent multiple clicks
+      if (deleteStatus !== 'success') {
+        setIsDeletingAll(false);
+      }
     }
   };
 
@@ -110,14 +112,14 @@ const ExamSection = ({
                 <Button
                   variant="outline"
                   onClick={() => setShowConfirmation(false)}
-                  disabled={isDeletingAll}
+                  disabled={isDeletingAll || deleteStatus === 'success'}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={handleDeleteAll}
-                  disabled={isDeletingAll}
+                  disabled={isDeletingAll || deleteStatus === 'success'}
                 >
                   {isDeletingAll ? (
                     <>

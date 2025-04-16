@@ -78,7 +78,10 @@ const AdminExamUploadPage = () => {
       if (board === 'WBJEE') {
         console.log("Deleting all WBJEE exams...");
         await deleteWBJEEExams();
-        await loadExams(true); // Force reload and show toast after deletion
+        // Wait a moment before reloading to let the database process deletion
+        setTimeout(() => {
+          loadExams(true); // Force reload and show toast after deletion
+        }, 1000);
       }
     } catch (error) {
       console.error(`Error deleting ${board} exams:`, error);
@@ -115,7 +118,10 @@ const AdminExamUploadPage = () => {
 
   const handleDeleteComplete = useCallback(() => {
     console.log("Delete operation completed, refreshing exam data...");
-    loadExams(false); // Don't show toast as the component already showed success
+    // Add a small delay to ensure database operations have completed
+    setTimeout(() => {
+      loadExams(false); // Don't show toast as the component already showed success
+    }, 500);
   }, [loadExams]);
 
   if (loading) {

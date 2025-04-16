@@ -1,5 +1,3 @@
-
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Exam } from "@/services/exam/types";
 import { useState } from "react";
@@ -51,7 +49,11 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         variant: "destructive",
       });
     } finally {
-      setIsDeleting(false);
+      // Only set isDeleting to false if error, keep it true on success
+      // to prevent double-clicks
+      if (deleteStatus !== 'success') {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -102,14 +104,14 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
             <Button 
               variant="outline" 
               onClick={() => setShowConfirmation(false)}
-              disabled={isDeleting}
+              disabled={isDeleting || deleteStatus === 'success'}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={isDeleting}
+              disabled={isDeleting || deleteStatus === 'success'}
             >
               {isDeleting ? (
                 <>
