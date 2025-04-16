@@ -81,28 +81,6 @@ const ExamPage = () => {
           return;
         }
         
-        const formattedQuestions = questionsData.map(q => {
-          let correctAnswer = q.correct_answer;
-          if (typeof correctAnswer === 'string' && q.is_multi_correct) {
-            correctAnswer = correctAnswer.split(',');
-          }
-          
-          return {
-            id: q.id,
-            text: q.question_text,
-            options: [
-              { id: "a", text: q.option_a },
-              { id: "b", text: q.option_b },
-              { id: "c", text: q.option_c },
-              { id: "d", text: q.option_d }
-            ],
-            correctAnswer: correctAnswer,
-            marks: q.marks,
-            negative_marks: q.negative_marks,
-            is_multi_correct: q.is_multi_correct || false
-          };
-        });
-        
         setExam({
           id: examData.id,
           title: examData.title,
@@ -111,7 +89,7 @@ const ExamPage = () => {
           year: examData.year,
           duration: examData.duration,
           isPremium: examData.is_premium,
-          questions: formattedQuestions
+          questions: questionsData
         });
         
         setTimeRemaining(examData.duration * 60);
@@ -186,9 +164,9 @@ const ExamPage = () => {
     let calculatedPossibleMarks = 0;
     
     const questionsWithResults = exam.questions.map(question => {
-      const isCorrect = Array.isArray(question.correctAnswer)
-        ? question.correctAnswer.includes(userAnswers[question.id] || '')
-        : userAnswers[question.id] === question.correctAnswer;
+      const isCorrect = Array.isArray(question.correct_answer)
+        ? question.correct_answer.includes(userAnswers[question.id] || '')
+        : userAnswers[question.id] === question.correct_answer;
       
       if (isCorrect) {
         correctAnswers++;
@@ -333,7 +311,20 @@ const ExamPage = () => {
               </div>
               
               <QuestionCard
-                question={currentQuestion}
+                question={{
+                  id: currentQuestion.id,
+                  text: currentQuestion.question_text,
+                  options: [
+                    { id: "a", text: currentQuestion.option_a },
+                    { id: "b", text: currentQuestion.option_b },
+                    { id: "c", text: currentQuestion.option_c },
+                    { id: "d", text: currentQuestion.option_d }
+                  ],
+                  correctAnswer: currentQuestion.correct_answer,
+                  marks: currentQuestion.marks,
+                  negative_marks: currentQuestion.negative_marks,
+                  is_multi_correct: currentQuestion.is_multi_correct
+                }}
                 onAnswer={handleAnswer}
                 userAnswer={userAnswers[currentQuestion.id]}
                 questionNumber={currentQuestionIndex + 1}
