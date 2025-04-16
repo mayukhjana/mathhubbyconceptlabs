@@ -4,7 +4,6 @@ import { Exam } from "@/services/exam/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 
 interface ExamCardProps {
@@ -35,15 +34,15 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         description: `Exam "${exam.title}" deleted successfully`,
       });
       
-      // Call onDeleteComplete immediately to refresh the list
-      if (onDeleteComplete) {
-        onDeleteComplete();
-      }
-      
       // Close the dialog after a brief delay to show the success message
       setTimeout(() => {
         setShowConfirmation(false);
         setIsDeleting(false);
+        
+        // Call onDeleteComplete after dialog is closed
+        if (onDeleteComplete) {
+          onDeleteComplete();
+        }
       }, 1500);
     } catch (error) {
       console.error("Error deleting exam:", error);
@@ -51,6 +50,11 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
       setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
       setIsDeleting(false);
       setRetryCount(prev => prev + 1);
+      
+      if (retryCount >= 2) {
+        setErrorMessage("Exam deletion failed after multiple attempts - exam may still exist in database");
+      }
+      
       toast({
         title: "Error",
         description: `Failed to delete exam "${exam.title}"`,

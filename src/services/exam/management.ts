@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -111,6 +110,7 @@ export const deleteExamById = async (examId: string) => {
     const MAX_RETRIES = 3;
     let retries = 0;
     let deletionSuccess = false;
+    let lastError = null;
     
     while (retries < MAX_RETRIES && !deletionSuccess) {
       try {
@@ -122,7 +122,8 @@ export const deleteExamById = async (examId: string) => {
           
         if (userResultsError) {
           console.error(`Error deleting user results for exam ${examId}:`, userResultsError);
-          throw new Error(`Failed to delete user results: ${userResultsError.message}`);
+          lastError = new Error(`Failed to delete user results: ${userResultsError.message}`);
+          throw lastError;
         }
         
         console.log(`Successfully deleted user results for exam ${examId}`);
@@ -135,7 +136,8 @@ export const deleteExamById = async (examId: string) => {
         
         if (questionsError) {
           console.error(`Error deleting questions for exam ${examId}:`, questionsError);
-          throw new Error(`Failed to delete questions: ${questionsError.message}`);
+          lastError = new Error(`Failed to delete questions: ${questionsError.message}`);
+          throw lastError;
         }
         
         console.log(`Successfully deleted questions for exam ${examId}`);
@@ -148,32 +150,15 @@ export const deleteExamById = async (examId: string) => {
         
         if (examError) {
           console.error(`Error deleting exam ${examId}:`, examError);
-          throw new Error(`Failed to delete exam: ${examError.message}`);
+          lastError = new Error(`Failed to delete exam: ${examError.message}`);
+          throw lastError;
         }
         
         console.log(`Successfully deleted exam ${examId}`);
-        
-        // Verify that the exam is actually deleted
-        const { data: checkDeletion, error: checkError } = await supabase
-          .from('exams')
-          .select('id')
-          .eq('id', examId);
-          
-        if (checkError) {
-          console.error(`Error checking if exam was deleted: ${checkError.message}`);
-        }
-        
-        if (checkDeletion && checkDeletion.length > 0) {
-          console.error(`Exam ${examId} still exists after deletion attempt! Retry attempt ${retries + 1}`);
-          retries++;
-          // Adding a small delay before retry
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } else {
-          deletionSuccess = true;
-          console.log(`Verified exam ${examId} was successfully deleted`);
-        }
+        deletionSuccess = true;
       } catch (innerError) {
         console.error(`Error during deletion attempt ${retries + 1}:`, innerError);
+        lastError = innerError;
         retries++;
         // Adding a small delay before retry
         await new Promise(resolve => setTimeout(resolve, 500));

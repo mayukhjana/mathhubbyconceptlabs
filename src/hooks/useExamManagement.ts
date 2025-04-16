@@ -71,18 +71,22 @@ export const useExamManagement = () => {
 
   const handleDeleteExam = async (examId: string, examTitle: string) => {
     try {
-      // Try deleting the exam
-      await deleteExamById(examId);
+      // Try deleting the exam and await the result
+      const result = await deleteExamById(examId);
       
-      // If successful, update local state to remove the deleted exam immediately
-      setEntranceExams(prev => prev.filter(exam => exam.id !== examId));
-      setBoardExamsList(prev => prev.filter(exam => exam.id !== examId));
-      
-      toast({
-        title: "Success",
-        description: `Exam "${examTitle}" deleted successfully`
-      });
-      return Promise.resolve();
+      if (result && result.success) {
+        // If successful, update local state to remove the deleted exam immediately
+        setEntranceExams(prev => prev.filter(exam => exam.id !== examId));
+        setBoardExamsList(prev => prev.filter(exam => exam.id !== examId));
+        
+        toast({
+          title: "Success",
+          description: `Exam "${examTitle}" deleted successfully`
+        });
+        return Promise.resolve();
+      } else {
+        throw new Error("Exam deletion failed");
+      }
     } catch (error) {
       console.error(`Error deleting exam:`, error);
       toast({

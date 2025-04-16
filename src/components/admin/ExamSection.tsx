@@ -57,15 +57,15 @@ const ExamSection = ({
         description: `All ${title} exams deleted successfully`,
       });
       
-      // Notify parent component that deletion is complete
-      if (onDeleteComplete) {
-        onDeleteComplete();
-      }
-      
       // Close dialog after a delay
       setTimeout(() => {
         setShowConfirmation(false);
         setIsDeletingAll(false);
+        
+        // Notify parent component that deletion is complete
+        if (onDeleteComplete) {
+          onDeleteComplete();
+        }
       }, 1500);
     } catch (error) {
       console.error(`Error deleting all ${title} exams:`, error);

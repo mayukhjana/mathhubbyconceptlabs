@@ -23,7 +23,7 @@ const ExamManagementHeader = ({ onRefresh, isRefreshing }: ExamManagementHeaderP
           <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           {isRefreshing ? "Refreshing..." : "Refresh"}
         </Button>
-        <Button onClick={() => navigate("/admin/exam-upload/new")}>
+        <Button onClick={() => navigate("/admin/upload")}>
           Add New Exam
         </Button>
       </div>
