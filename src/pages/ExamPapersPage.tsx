@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,12 +8,14 @@ import { Search } from "lucide-react";
 import PaperCard from "@/components/PaperCard";
 import { 
   fetchEntranceExams, 
-  getFileDownloadUrl
+  getFileDownloadUrl,
+  deleteWBJEEExams
 } from "@/services/examService";
 import { Exam, ENTRANCE_OPTIONS } from "@/services/exam/types";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const ExamPapersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +77,22 @@ const ExamPapersPage = () => {
     setActiveTab(value);
   };
   
+  const handleRemoveWBJEE = async () => {
+    try {
+      const { success, message } = await deleteWBJEEExams();
+      if (success) {
+        toast.success(message);
+        const examData = await fetchEntranceExams();
+        setExams(examData);
+      } else {
+        toast.error('Failed to delete WBJEE exams');
+      }
+    } catch (error) {
+      console.error('Error deleting WBJEE exams:', error);
+      toast.error('Error deleting WBJEE exams');
+    }
+  };
+  
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -94,7 +111,18 @@ const ExamPapersPage = () => {
       
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-6">Entrance Exam Papers</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Entrance Exam Papers</h1>
+            {activeTab === "all" && (
+              <Button 
+                variant="destructive" 
+                onClick={handleRemoveWBJEE}
+                className="ml-4"
+              >
+                Delete WBJEE Exams
+              </Button>
+            )}
+          </div>
           
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center mb-6">
             <div className="relative flex-1">
