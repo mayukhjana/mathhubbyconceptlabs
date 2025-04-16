@@ -40,11 +40,12 @@ export interface Question {
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_answer: string;
+  correct_answer: string | string[];
   order_number: number;
   marks: number;
   negative_marks: number;
   created_at?: string | null;
+  is_multi_correct?: boolean;
 }
 
 export const EXAM_TYPES = {

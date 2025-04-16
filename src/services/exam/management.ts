@@ -35,10 +35,11 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
     option_b: q.option_b,
     option_c: q.option_c,
     option_d: q.option_d,
-    correct_answer: q.correct_answer,
+    correct_answer: Array.isArray(q.correct_answer) ? q.correct_answer.join(',') : q.correct_answer,
     order_number: q.order_number,
     marks: q.marks,
-    negative_marks: q.negative_marks
+    negative_marks: q.negative_marks,
+    is_multi_correct: q.is_multi_correct || false
   }));
 
   const { data, error } = await supabase
