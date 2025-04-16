@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
 import { useTheme } from "@/components/ThemeProvider";
 import { Toggle } from "@/components/ui/toggle";
-import { FileText } from "lucide-react";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
