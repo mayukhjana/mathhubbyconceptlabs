@@ -1,3 +1,4 @@
+
 import { AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Exam } from "@/services/exam/types";
 import ExamCard from "./ExamCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ExamSectionProps {
@@ -29,7 +30,13 @@ const ExamSection = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [localExams, setLocalExams] = useState<Exam[]>(exams);
   const { toast } = useToast();
+
+  // Update local exams when props change
+  useEffect(() => {
+    setLocalExams(exams);
+  }, [exams]);
 
   const handleDeleteAll = async () => {
     if (!onDeleteAll) return;
@@ -42,6 +49,9 @@ const ExamSection = ({
       await onDeleteAll();
       
       setDeleteStatus('success');
+      // Clear local exams immediately to update UI
+      setLocalExams([]);
+      
       toast({
         title: "Success",
         description: `All ${title} exams deleted successfully`,
@@ -49,33 +59,45 @@ const ExamSection = ({
       
       // Notify parent component that deletion is complete
       if (onDeleteComplete) {
-        setTimeout(() => {
-          onDeleteComplete();
-          setShowConfirmation(false);
-        }, 1500); // Small delay to show success message
+        onDeleteComplete();
       }
+      
+      // Close dialog after a delay
+      setTimeout(() => {
+        setShowConfirmation(false);
+        setIsDeletingAll(false);
+      }, 1500);
     } catch (error) {
       console.error(`Error deleting all ${title} exams:`, error);
       setDeleteStatus('error');
       setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
+      setIsDeletingAll(false);
+      
       toast({
         title: "Error",
         description: `Failed to delete all ${title} exams`,
         variant: "destructive",
       });
-    } finally {
-      // Keep isDeletingAll true if successful to prevent multiple clicks
-      if (deleteStatus !== 'success') {
-        setIsDeletingAll(false);
-      }
+    }
+  };
+
+  // Handle individual exam deletion
+  const handleExamDelete = async (examId: string, examTitle: string) => {
+    try {
+      await onDeleteExam(examId, examTitle);
+      // Remove the exam from local state immediately
+      setLocalExams(prevExams => prevExams.filter(exam => exam.id !== examId));
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
     }
   };
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle>{title} ({exams.length})</CardTitle>
-        {showDeleteAll && onDeleteAll && exams.length > 0 && (
+        <CardTitle>{title} ({localExams.length})</CardTitle>
+        {showDeleteAll && onDeleteAll && localExams.length > 0 && (
           <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
             <Button
               variant="destructive"
@@ -91,7 +113,7 @@ const ExamSection = ({
               <DialogHeader>
                 <DialogTitle>Delete All {title} Exams</DialogTitle>
                 <DialogDescription>
-                  This will permanently delete all {exams.length} {title} exams. This action cannot be undone.
+                  This will permanently delete all {localExams.length} {title} exams. This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               
@@ -134,7 +156,7 @@ const ExamSection = ({
         )}
       </CardHeader>
       <CardContent>
-        {exams.length === 0 ? (
+        {localExams.length === 0 ? (
           <div className="text-center py-4 text-muted-foreground">
             <AlertCircle className="mx-auto h-6 w-6 mb-2" />
             <p>No exams found for {title}</p>
@@ -142,11 +164,11 @@ const ExamSection = ({
         ) : (
           <ScrollArea className="h-[300px]">
             <div className="space-y-2">
-              {exams.map(exam => (
+              {localExams.map(exam => (
                 <ExamCard
                   key={exam.id}
                   exam={exam}
-                  onDelete={onDeleteExam}
+                  onDelete={handleExamDelete}
                   onDeleteComplete={onDeleteComplete}
                 />
               ))}

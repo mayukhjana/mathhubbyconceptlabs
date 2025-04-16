@@ -18,6 +18,7 @@ const AdminExamUploadPage = () => {
   const [boardExamsList, setBoardExamsList] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -32,6 +33,7 @@ const AdminExamUploadPage = () => {
       console.log("Loaded board exams:", board);
       setEntranceExams(entrance);
       setBoardExamsList(board);
+      setLastRefreshTime(Date.now());
       
       if (showToast) {
         toast({
@@ -78,10 +80,9 @@ const AdminExamUploadPage = () => {
       if (board === 'WBJEE') {
         console.log("Deleting all WBJEE exams...");
         await deleteWBJEEExams();
-        // Wait a moment before reloading to let the database process deletion
-        setTimeout(() => {
-          loadExams(true); // Force reload and show toast after deletion
-        }, 1000);
+        console.log("Successfully deleted all WBJEE exams, refreshing data...");
+        await loadExams(true);
+        return { success: true };
       }
     } catch (error) {
       console.error(`Error deleting ${board} exams:`, error);
@@ -90,7 +91,7 @@ const AdminExamUploadPage = () => {
         description: `Failed to delete ${board} exams: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive"
       });
-      throw error; // Propagate error to component
+      throw error;
     }
   };
 
@@ -104,7 +105,8 @@ const AdminExamUploadPage = () => {
         description: `Exam "${examTitle}" deleted successfully`
       });
       
-      // Return without throwing to allow the ExamCard to show success
+      // Return success
+      return Promise.resolve();
     } catch (error) {
       console.error(`Error deleting exam:`, error);
       toast({
@@ -112,16 +114,14 @@ const AdminExamUploadPage = () => {
         description: `Failed to delete exam: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive"
       });
-      throw error; // Propagate error to component
+      return Promise.reject(error);
     }
   };
 
   const handleDeleteComplete = useCallback(() => {
     console.log("Delete operation completed, refreshing exam data...");
-    // Add a small delay to ensure database operations have completed
-    setTimeout(() => {
-      loadExams(false); // Don't show toast as the component already showed success
-    }, 500);
+    // Force reload of exam data
+    loadExams(false);
   }, [loadExams]);
 
   if (loading) {
@@ -170,7 +170,7 @@ const AdminExamUploadPage = () => {
                 const boardExams = entranceExams.filter(exam => exam.board === board);
                 return (
                   <ExamSection
-                    key={board}
+                    key={`${board}-${lastRefreshTime}`}
                     title={board}
                     exams={boardExams}
                     onDeleteExam={handleDeleteExam}
@@ -187,7 +187,7 @@ const AdminExamUploadPage = () => {
                 const filteredBoardExams = boardExamsList.filter(exam => exam.board === board);
                 return (
                   <ExamSection
-                    key={board}
+                    key={`${board}-${lastRefreshTime}`}
                     title={board}
                     exams={filteredBoardExams}
                     onDeleteExam={handleDeleteExam}

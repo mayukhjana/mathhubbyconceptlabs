@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Exam } from "@/services/exam/types";
 import { useState } from "react";
@@ -32,28 +33,26 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         description: `Exam "${exam.title}" deleted successfully`,
       });
       
-      // Notify parent that deletion is complete
+      // Call onDeleteComplete immediately to refresh the list
       if (onDeleteComplete) {
-        setTimeout(() => {
-          onDeleteComplete();
-          setShowConfirmation(false);
-        }, 1500); // Give a small delay to show success status
+        onDeleteComplete();
       }
+      
+      // Close the dialog after a brief delay to show the success message
+      setTimeout(() => {
+        setShowConfirmation(false);
+        setIsDeleting(false);
+      }, 1500);
     } catch (error) {
       console.error("Error deleting exam:", error);
       setDeleteStatus('error');
       setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
+      setIsDeleting(false);
       toast({
         title: "Error",
         description: `Failed to delete exam "${exam.title}"`,
         variant: "destructive",
       });
-    } finally {
-      // Only set isDeleting to false if error, keep it true on success
-      // to prevent double-clicks
-      if (deleteStatus !== 'success') {
-        setIsDeleting(false);
-      }
     }
   };
 

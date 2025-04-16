@@ -30,7 +30,7 @@ const ExamPapersPage = () => {
     setLoading(true);
     try {
       const examData = await fetchEntranceExams();
-      console.log("Loaded entrance exams:", examData);
+      console.log("Loaded entrance exams:", examData.length, "exams");
       
       if (user) {
         const { data: attemptedExams } = await supabase
@@ -49,6 +49,8 @@ const ExamPapersPage = () => {
       } else {
         setExams(examData);
       }
+      
+      setLastRefresh(Date.now());
       toast({
         title: "Exams refreshed",
         description: `Successfully loaded ${examData.length} exams`
@@ -71,11 +73,6 @@ const ExamPapersPage = () => {
     
     loadExams();
     
-    // Set up an interval to periodically check for updates
-    const refreshInterval = setInterval(() => {
-      loadExams();
-    }, 60000); // Check every minute
-    
     // Set up a focus event listener to refresh data when user returns to the tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -86,7 +83,6 @@ const ExamPapersPage = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      clearInterval(refreshInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [user, loadExams]);
@@ -170,6 +166,7 @@ const ExamPapersPage = () => {
                   exams={filteredExams} 
                   userIsPremium={userIsPremium}
                   searchQuery={searchQuery}
+                  lastRefresh={lastRefresh}
                 />
               </TabsContent>
             ))}
@@ -185,11 +182,13 @@ const ExamPapersPage = () => {
 const ExamsList = ({ 
   exams, 
   userIsPremium,
-  searchQuery
+  searchQuery,
+  lastRefresh
 }: { 
   exams: Exam[], 
   userIsPremium: boolean,
-  searchQuery: string
+  searchQuery: string,
+  lastRefresh: number
 }) => {
   if (exams.length === 0) {
     return (
@@ -207,7 +206,11 @@ const ExamsList = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {exams.map(exam => (
-        <ExamPaperCard key={exam.id} exam={exam} userIsPremium={userIsPremium} />
+        <ExamPaperCard 
+          key={`${exam.id}-${lastRefresh}`} 
+          exam={exam} 
+          userIsPremium={userIsPremium} 
+        />
       ))}
     </div>
   );

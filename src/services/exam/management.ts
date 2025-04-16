@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -145,8 +146,23 @@ export const deleteExamById = async (examId: string) => {
     
     console.log(`Successfully deleted exam ${examId}`);
     
-    // No need to verify deletion as it adds complexity and potential for false negatives
-    // Just return success
+    // Verify that the exam is actually deleted
+    const { data: checkDeletion, error: checkError } = await supabase
+      .from('exams')
+      .select('id')
+      .eq('id', examId);
+      
+    if (checkError) {
+      console.error(`Error checking if exam was deleted: ${checkError.message}`);
+    }
+    
+    if (checkDeletion && checkDeletion.length > 0) {
+      console.error(`Exam ${examId} still exists after deletion attempt!`);
+      throw new Error("Exam deletion failed - exam still exists in database");
+    }
+    
+    console.log(`Verified exam ${examId} was successfully deleted`);
+    
     return { success: true, message: `Exam deleted successfully` };
   } catch (error) {
     console.error("Error in deleteExamById:", error);
@@ -174,7 +190,7 @@ export const deleteWBJEEExams = async () => {
       return { success: true, message: "No WBJEE exams to delete" };
     }
     
-    console.log(`Found ${wbjeeExams.length} WBJEE exams to delete`);
+    console.log(`Found ${wbjeeExams.length} WBJEE exams to delete:`, wbjeeExams.map(e => e.id));
     
     // Delete all user results for WBJEE exams in one batch
     const examIds = wbjeeExams.map(exam => exam.id);
@@ -214,7 +230,22 @@ export const deleteWBJEEExams = async () => {
       throw new Error(`Failed to delete exams: ${examsError.message}`);
     }
     
-    console.log("Successfully deleted all WBJEE exams");
+    // Verify deletion was successful
+    const { data: checkDeletion, error: checkError } = await supabase
+      .from('exams')
+      .select('id')
+      .eq('board', 'WBJEE');
+      
+    if (checkError) {
+      console.error(`Error checking if exams were deleted: ${checkError.message}`);
+    }
+    
+    if (checkDeletion && checkDeletion.length > 0) {
+      console.error(`${checkDeletion.length} WBJEE exams still exist after deletion attempt!`);
+      throw new Error("WBJEE exams deletion failed - exams still exist in database");
+    }
+    
+    console.log("Successfully deleted all WBJEE exams and verified deletion");
     
     return { success: true, message: `Deleted ${wbjeeExams.length} WBJEE exams` };
   } catch (error) {
@@ -222,3 +253,4 @@ export const deleteWBJEEExams = async () => {
     throw error;
   }
 };
+
