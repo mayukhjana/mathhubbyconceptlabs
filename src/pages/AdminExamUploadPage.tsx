@@ -82,7 +82,7 @@ const AdminExamUploadPage = () => {
         await deleteWBJEEExams();
         console.log("Successfully deleted all WBJEE exams, refreshing data...");
         await loadExams(true);
-        return { success: true };
+        return; // Return void instead of an object with success property
       }
     } catch (error) {
       console.error(`Error deleting ${board} exams:`, error);
