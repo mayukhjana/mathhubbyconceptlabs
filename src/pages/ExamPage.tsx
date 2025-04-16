@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import QuestionCard, { Question } from "@/components/QuestionCard";
+import QuestionCard from "@/components/QuestionCard";
 import { Button } from "@/components/ui/button";
-import { 
+import { ExamHeader } from "@/components/exam/ExamHeader";
+import { ExamNavigation } from "@/components/exam/ExamNavigation";
+import { ExamResults } from "@/components/exam/ExamResults";
+import { Progress } from "@/components/ui/progress";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -15,22 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Progress } from "@/components/ui/progress";
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckSquare, 
-  Clock, 
-  AlertTriangle,
-  Trophy,
-  BookOpen,
-  Home,
-  BarChart3,
-  Loader2,
-} from "lucide-react";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import LoadingAnimation from "@/components/LoadingAnimation";
+import { Link } from "react-router-dom";
 import { fetchExamById, fetchQuestionsForExam } from "@/services/examService";
 
 const ExamPage = () => {
@@ -298,16 +290,10 @@ const ExamPage = () => {
           </p>
           <div className="flex gap-4">
             <Button variant="outline" asChild>
-              <Link to="/exams">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Exams
-              </Link>
+              <Link to="/exams">Back to Exams</Link>
             </Button>
             <Button asChild>
-              <Link to="/">
-                <Home className="mr-2 h-4 w-4" />
-                Go Home
-              </Link>
+              <Link to="/">Go Home</Link>
             </Button>
           </div>
         </div>
@@ -328,37 +314,21 @@ const ExamPage = () => {
         <div className="container mx-auto px-4">
           {!examCompleted ? (
             <>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <h1 className="text-xl font-bold">{exam.title}</h1>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <BookOpen size={14} />
-                        <span>{exam.board}{exam.chapter ? ` - ${exam.chapter}` : ''}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <CheckSquare size={14} />
-                        <span>{answeredCount}/{exam.questions.length} Answered</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 bg-mathlight dark:bg-gray-700 px-4 py-2 rounded-full">
-                    <Clock size={18} className={timeRemaining && timeRemaining < 300 ? "text-red-500 animate-pulse" : "text-mathprimary dark:text-blue-400"} />
-                    <span className={`font-mono font-medium ${timeRemaining && timeRemaining < 300 ? "text-red-500" : ""}`}>
-                      {timeRemaining !== null ? formatTime(timeRemaining) : "00:00"}
-                    </span>
-                  </div>
+              <ExamHeader
+                title={exam.title}
+                board={exam.board}
+                chapter={exam.chapter}
+                answeredCount={answeredCount}
+                totalQuestions={exam.questions.length}
+                timeRemaining={timeRemaining}
+              />
+              
+              <div className="mt-4">
+                <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  <span>Progress</span>
+                  <span>{answeredCount}/{exam.questions.length} Questions</span>
                 </div>
-                
-                <div className="mt-4">
-                  <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    <span>Progress</span>
-                    <span>{answeredCount}/{exam.questions.length} Questions</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
+                <Progress value={progress} className="h-2" />
               </div>
               
               <QuestionCard
@@ -368,110 +338,25 @@ const ExamPage = () => {
                 questionNumber={currentQuestionIndex + 1}
               />
               
-              <div className="flex justify-between mt-6">
-                <Button 
-                  variant="outline" 
-                  onClick={handlePrevious}
-                  disabled={currentQuestionIndex === 0}
-                  className="gap-2"
-                >
-                  <ArrowLeft size={16} />
-                  Previous
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={handleSubmit}
-                  className="gap-2"
-                >
-                  <CheckSquare size={16} />
-                  Submit Exam
-                </Button>
-                
-                <Button 
-                  onClick={handleNext}
-                  disabled={currentQuestionIndex === exam.questions.length - 1}
-                  className="gap-2"
-                >
-                  Next
-                  <ArrowRight size={16} />
-                </Button>
-              </div>
+              <ExamNavigation
+                currentQuestionIndex={currentQuestionIndex}
+                totalQuestions={exam.questions.length}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onSubmit={handleSubmit}
+              />
             </>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="w-24 h-24 bg-mathprimary/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Trophy className="w-12 h-12 text-mathprimary dark:text-blue-400" />
-                </div>
-                
-                <h1 className="text-2xl font-bold mb-2">Exam Completed!</h1>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  You've completed the {exam.title} exam.
-                </p>
-                
-                <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-6 mb-8">
-                  <h2 className="text-lg font-medium mb-4">Your Results</h2>
-                  
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-gray-600 dark:text-gray-300">Total Marks:</span>
-                    <span className="font-medium">{totalObtainedMarks} / {totalPossibleMarks}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-gray-600 dark:text-gray-300">Correct Answers:</span>
-                    <span className="font-medium">{exam.questions.filter(q => userAnswers[q.id] === q.correctAnswer).length} / {exam.questions.length}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-300">Time Taken:</span>
-                    <span className="font-medium">{formatTime(timeTaken)}</span>
-                  </div>
-
-                  {user && (
-                    <div className="mt-3 pt-3 border-t">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-300">Results Saved:</span>
-                        <span className={`font-medium ${resultSaved ? "text-green-500" : "text-red-500"}`}>
-                          {resultSaved ? "Yes" : "No"}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <h3 className="text-lg font-medium mb-4">Review Your Answers</h3>
-                
-                <div className="space-y-4 max-h-96 overflow-y-auto mb-8">
-                  {exam.questions.map((question, index) => (
-                    <QuestionCard
-                      key={question.id}
-                      question={question}
-                      onAnswer={() => {}}
-                      userAnswer={userAnswers[question.id]}
-                      showResult={true}
-                      questionNumber={index + 1}
-                    />
-                  ))}
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button variant="outline" className="gap-2" asChild>
-                    <Link to="/results">
-                      <BarChart3 size={16} />
-                      View All Results
-                    </Link>
-                  </Button>
-                  
-                  <Button className="gap-2" asChild>
-                    <Link to="/exams">
-                      <ArrowRight size={16} />
-                      More Exams
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <ExamResults
+              score={score}
+              timeTaken={timeTaken}
+              totalObtainedMarks={totalObtainedMarks}
+              totalPossibleMarks={totalPossibleMarks}
+              questions={exam.questions}
+              userAnswers={userAnswers}
+              resultSaved={resultSaved}
+              formatTime={formatTime}
+            />
           )}
         </div>
       </main>
