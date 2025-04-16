@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 import { BOARD_OPTIONS, ENTRANCE_OPTIONS } from "./types";
@@ -71,15 +72,27 @@ export const fetchQuestionsForExam = async (examId: string) => {
     
     console.log("Fetched questions:", data);
 
-    // Process multi-correct answers from comma-separated strings
+    // Process multi-correct answers from comma-separated strings and add is_multi_correct if not present
     const processedData = data.map(question => {
-      if (question.is_multi_correct && typeof question.correct_answer === 'string') {
+      // Create a base question with all properties from the fetched data
+      const baseQuestion = { ...question };
+      
+      // Add is_multi_correct property if not present in the database result
+      // We'll determine this based on whether correct_answer contains commas
+      if (baseQuestion.is_multi_correct === undefined) {
+        baseQuestion.is_multi_correct = typeof question.correct_answer === 'string' && 
+                                        question.correct_answer.includes(',');
+      }
+      
+      // Convert comma-separated string to array if multi-correct
+      if (baseQuestion.is_multi_correct && typeof question.correct_answer === 'string') {
         return {
-          ...question,
+          ...baseQuestion,
           correct_answer: question.correct_answer.split(',')
         };
       }
-      return question;
+      
+      return baseQuestion;
     });
     
     return processedData as Question[];
@@ -194,7 +207,8 @@ const getMockQuestions = (examId: string): Question[] => {
       correct_answer: "c",
       order_number: 1,
       marks: 2,
-      negative_marks: 0.5
+      negative_marks: 0.5,
+      is_multi_correct: false
     },
     {
       id: "q2",
@@ -207,7 +221,8 @@ const getMockQuestions = (examId: string): Question[] => {
       correct_answer: "a",
       order_number: 2,
       marks: 2,
-      negative_marks: 0.5
+      negative_marks: 0.5,
+      is_multi_correct: false
     },
     {
       id: "q3",
@@ -220,7 +235,8 @@ const getMockQuestions = (examId: string): Question[] => {
       correct_answer: "a",
       order_number: 3,
       marks: 2,
-      negative_marks: 0.5
+      negative_marks: 0.5,
+      is_multi_correct: false
     },
     {
       id: "q4",
@@ -233,7 +249,8 @@ const getMockQuestions = (examId: string): Question[] => {
       correct_answer: "b",
       order_number: 4,
       marks: 2,
-      negative_marks: 0.5
+      negative_marks: 0.5,
+      is_multi_correct: false
     },
     {
       id: "q5",
@@ -246,7 +263,8 @@ const getMockQuestions = (examId: string): Question[] => {
       correct_answer: "c",
       order_number: 5,
       marks: 2,
-      negative_marks: 0.5
+      negative_marks: 0.5,
+      is_multi_correct: false
     }
   ];
 };
