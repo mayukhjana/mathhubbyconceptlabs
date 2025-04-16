@@ -18,12 +18,12 @@ export const AuthGuard = ({
   requirePremium = false,
   requireAdmin = false
 }: AuthGuardProps) => {
-  const { isAuthenticated, isLoading, isPremium } = useAuth();
+  const { isAuthenticated, isLoading, isPremium, user } = useAuth();
   const navigate = useNavigate();
   
   // Check if user has admin role
   const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
-    queryKey: ['isAdmin'],
+    queryKey: ['isAdmin', user?.email],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('has_role', { _role: 'admin' });
       if (error) {
