@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -88,6 +89,31 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
   }
   
   return data as Question[];
+};
+
+export const deleteExamById = async (examId: string) => {
+  try {
+    // First delete all questions associated with this exam
+    const { error: questionsError } = await supabase
+      .from('questions')
+      .delete()
+      .eq('exam_id', examId);
+    
+    if (questionsError) throw questionsError;
+    
+    // Then delete the exam itself
+    const { error: examError } = await supabase
+      .from('exams')
+      .delete()
+      .eq('id', examId);
+    
+    if (examError) throw examError;
+    
+    return { success: true, message: `Exam deleted successfully` };
+  } catch (error) {
+    console.error("Error deleting exam:", error);
+    throw error;
+  }
 };
 
 export const deleteWBJEEExams = async () => {

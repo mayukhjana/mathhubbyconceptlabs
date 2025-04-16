@@ -29,7 +29,7 @@ import {
   fetchEntranceExams, 
   fetchBoardExams
 } from "@/services/exam/queries";
-import { deleteWBJEEExams } from "@/services/exam/management";
+import { deleteWBJEEExams, deleteExamById } from "@/services/exam/management";
 import { Exam, BOARD_OPTIONS, ENTRANCE_OPTIONS } from "@/services/exam/types";
 import { useNavigate } from "react-router-dom";
 import LoadingAnimation from "@/components/LoadingAnimation";
@@ -69,7 +69,7 @@ const AdminExamUploadPage = () => {
     try {
       if (board === 'WBJEE') {
         await deleteWBJEEExams();
-        // Refresh the exam list after deletion
+        // Refresh the entrance exams list after deletion
         const updatedExams = await fetchEntranceExams();
         setEntranceExams(updatedExams);
         toast({
@@ -83,6 +83,33 @@ const AdminExamUploadPage = () => {
       toast({
         title: "Error",
         description: `Failed to delete ${board} exams`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteExam = async (examId: string, examTitle: string) => {
+    try {
+      await deleteExamById(examId);
+      
+      // Refresh both exam lists to ensure UI is up to date
+      const [updatedEntranceExams, updatedBoardExams] = await Promise.all([
+        fetchEntranceExams(),
+        fetchBoardExams()
+      ]);
+      
+      setEntranceExams(updatedEntranceExams);
+      setBoardExamsList(updatedBoardExams);
+      
+      toast({
+        title: "Success",
+        description: `Exam "${examTitle}" deleted successfully`
+      });
+    } catch (error) {
+      console.error(`Error deleting exam:`, error);
+      toast({
+        title: "Error",
+        description: "Failed to delete exam",
         variant: "destructive"
       });
     }
@@ -182,7 +209,28 @@ const AdminExamUploadPage = () => {
                                     Year: {exam.year} | Duration: {exam.duration} mins
                                   </p>
                                 </div>
-                                <Button variant="destructive" size="sm">Delete</Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">Delete</Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Exam</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{exam.title}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteExam(exam.id, exam.title)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             ))}
                           </div>
@@ -222,7 +270,28 @@ const AdminExamUploadPage = () => {
                                     Year: {exam.year} | Duration: {exam.duration} mins
                                   </p>
                                 </div>
-                                <Button variant="destructive" size="sm">Delete</Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">Delete</Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Exam</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{exam.title}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteExam(exam.id, exam.title)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             ))}
                           </div>
