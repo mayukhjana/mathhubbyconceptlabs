@@ -312,6 +312,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_wbjee_delete_function: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      delete_wbjee_exams: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean

@@ -1,9 +1,9 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Exam } from "@/services/exam/types";
 import { fetchEntranceExams, fetchBoardExams } from "@/services/exam/queries";
 import { deleteWBJEEExams, deleteExamById } from "@/services/exam/management";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useExamManagement = () => {
   const [entranceExams, setEntranceExams] = useState<Exam[]>([]);
@@ -57,7 +57,7 @@ export const useExamManagement = () => {
             description: `All WBJEE exams deleted successfully`
           });
           
-          // Force reload to ensure UI is correct
+          // Force reload to ensure UI is up to date
           await loadExams(false);
         }
         return result;

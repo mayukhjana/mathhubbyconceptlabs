@@ -48,7 +48,7 @@ export const deleteWBJEEExams = async () => {
       throw new Error(`Failed to delete questions: ${questionsError.message}`);
     }
     
-    // Use a transaction for deleting the exams to ensure consistency
+    // Call the database function to delete the exams
     const { error: examsError } = await supabase.rpc('delete_wbjee_exams');
     
     if (examsError) {
