@@ -43,7 +43,7 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
       correct_answer: "a",
       order_number: index + 1,
       marks: 1,
-      negative_marks: 0,
+      negative_marks: 0.25,  // Changed from 0 to 0.25
       is_multi_correct: false,
     }
   );
