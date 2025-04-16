@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
 import { useTheme } from "@/components/ThemeProvider";
 import { Toggle } from "@/components/ui/toggle";
+import { FileText } from "lucide-react";
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -75,6 +76,12 @@ const Navbar = () => {
               <span>Premium</span>
             </Button>
           </Link>
+          <Link to="/resources">
+            <Button variant={isActive("/resources") ? "default" : "ghost"} className="flex items-center gap-2">
+              <FileText size={18} />
+              <span>Resources</span>
+            </Button>
+          </Link>
         </nav>
         
         <div className="hidden md:flex items-center space-x-2">
@@ -140,6 +147,13 @@ const Navbar = () => {
               </Button>
             </Link>
             
+            <Link to="/resources" onClick={closeMenu}>
+              <Button variant={isActive("/resources") ? "default" : "ghost"} className="w-full justify-start text-lg">
+                <FileText className="mr-3" size={20} />
+                Resources
+              </Button>
+            </Link>
+
             <div className="flex items-center justify-between border-t border-border pt-4 mt-2">
               <span>Dark Mode</span>
               <Toggle pressed={theme === "dark"} onPressedChange={toggleTheme} aria-label="Toggle theme">
@@ -169,4 +183,5 @@ const Navbar = () => {
         </div>}
     </header>;
 };
+
 export default Navbar;

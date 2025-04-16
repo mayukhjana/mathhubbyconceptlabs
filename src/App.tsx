@@ -21,6 +21,7 @@ import AdminUploadPage from "./pages/AdminUploadPage";
 import AdminExamUploadPage from "./pages/AdminExamUploadPage";
 import AuthPage from "./pages/AuthPage";
 import MathHubAIPage from "./pages/MathHubAIPage";
+import ResourcesPage from "./pages/ResourcesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/boards/:boardId/*" element={<BoardDetail />} />
               <Route path="/exams/:examId" element={<ExamPage />} />
               <Route path="/exam-papers" element={<ExamPapersPage />} />
+              <Route path="/resources" element={<ResourcesPage />} />
               <Route path="/results" element={
                 <AuthGuard>
                   <ResultsPage />
