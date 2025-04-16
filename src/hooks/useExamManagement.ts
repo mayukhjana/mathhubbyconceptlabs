@@ -46,7 +46,9 @@ export const useExamManagement = () => {
   const handleDeleteBoard = async (board: string) => {
     try {
       if (board === 'WBJEE') {
+        await supabase.rpc('create_wbjee_delete_function');
         const result = await deleteWBJEEExams();
+        
         // Update the local state immediately to reflect the deletion
         if (result.success) {
           setEntranceExams(prev => prev.filter(exam => exam.board !== 'WBJEE'));
@@ -54,6 +56,9 @@ export const useExamManagement = () => {
             title: "Success",
             description: `All WBJEE exams deleted successfully`
           });
+          
+          // Force reload to ensure UI is correct
+          await loadExams(false);
         }
         return result;
       }
@@ -83,6 +88,9 @@ export const useExamManagement = () => {
           title: "Success",
           description: `Exam "${examTitle}" deleted successfully`
         });
+        
+        // Force a refresh of the exams list to ensure UI is up to date
+        await loadExams(false);
         return Promise.resolve();
       } else {
         throw new Error("Exam deletion failed");

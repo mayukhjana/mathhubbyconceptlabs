@@ -48,16 +48,16 @@ export const deleteWBJEEExams = async () => {
       throw new Error(`Failed to delete questions: ${questionsError.message}`);
     }
     
-    console.log("Deleting all WBJEE exams");
-    const { error: examsError } = await supabase
-      .from('exams')
-      .delete()
-      .eq('board', 'WBJEE');
+    // Use a transaction for deleting the exams to ensure consistency
+    const { error: examsError } = await supabase.rpc('delete_wbjee_exams');
     
     if (examsError) {
-      console.error("Error deleting WBJEE exams:", examsError);
+      console.error("Error calling delete_wbjee_exams function:", examsError);
       throw new Error(`Failed to delete exams: ${examsError.message}`);
     }
+    
+    // Additional verification step after a brief delay to ensure deletion is reflected
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Verify deletion was successful
     const { data: checkDeletion, error: checkError } = await supabase

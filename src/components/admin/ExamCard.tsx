@@ -43,7 +43,7 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         if (onDeleteComplete) {
           onDeleteComplete();
         }
-      }, 1500);
+      }, 1000);
     } catch (error) {
       console.error("Error deleting exam:", error);
       setDeleteStatus('error');
@@ -107,7 +107,7 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
           
           {deleteStatus === 'success' && (
             <div className="bg-green-50 p-3 rounded-md text-green-700 mb-4">
-              Exam deleted successfully! The list will refresh shortly.
+              Exam deleted successfully!
             </div>
           )}
           

@@ -8,6 +8,7 @@ import { Exam } from "@/services/exam/types";
 import ExamCard from "./ExamCard";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ExamSectionProps {
   title: string;
@@ -87,6 +88,12 @@ const ExamSection = ({
       await onDeleteExam(examId, examTitle);
       // Remove the exam from local state immediately
       setLocalExams(prevExams => prevExams.filter(exam => exam.id !== examId));
+      
+      // Call onDeleteComplete to refresh parent data
+      if (onDeleteComplete) {
+        onDeleteComplete();
+      }
+      
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
@@ -124,10 +131,12 @@ const ExamSection = ({
               )}
               
               {deleteStatus === 'error' && (
-                <div className="bg-red-50 p-3 rounded-md text-red-700 mb-4">
-                  <p>Failed to delete all exams. Please try again or contact support.</p>
-                  {errorMessage && <p className="text-sm mt-2 font-mono">{errorMessage}</p>}
-                </div>
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription className="space-y-2">
+                    <p>Failed to delete all exams. Please try again or contact support.</p>
+                    {errorMessage && <p className="text-sm font-mono break-words whitespace-pre-wrap">{errorMessage}</p>}
+                  </AlertDescription>
+                </Alert>
               )}
               
               <DialogFooter>
