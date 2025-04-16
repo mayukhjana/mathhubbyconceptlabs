@@ -16,6 +16,7 @@ const AdminExamUploadPage = () => {
   const [entranceExams, setEntranceExams] = useState<Exam[]>([]);
   const [boardExamsList, setBoardExamsList] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,6 +27,8 @@ const AdminExamUploadPage = () => {
         fetchEntranceExams(),
         fetchBoardExams()
       ]);
+      console.log("Loaded entrance exams:", entrance);
+      console.log("Loaded board exams:", board);
       setEntranceExams(entrance);
       setBoardExamsList(board);
     } catch (error) {
@@ -42,13 +45,18 @@ const AdminExamUploadPage = () => {
 
   useEffect(() => {
     loadExams();
-  }, [toast]);
+  }, [toast, refreshTrigger]);
+
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const handleDeleteBoard = async (board: string) => {
     try {
       if (board === 'WBJEE') {
+        console.log("Deleting all WBJEE exams...");
         await deleteWBJEEExams();
-        await loadExams();
+        handleRefresh();
         toast({
           title: "Success",
           description: `All ${board} exams deleted successfully`
@@ -68,7 +76,7 @@ const AdminExamUploadPage = () => {
     try {
       console.log(`Deleting exam with ID: ${examId}`);
       await deleteExamById(examId);
-      await loadExams();
+      handleRefresh();
       
       toast({
         title: "Success",
@@ -104,9 +112,17 @@ const AdminExamUploadPage = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Exam Management</h1>
-            <Button onClick={() => navigate("/admin/exam-upload/new")}>
-              Add New Exam
-            </Button>
+            <div className="space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={handleRefresh}
+              >
+                Refresh
+              </Button>
+              <Button onClick={() => navigate("/admin/exam-upload/new")}>
+                Add New Exam
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="entrance" className="space-y-4">
@@ -124,6 +140,7 @@ const AdminExamUploadPage = () => {
                     title={board}
                     exams={boardExams}
                     onDeleteExam={handleDeleteExam}
+                    onDeleteComplete={handleRefresh}
                     onDeleteAll={board === 'WBJEE' ? () => handleDeleteBoard(board) : undefined}
                     showDeleteAll={board === 'WBJEE'}
                   />
@@ -140,6 +157,7 @@ const AdminExamUploadPage = () => {
                     title={board}
                     exams={filteredBoardExams}
                     onDeleteExam={handleDeleteExam}
+                    onDeleteComplete={handleRefresh}
                   />
                 );
               })}

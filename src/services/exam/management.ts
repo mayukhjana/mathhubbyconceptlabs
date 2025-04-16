@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -29,34 +28,29 @@ export const createExam = async (examData: Omit<Exam, 'id' | 'created_at'>) => {
 
 export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
   const questionsToInsert = questions.map(q => {
-    // Format the correct_answer based on whether it's a multi-correct answer
     let formattedAnswer: string;
     
     if (q.is_multi_correct) {
-      // If it's a multi-correct question, handle both array and string inputs
       if (Array.isArray(q.correct_answer)) {
         formattedAnswer = [...q.correct_answer].sort().join(',');
       } else if (typeof q.correct_answer === 'string') {
         const answerParts = q.correct_answer.split(',').map(p => p.trim());
         formattedAnswer = [...answerParts].sort().join(',');
       } else {
-        formattedAnswer = 'a'; // Default to 'a' if input is invalid
+        formattedAnswer = 'a';
       }
     } else {
-      // For single answers, ensure we get a single value
       formattedAnswer = Array.isArray(q.correct_answer) 
         ? q.correct_answer[0] 
         : String(q.correct_answer);
     }
     
-    // Make sure formattedAnswer only contains valid option values (a,b,c,d)
     const validOptions = ['a', 'b', 'c', 'd'];
     const answerParts = formattedAnswer.split(',');
     const validAnswerParts = answerParts.filter(part => 
       validOptions.includes(part.trim())
     );
     
-    // If no valid options remain, default to 'a'
     formattedAnswer = validAnswerParts.length === 0 
       ? 'a' 
       : validAnswerParts.join(',');
@@ -95,7 +89,33 @@ export const deleteExamById = async (examId: string) => {
   try {
     console.log(`Starting deletion process for exam ${examId}`);
     
-    // First delete all questions associated with this exam
+    const { data: examExists, error: examCheckError } = await supabase
+      .from('exams')
+      .select('id')
+      .eq('id', examId)
+      .single();
+      
+    if (examCheckError) {
+      if (examCheckError.code === 'PGRST116') {
+        console.error(`Exam with ID ${examId} not found`);
+        throw new Error(`Exam with ID ${examId} not found`);
+      }
+      throw examCheckError;
+    }
+    
+    console.log(`Exam found, proceeding with deletion for ${examId}`);
+    
+    const { error: resultsError } = await supabase
+      .from('user_results')
+      .delete()
+      .eq('exam_id', examId);
+      
+    if (resultsError) {
+      console.error("Error deleting user results:", resultsError);
+    } else {
+      console.log(`Successfully deleted user results for exam ${examId}`);
+    }
+    
     const { error: questionsError } = await supabase
       .from('questions')
       .delete()
@@ -108,7 +128,6 @@ export const deleteExamById = async (examId: string) => {
     
     console.log(`Successfully deleted questions for exam ${examId}`);
     
-    // Then delete the exam itself
     const { error: examError } = await supabase
       .from('exams')
       .delete()
@@ -132,7 +151,6 @@ export const deleteWBJEEExams = async () => {
   try {
     console.log("Starting deletion of all WBJEE exams");
     
-    // Fetch all WBJEE exam IDs
     const { data: wbjeeExams, error: fetchError } = await supabase
       .from('exams')
       .select('id')
@@ -147,7 +165,17 @@ export const deleteWBJEEExams = async () => {
       console.log(`Found ${wbjeeExams.length} WBJEE exams to delete`);
       const examIds = wbjeeExams.map(exam => exam.id);
       
-      // Delete all questions for these exams
+      const { error: resultsError } = await supabase
+        .from('user_results')
+        .delete()
+        .in('exam_id', examIds);
+        
+      if (resultsError) {
+        console.error("Error deleting WBJEE exam user results:", resultsError);
+      } else {
+        console.log("Successfully deleted WBJEE exam user results");
+      }
+      
       const { error: questionsError } = await supabase
         .from('questions')
         .delete()
@@ -160,7 +188,6 @@ export const deleteWBJEEExams = async () => {
       
       console.log("Successfully deleted WBJEE exam questions");
       
-      // Then delete all the exams
       const { error } = await supabase
         .from('exams')
         .delete()

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -21,6 +20,7 @@ const ExamPapersPage = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { user } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
   
@@ -30,31 +30,55 @@ const ExamPapersPage = () => {
     
     const loadExams = async () => {
       setLoading(true);
-      const examData = await fetchEntranceExams();
-      console.log("Loaded entrance exams:", examData);
-      
-      if (user) {
-        const { data: attemptedExams } = await supabase
-          .from('user_results')
-          .select('exam_id')
-          .eq('user_id', user.id);
+      try {
+        const examData = await fetchEntranceExams();
+        console.log("Loaded entrance exams:", examData);
+        
+        if (user) {
+          const { data: attemptedExams } = await supabase
+            .from('user_results')
+            .select('exam_id')
+            .eq('user_id', user.id);
+            
+          const attemptedExamIds = new Set(attemptedExams?.map(result => result.exam_id) || []);
           
-        const attemptedExamIds = new Set(attemptedExams?.map(result => result.exam_id) || []);
-        
-        const examDataWithAttempted = examData.map(exam => ({
-          ...exam,
-          isAttempted: attemptedExamIds.has(exam.id)
-        }));
-        
-        setExams(examDataWithAttempted);
-      } else {
-        setExams(examData);
+          const examDataWithAttempted = examData.map(exam => ({
+            ...exam,
+            isAttempted: attemptedExamIds.has(exam.id)
+          }));
+          
+          setExams(examDataWithAttempted);
+        } else {
+          setExams(examData);
+        }
+      } catch (error) {
+        console.error("Error loading exams:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     
     loadExams();
-  }, [user]);
+    
+    // Set up an interval to periodically check for updates
+    const refreshInterval = setInterval(() => {
+      setLastRefresh(Date.now());
+    }, 60000); // Check every minute
+    
+    // Set up a focus event listener to refresh data when user returns to the tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setLastRefresh(Date.now());
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      clearInterval(refreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, lastRefresh]);
   
   const examBoardTabs = [
     { id: "all", label: "All Entrance Exams" },
@@ -107,6 +131,13 @@ const ExamPapersPage = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setLastRefresh(Date.now())}
+              className="whitespace-nowrap"
+            >
+              Refresh Exams
+            </Button>
           </div>
           
           <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange} className="mb-8">

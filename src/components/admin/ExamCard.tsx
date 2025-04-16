@@ -8,9 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ExamCardProps {
   exam: Exam;
   onDelete: (examId: string, examTitle: string) => Promise<void>;
+  onDeleteComplete?: () => void;
 }
 
-const ExamCard = ({ exam, onDelete }: ExamCardProps) => {
+const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
@@ -22,6 +23,11 @@ const ExamCard = ({ exam, onDelete }: ExamCardProps) => {
         title: "Success",
         description: `Exam "${exam.title}" deleted successfully`,
       });
+      
+      // Notify parent that deletion is complete
+      if (onDeleteComplete) {
+        onDeleteComplete();
+      }
     } catch (error) {
       console.error("Error deleting exam:", error);
       toast({

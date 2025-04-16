@@ -13,6 +13,7 @@ interface ExamSectionProps {
   title: string;
   exams: Exam[];
   onDeleteExam: (examId: string, examTitle: string) => Promise<void>;
+  onDeleteComplete?: () => void;
   onDeleteAll?: () => Promise<void>;
   showDeleteAll?: boolean;
 }
@@ -21,6 +22,7 @@ const ExamSection = ({
   title, 
   exams, 
   onDeleteExam, 
+  onDeleteComplete,
   onDeleteAll, 
   showDeleteAll = false 
 }: ExamSectionProps) => {
@@ -37,6 +39,11 @@ const ExamSection = ({
         title: "Success",
         description: `All ${title} exams deleted successfully`,
       });
+      
+      // Notify parent component that deletion is complete
+      if (onDeleteComplete) {
+        onDeleteComplete();
+      }
     } catch (error) {
       console.error(`Error deleting all ${title} exams:`, error);
       toast({
@@ -95,6 +102,7 @@ const ExamSection = ({
                   key={exam.id}
                   exam={exam}
                   onDelete={onDeleteExam}
+                  onDeleteComplete={onDeleteComplete}
                 />
               ))}
             </div>
