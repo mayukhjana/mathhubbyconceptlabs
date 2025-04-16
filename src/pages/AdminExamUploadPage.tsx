@@ -27,16 +27,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { 
   fetchEntranceExams, 
-  fetchBoardExams,
-  deleteWBJEEExams 
+  fetchBoardExams
 } from "@/services/exam/queries";
+import { deleteWBJEEExams } from "@/services/exam/management";
 import { Exam, BOARD_OPTIONS, ENTRANCE_OPTIONS } from "@/services/exam/types";
 import { useNavigate } from "react-router-dom";
 import LoadingAnimation from "@/components/LoadingAnimation";
 
 const AdminExamUploadPage = () => {
   const [entranceExams, setEntranceExams] = useState<Exam[]>([]);
-  const [boardExams, setBoardExams] = useState<Exam[]>([]);
+  const [boardExamsList, setBoardExamsList] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const AdminExamUploadPage = () => {
           fetchBoardExams()
         ]);
         setEntranceExams(entrance);
-        setBoardExams(board);
+        setBoardExamsList(board);
       } catch (error) {
         console.error("Error loading exams:", error);
         toast({
@@ -196,17 +196,17 @@ const AdminExamUploadPage = () => {
 
             <TabsContent value="board" className="space-y-6">
               {BOARD_OPTIONS.map(board => {
-                const boardExams = boardExams.filter(exam => exam.board === board);
+                const filteredBoardExams = boardExamsList.filter(exam => exam.board === board);
                 return (
                   <Card key={board}>
                     <CardHeader>
                       <CardTitle>{board}</CardTitle>
                       <CardDescription>
-                        Total Exams: {boardExams.length}
+                        Total Exams: {filteredBoardExams.length}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {boardExams.length === 0 ? (
+                      {filteredBoardExams.length === 0 ? (
                         <div className="text-center py-4 text-muted-foreground">
                           <AlertCircle className="mx-auto h-6 w-6 mb-2" />
                           <p>No exams found for {board}</p>
@@ -214,7 +214,7 @@ const AdminExamUploadPage = () => {
                       ) : (
                         <ScrollArea className="h-[300px]">
                           <div className="space-y-2">
-                            {boardExams.map(exam => (
+                            {filteredBoardExams.map(exam => (
                               <div key={exam.id} className="flex items-center justify-between p-2 rounded-lg border">
                                 <div>
                                   <h4 className="font-medium">{exam.title}</h4>
