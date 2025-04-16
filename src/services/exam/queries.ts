@@ -70,7 +70,19 @@ export const fetchQuestionsForExam = async (examId: string) => {
     }
     
     console.log("Fetched questions:", data);
-    return data as Question[];
+
+    // Process multi-correct answers from comma-separated strings
+    const processedData = data.map(question => {
+      if (question.is_multi_correct && typeof question.correct_answer === 'string') {
+        return {
+          ...question,
+          correct_answer: question.correct_answer.split(',')
+        };
+      }
+      return question;
+    });
+    
+    return processedData as Question[];
   } catch (error) {
     console.error("Exception fetching questions:", error);
     return [];

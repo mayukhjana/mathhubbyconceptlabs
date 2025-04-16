@@ -88,19 +88,27 @@ const ExamPage = () => {
           return;
         }
         
-        const formattedQuestions = questionsData.map(q => ({
-          id: q.id,
-          text: q.question_text,
-          options: [
-            { id: "a", text: q.option_a },
-            { id: "b", text: q.option_b },
-            { id: "c", text: q.option_c },
-            { id: "d", text: q.option_d }
-          ],
-          correctAnswer: q.correct_answer,
-          marks: q.marks,
-          negative_marks: q.negative_marks
-        }));
+        const formattedQuestions = questionsData.map(q => {
+          let correctAnswer = q.correct_answer;
+          if (typeof correctAnswer === 'string' && q.is_multi_correct) {
+            correctAnswer = correctAnswer.split(',');
+          }
+          
+          return {
+            id: q.id,
+            text: q.question_text,
+            options: [
+              { id: "a", text: q.option_a },
+              { id: "b", text: q.option_b },
+              { id: "c", text: q.option_c },
+              { id: "d", text: q.option_d }
+            ],
+            correctAnswer: correctAnswer,
+            marks: q.marks,
+            negative_marks: q.negative_marks,
+            is_multi_correct: q.is_multi_correct || false
+          };
+        });
         
         setExam({
           id: examData.id,
@@ -185,7 +193,10 @@ const ExamPage = () => {
     let calculatedPossibleMarks = 0;
     
     const questionsWithResults = exam.questions.map(question => {
-      const isCorrect = userAnswers[question.id] === question.correctAnswer;
+      const isCorrect = Array.isArray(question.correctAnswer)
+        ? question.correctAnswer.includes(userAnswers[question.id] || '')
+        : userAnswers[question.id] === question.correctAnswer;
+      
       if (isCorrect) {
         correctAnswers++;
         calculatedObtainedMarks += question.marks;

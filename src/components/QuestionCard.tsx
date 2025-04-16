@@ -3,6 +3,7 @@ import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Check, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export interface Question {
   id: string;
@@ -11,9 +12,10 @@ export interface Question {
     id: string;
     text: string;
   }[];
-  correctAnswer: string;
+  correctAnswer: string | string[];
   marks: number;
   negative_marks: number;
+  is_multi_correct?: boolean;
 }
 
 interface QuestionCardProps {
@@ -40,8 +42,15 @@ const QuestionCard = ({
     onAnswer(question.id, optionId);
   };
   
-  const isCorrect = showResult && selectedOption === question.correctAnswer;
-  const isIncorrect = showResult && selectedOption !== question.correctAnswer;
+  const isCorrect = showResult && 
+    (Array.isArray(question.correctAnswer) 
+      ? question.correctAnswer.includes(selectedOption || '')
+      : selectedOption === question.correctAnswer);
+
+  const isIncorrect = showResult && 
+    (Array.isArray(question.correctAnswer)
+      ? !question.correctAnswer.includes(selectedOption || '') && selectedOption !== undefined
+      : selectedOption !== question.correctAnswer && selectedOption !== undefined);
   
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm border mb-6">
@@ -51,7 +60,14 @@ const QuestionCard = ({
         </div>
         <div className="w-full">
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-medium">{question.text}</h3>
+            <h3 className="text-lg font-medium">
+              {question.text}
+              {question.is_multi_correct && (
+                <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                  Multiple Correct
+                </span>
+              )}
+            </h3>
             <div className="text-sm text-gray-500 shrink-0">
               <span className="font-medium text-mathprimary">{question.marks} mark{question.marks !== 1 && 's'}</span>
               {question.negative_marks > 0 && (
@@ -65,8 +81,16 @@ const QuestionCard = ({
             className="space-y-3"
           >
             {question.options.map((option) => {
-              const isOptionCorrect = showResult && option.id === question.correctAnswer;
-              const isOptionIncorrect = showResult && selectedOption === option.id && option.id !== question.correctAnswer;
+              const isOptionCorrect = showResult && 
+                (Array.isArray(question.correctAnswer) 
+                  ? question.correctAnswer.includes(option.id)
+                  : option.id === question.correctAnswer);
+              
+              const isOptionIncorrect = showResult && 
+                selectedOption === option.id && 
+                (Array.isArray(question.correctAnswer)
+                  ? !question.correctAnswer.includes(option.id)
+                  : option.id !== question.correctAnswer);
               
               return (
                 <div
@@ -117,7 +141,11 @@ const QuestionCard = ({
                   <span>
                     Incorrect. {question.negative_marks > 0 && `(-${question.negative_marks} marks) `}
                     The correct answer is: {
-                      question.options.find(o => o.id === question.correctAnswer)?.text
+                      Array.isArray(question.correctAnswer)
+                        ? question.correctAnswer.map(id => 
+                            question.options.find(o => o.id === id)?.text
+                          ).filter(Boolean).join(", ")
+                        : question.options.find(o => o.id === question.correctAnswer)?.text
                     }
                   </span>
                 </div>
