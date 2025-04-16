@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Check, X, AlertCircle } from "lucide-react";
@@ -35,25 +35,35 @@ const QuestionCard = ({
   questionNumber,
   skipped = false,
 }: QuestionCardProps) => {
-  const [selectedOption, setSelectedOption] = useState<string | undefined>(userAnswer);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(
+    userAnswer ? userAnswer.split(',') : []
+  );
   
-  const handleOptionChange = (optionId: string) => {
+  const handleOptionChange = (optionId: string, checked?: boolean) => {
     if (showResult) return;
     
-    setSelectedOption(optionId);
-    onAnswer(question.id, optionId);
+    if (question.is_multi_correct) {
+      let newSelectedOptions: string[];
+      if (checked) {
+        newSelectedOptions = [...selectedOptions, optionId].sort();
+      } else {
+        newSelectedOptions = selectedOptions.filter(id => id !== optionId).sort();
+      }
+      setSelectedOptions(newSelectedOptions);
+      onAnswer(question.id, newSelectedOptions.join(','));
+    } else {
+      setSelectedOptions([optionId]);
+      onAnswer(question.id, optionId);
+    }
   };
   
   // Determine if answer is correct
   const isCorrect = showResult && !skipped && 
-    (Array.isArray(question.correctAnswer) 
-      ? question.correctAnswer.includes(selectedOption || '')
-      : selectedOption === question.correctAnswer);
-
-  const isIncorrect = showResult && !skipped && 
     (Array.isArray(question.correctAnswer)
-      ? !question.correctAnswer.includes(selectedOption || '') && selectedOption !== undefined
-      : selectedOption !== question.correctAnswer && selectedOption !== undefined);
+      ? JSON.stringify([...selectedOptions].sort()) === JSON.stringify([...question.correctAnswer].sort())
+      : selectedOptions.join(',') === question.correctAnswer);
+
+  const isIncorrect = showResult && !skipped && !isCorrect && selectedOptions.length > 0;
   
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm border mb-6">
@@ -79,54 +89,60 @@ const QuestionCard = ({
             </div>
           </div>
           
-          <RadioGroup
-            value={selectedOption}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             {question.options.map((option) => {
+              const isSelected = selectedOptions.includes(option.id);
               const isOptionCorrect = showResult && 
                 (Array.isArray(question.correctAnswer) 
                   ? question.correctAnswer.includes(option.id)
                   : option.id === question.correctAnswer);
               
               const isOptionIncorrect = showResult && 
-                selectedOption === option.id && 
-                (Array.isArray(question.correctAnswer)
-                  ? !question.correctAnswer.includes(option.id)
-                  : option.id !== question.correctAnswer);
+                isSelected && !isOptionCorrect;
               
               return (
                 <div
                   key={option.id}
                   className={`flex items-center space-x-2 p-3 rounded-md border ${
-                    isOptionCorrect 
+                    isOptionCorrect && showResult
                       ? "bg-green-50 border-green-200"
                       : isOptionIncorrect
                         ? "bg-red-50 border-red-200"
-                        : selectedOption === option.id
+                        : isSelected
                           ? "bg-mathlight border-mathprimary/30"
                           : "hover:bg-muted/50"
                   }`}
-                  onClick={() => handleOptionChange(option.id)}
                 >
-                  <RadioGroupItem
-                    value={option.id}
-                    id={`${question.id}-${option.id}`}
-                    disabled={showResult}
-                    className={isOptionCorrect ? "text-green-600" : isOptionIncorrect ? "text-red-600" : ""}
-                  />
+                  {question.is_multi_correct ? (
+                    <Checkbox
+                      id={`${question.id}-${option.id}`}
+                      checked={isSelected}
+                      disabled={showResult}
+                      onCheckedChange={(checked) => handleOptionChange(option.id, checked as boolean)}
+                      className={isOptionCorrect ? "text-green-600" : isOptionIncorrect ? "text-red-600" : ""}
+                    />
+                  ) : (
+                    <RadioGroupItem
+                      value={option.id}
+                      id={`${question.id}-${option.id}`}
+                      checked={isSelected}
+                      disabled={showResult}
+                      onClick={() => handleOptionChange(option.id)}
+                      className={isOptionCorrect ? "text-green-600" : isOptionIncorrect ? "text-red-600" : ""}
+                    />
+                  )}
                   <Label
                     htmlFor={`${question.id}-${option.id}`}
                     className="w-full cursor-pointer flex items-center justify-between"
                   >
                     <span>{option.text}</span>
-                    {isOptionCorrect && <Check className="h-4 w-4 text-green-600" />}
-                    {isOptionIncorrect && <X className="h-4 w-4 text-red-600" />}
+                    {showResult && isOptionCorrect && <Check className="h-4 w-4 text-green-600" />}
+                    {showResult && isOptionIncorrect && <X className="h-4 w-4 text-red-600" />}
                   </Label>
                 </div>
               );
             })}
-          </RadioGroup>
+          </div>
           
           {showResult && (
             <div className={`mt-4 p-3 rounded-md ${
@@ -177,3 +193,4 @@ const QuestionCard = ({
 };
 
 export default QuestionCard;
+
