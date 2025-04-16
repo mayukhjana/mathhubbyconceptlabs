@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Exam } from "@/services/exam/types";
@@ -46,7 +47,6 @@ export const useExamManagement = () => {
   const handleDeleteBoard = async (board: string) => {
     try {
       if (board === 'WBJEE') {
-        await supabase.rpc('create_wbjee_delete_function');
         const result = await deleteWBJEEExams();
         
         // Update the local state immediately to reflect the deletion

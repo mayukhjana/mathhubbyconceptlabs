@@ -175,7 +175,7 @@ const ExamSection = ({
             <div className="space-y-2">
               {localExams.map(exam => (
                 <ExamCard
-                  key={exam.id}
+                  key={`${exam.id}-${lastRefreshTime}`}
                   exam={exam}
                   onDelete={handleExamDelete}
                   onDeleteComplete={onDeleteComplete}
