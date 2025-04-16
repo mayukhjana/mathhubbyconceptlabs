@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -106,61 +107,82 @@ export const deleteExamById = async (examId: string) => {
     
     console.log(`Exam found, proceeding with deletion for "${examExists.title}" (${examId})`);
     
-    // First, delete all user results associated with this exam
-    const { error: userResultsError } = await supabase
-      .from('user_results')
-      .delete()
-      .eq('exam_id', examId);
-      
-    if (userResultsError) {
-      console.error(`Error deleting user results for exam ${examId}:`, userResultsError);
-      throw new Error(`Failed to delete user results: ${userResultsError.message}`);
+    // Delete operations with retry logic
+    const MAX_RETRIES = 3;
+    let retries = 0;
+    let deletionSuccess = false;
+    
+    while (retries < MAX_RETRIES && !deletionSuccess) {
+      try {
+        // First, delete all user results associated with this exam
+        const { error: userResultsError } = await supabase
+          .from('user_results')
+          .delete()
+          .eq('exam_id', examId);
+          
+        if (userResultsError) {
+          console.error(`Error deleting user results for exam ${examId}:`, userResultsError);
+          throw new Error(`Failed to delete user results: ${userResultsError.message}`);
+        }
+        
+        console.log(`Successfully deleted user results for exam ${examId}`);
+          
+        // Next, delete all questions associated with this exam
+        const { error: questionsError } = await supabase
+          .from('questions')
+          .delete()
+          .eq('exam_id', examId);
+        
+        if (questionsError) {
+          console.error(`Error deleting questions for exam ${examId}:`, questionsError);
+          throw new Error(`Failed to delete questions: ${questionsError.message}`);
+        }
+        
+        console.log(`Successfully deleted questions for exam ${examId}`);
+        
+        // Finally, delete the exam itself
+        const { error: examError } = await supabase
+          .from('exams')
+          .delete()
+          .eq('id', examId);
+        
+        if (examError) {
+          console.error(`Error deleting exam ${examId}:`, examError);
+          throw new Error(`Failed to delete exam: ${examError.message}`);
+        }
+        
+        console.log(`Successfully deleted exam ${examId}`);
+        
+        // Verify that the exam is actually deleted
+        const { data: checkDeletion, error: checkError } = await supabase
+          .from('exams')
+          .select('id')
+          .eq('id', examId);
+          
+        if (checkError) {
+          console.error(`Error checking if exam was deleted: ${checkError.message}`);
+        }
+        
+        if (checkDeletion && checkDeletion.length > 0) {
+          console.error(`Exam ${examId} still exists after deletion attempt! Retry attempt ${retries + 1}`);
+          retries++;
+          // Adding a small delay before retry
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          deletionSuccess = true;
+          console.log(`Verified exam ${examId} was successfully deleted`);
+        }
+      } catch (innerError) {
+        console.error(`Error during deletion attempt ${retries + 1}:`, innerError);
+        retries++;
+        // Adding a small delay before retry
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
     
-    console.log(`Successfully deleted user results for exam ${examId}`);
-      
-    // Next, delete all questions associated with this exam
-    const { error: questionsError } = await supabase
-      .from('questions')
-      .delete()
-      .eq('exam_id', examId);
-    
-    if (questionsError) {
-      console.error(`Error deleting questions for exam ${examId}:`, questionsError);
-      throw new Error(`Failed to delete questions: ${questionsError.message}`);
+    if (!deletionSuccess) {
+      throw new Error("Exam deletion failed after multiple attempts - exam may still exist in database");
     }
-    
-    console.log(`Successfully deleted questions for exam ${examId}`);
-    
-    // Finally, delete the exam itself
-    const { error: examError } = await supabase
-      .from('exams')
-      .delete()
-      .eq('id', examId);
-    
-    if (examError) {
-      console.error(`Error deleting exam ${examId}:`, examError);
-      throw new Error(`Failed to delete exam: ${examError.message}`);
-    }
-    
-    console.log(`Successfully deleted exam ${examId}`);
-    
-    // Verify that the exam is actually deleted
-    const { data: checkDeletion, error: checkError } = await supabase
-      .from('exams')
-      .select('id')
-      .eq('id', examId);
-      
-    if (checkError) {
-      console.error(`Error checking if exam was deleted: ${checkError.message}`);
-    }
-    
-    if (checkDeletion && checkDeletion.length > 0) {
-      console.error(`Exam ${examId} still exists after deletion attempt!`);
-      throw new Error("Exam deletion failed - exam still exists in database");
-    }
-    
-    console.log(`Verified exam ${examId} was successfully deleted`);
     
     return { success: true };
   } catch (error) {

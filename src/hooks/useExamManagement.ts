@@ -50,6 +50,10 @@ export const useExamManagement = () => {
         // Update the local state immediately to reflect the deletion
         if (result.success) {
           setEntranceExams(prev => prev.filter(exam => exam.board !== 'WBJEE'));
+          toast({
+            title: "Success",
+            description: `All WBJEE exams deleted successfully`
+          });
         }
         return result;
       }
@@ -67,9 +71,10 @@ export const useExamManagement = () => {
 
   const handleDeleteExam = async (examId: string, examTitle: string) => {
     try {
+      // Try deleting the exam
       await deleteExamById(examId);
       
-      // Update local state to remove the deleted exam
+      // If successful, update local state to remove the deleted exam immediately
       setEntranceExams(prev => prev.filter(exam => exam.id !== examId));
       setBoardExamsList(prev => prev.filter(exam => exam.id !== examId));
       

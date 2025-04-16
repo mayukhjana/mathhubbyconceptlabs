@@ -18,6 +18,7 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
   const handleDelete = async () => {
@@ -49,12 +50,25 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
       setDeleteStatus('error');
       setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
       setIsDeleting(false);
+      setRetryCount(prev => prev + 1);
       toast({
         title: "Error",
         description: `Failed to delete exam "${exam.title}"`,
         variant: "destructive",
       });
     }
+  };
+
+  const handleRetry = async () => {
+    if (retryCount >= 3) {
+      toast({
+        title: "Maximum retries reached",
+        description: "Please contact support for assistance",
+        variant: "destructive",
+      });
+      return;
+    }
+    await handleDelete();
   };
 
   return (
@@ -95,7 +109,7 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
           
           {deleteStatus === 'error' && (
             <div className="bg-red-50 p-3 rounded-md text-red-700 mb-4">
-              <p>Failed to delete exam. Please try again or contact support.</p>
+              <p>Failed to delete exam. {retryCount < 3 ? "Please try again." : "Please contact support."}</p>
               {errorMessage && <p className="text-sm mt-2 font-mono">{errorMessage}</p>}
             </div>
           )}
@@ -108,18 +122,28 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting || deleteStatus === 'success'}
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : "Delete"}
-            </Button>
+            {deleteStatus === 'error' && retryCount < 3 ? (
+              <Button
+                variant="destructive"
+                onClick={handleRetry}
+                disabled={isDeleting}
+              >
+                Retry Delete
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting || deleteStatus === 'success' || (deleteStatus === 'error' && retryCount >= 3)}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : "Delete"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
