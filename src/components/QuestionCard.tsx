@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Check, X } from "lucide-react";
+import { Check, X, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export interface Question {
@@ -24,6 +24,7 @@ interface QuestionCardProps {
   userAnswer?: string;
   showResult?: boolean;
   questionNumber: number;
+  skipped?: boolean;
 }
 
 const QuestionCard = ({
@@ -32,6 +33,7 @@ const QuestionCard = ({
   userAnswer,
   showResult = false,
   questionNumber,
+  skipped = false,
 }: QuestionCardProps) => {
   const [selectedOption, setSelectedOption] = useState<string | undefined>(userAnswer);
   
@@ -42,12 +44,13 @@ const QuestionCard = ({
     onAnswer(question.id, optionId);
   };
   
-  const isCorrect = showResult && 
+  // Determine if answer is correct
+  const isCorrect = showResult && !skipped && 
     (Array.isArray(question.correctAnswer) 
       ? question.correctAnswer.includes(selectedOption || '')
       : selectedOption === question.correctAnswer);
 
-  const isIncorrect = showResult && 
+  const isIncorrect = showResult && !skipped && 
     (Array.isArray(question.correctAnswer)
       ? !question.correctAnswer.includes(selectedOption || '') && selectedOption !== undefined
       : selectedOption !== question.correctAnswer && selectedOption !== undefined);
@@ -128,18 +131,33 @@ const QuestionCard = ({
           {showResult && (
             <div className={`mt-4 p-3 rounded-md ${
               isCorrect ? "bg-green-50 text-green-800 border border-green-200" : 
-              isIncorrect ? "bg-red-50 text-red-800 border border-red-200" : ""
+              isIncorrect ? "bg-red-50 text-red-800 border border-red-200" :
+              skipped ? "bg-gray-50 text-gray-800 border border-gray-200" : ""
             }`}>
               {isCorrect ? (
                 <div className="flex items-center gap-2">
                   <Check className="h-5 w-5" />
                   <span>Correct answer! (+{question.marks} marks)</span>
                 </div>
-              ) : (
+              ) : isIncorrect ? (
                 <div className="flex items-center gap-2">
                   <X className="h-5 w-5" />
                   <span>
                     Incorrect. {question.negative_marks > 0 && `(-${question.negative_marks} marks) `}
+                    The correct answer is: {
+                      Array.isArray(question.correctAnswer)
+                        ? question.correctAnswer.map(id => 
+                            question.options.find(o => o.id === id)?.text
+                          ).filter(Boolean).join(", ")
+                        : question.options.find(o => o.id === question.correctAnswer)?.text
+                    }
+                  </span>
+                </div>
+              ) : skipped && (
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  <span>
+                    Question skipped. (0 marks)
                     The correct answer is: {
                       Array.isArray(question.correctAnswer)
                         ? question.correctAnswer.map(id => 

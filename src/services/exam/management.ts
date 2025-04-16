@@ -33,13 +33,15 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
     let formattedAnswer: string;
     
     if (q.is_multi_correct && Array.isArray(q.correct_answer)) {
-      // If it's a multi-correct question and the answer is already an array, join it
-      formattedAnswer = q.correct_answer.sort().join(',');
+      // If it's a multi-correct question and the answer is already an array, sort and join it
+      // Sort to ensure consistent order (a,b,c,d)
+      formattedAnswer = [...q.correct_answer].sort().join(',');
     } else if (q.is_multi_correct && typeof q.correct_answer === 'string' && q.correct_answer.includes(',')) {
-      // If it's already a comma-separated string, use it as is
-      formattedAnswer = q.correct_answer;
+      // If it's already a comma-separated string, sort and normalize it
+      const answerParts = q.correct_answer.split(',').map(p => p.trim());
+      formattedAnswer = [...answerParts].sort().join(',');
     } else {
-      // For single answers or when the format is unknown, convert to string
+      // For single answers, convert to string
       formattedAnswer = String(q.correct_answer);
     }
     
@@ -47,11 +49,12 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
     const validOptions = ['a', 'b', 'c', 'd'];
     const answerParts = formattedAnswer.split(',');
     const validAnswerParts = answerParts.filter(part => validOptions.includes(part.trim()));
-    formattedAnswer = validAnswerParts.join(',');
     
+    // If no valid options remain, default to 'a'
     if (validAnswerParts.length === 0) {
-      // If no valid options remain, default to 'a'
       formattedAnswer = 'a';
+    } else {
+      formattedAnswer = validAnswerParts.join(',');
     }
 
     return {

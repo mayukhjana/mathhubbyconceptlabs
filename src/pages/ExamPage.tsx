@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ const ExamPage = () => {
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+  const [attemptedQuestions, setAttemptedQuestions] = useState<Set<string>>(new Set());
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [examCompleted, setExamCompleted] = useState(false);
   const [score, setScore] = useState(0);
@@ -131,6 +133,12 @@ const ExamPage = () => {
       ...prev,
       [questionId]: selectedOption
     }));
+    setAttemptedQuestions(prev => new Set(prev).add(questionId));
+  };
+
+  const skipQuestion = () => {
+    // Just move to the next question without recording an answer
+    handleNext();
   };
   
   const handleNext = () => {
@@ -148,7 +156,10 @@ const ExamPage = () => {
   const handleSubmit = () => {
     if (!exam) return;
     
-    if (Object.keys(userAnswers).length < exam.questions.length) {
+    // Instead of checking if all questions are answered,
+    // just show a confirmation dialog if some questions are unattempted
+    const unattemptedCount = exam.questions.length - attemptedQuestions.size;
+    if (unattemptedCount > 0) {
       setShowSubmitDialog(true);
       return;
     }
@@ -164,20 +175,46 @@ const ExamPage = () => {
     let calculatedPossibleMarks = 0;
     
     const questionsWithResults = exam.questions.map(question => {
-      const isCorrect = Array.isArray(question.correct_answer)
-        ? question.correct_answer.includes(userAnswers[question.id] || '')
-        : userAnswers[question.id] === question.correct_answer;
+      const userAnswer = userAnswers[question.id];
+      // Skip calculation for unattempted questions
+      if (!userAnswer) {
+        calculatedPossibleMarks += question.marks;
+        return {
+          ...question,
+          isCorrect: false,
+          isAttempted: false
+        };
+      }
+      
+      // Check if answer is correct based on question type
+      let isCorrect = false;
+      
+      if (question.is_multi_correct) {
+        // For multi-correct questions, check if answer matches any of the correct answers
+        const correctAnswers = question.correct_answer.split(',');
+        const userAnswerParts = userAnswer.split(',');
+        
+        // Check if user's answer matches all correct answers
+        isCorrect = correctAnswers.length === userAnswerParts.length && 
+          correctAnswers.every(a => userAnswerParts.includes(a));
+      } else {
+        // For single-correct questions
+        isCorrect = userAnswer === question.correct_answer;
+      }
       
       if (isCorrect) {
         correctAnswers++;
         calculatedObtainedMarks += question.marks;
-      } else if (userAnswers[question.id]) {
+      } else {
         calculatedObtainedMarks -= question.negative_marks;
       }
+      
       calculatedPossibleMarks += question.marks;
+      
       return {
         ...question,
-        isCorrect
+        isCorrect,
+        isAttempted: true
       };
     });
     
@@ -330,13 +367,32 @@ const ExamPage = () => {
                 questionNumber={currentQuestionIndex + 1}
               />
               
-              <ExamNavigation
-                currentQuestionIndex={currentQuestionIndex}
-                totalQuestions={exam.questions.length}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-                onSubmit={handleSubmit}
-              />
+              <div className="flex justify-between mt-6">
+                <Button 
+                  onClick={handlePrevious} 
+                  variant="outline" 
+                  disabled={currentQuestionIndex === 0}
+                >
+                  Previous
+                </Button>
+                
+                <div className="space-x-2">
+                  <Button
+                    onClick={skipQuestion}
+                    variant="secondary"
+                  >
+                    Skip Question
+                  </Button>
+                  
+                  {currentQuestionIndex < exam.questions.length - 1 ? (
+                    <Button onClick={handleNext}>Next</Button>
+                  ) : (
+                    <Button onClick={handleSubmit} variant="default" className="bg-mathprimary">
+                      Submit Exam
+                    </Button>
+                  )}
+                </div>
+              </div>
             </>
           ) : (
             <ExamResults
@@ -360,11 +416,13 @@ const ExamPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Submit Exam?</AlertDialogTitle>
             <AlertDialogDescription>
-              You have only answered {answeredCount} out of {exam.questions.length} questions. Are you sure you want to submit the exam now?
+              You have only answered {answeredCount} out of {exam.questions.length} questions. 
+              Unanswered questions will be marked as zero, with no negative marking.
+              Are you sure you want to submit the exam now?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Continue Answering</AlertDialogCancel>
             <AlertDialogAction onClick={finishExam}>Submit Anyway</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

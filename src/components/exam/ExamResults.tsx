@@ -26,6 +26,10 @@ export const ExamResults = ({
   resultSaved,
   formatTime,
 }: ExamResultsProps) => {
+  // Calculate attempted vs unattempted questions
+  const attemptedCount = Object.keys(userAnswers).length;
+  const unattemptedCount = questions.length - attemptedCount;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
       <div className="max-w-md mx-auto">
@@ -47,10 +51,20 @@ export const ExamResults = ({
             <span className="text-gray-600 dark:text-gray-300">Correct Answers:</span>
             <span className="font-medium">
               {questions.filter(q => 
-                Array.isArray(q.correct_answer) 
-                  ? q.correct_answer.includes(userAnswers[q.id] || '')
-                  : userAnswers[q.id] === q.correct_answer
-              ).length} / {questions.length}
+                userAnswers[q.id] && (
+                  q.is_multi_correct 
+                    ? q.correct_answer.split(',').join(',') === userAnswers[q.id]
+                    : userAnswers[q.id] === q.correct_answer
+                )
+              ).length} / {attemptedCount} attempted
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-gray-600 dark:text-gray-300">Questions Attempted:</span>
+            <span className="font-medium">
+              {attemptedCount} / {questions.length}
+              {unattemptedCount > 0 && ` (${unattemptedCount} skipped)`}
             </span>
           </div>
           
@@ -95,6 +109,7 @@ export const ExamResults = ({
               userAnswer={userAnswers[question.id]}
               showResult={true}
               questionNumber={index + 1}
+              skipped={!userAnswers[question.id]}
             />
           ))}
         </div>
