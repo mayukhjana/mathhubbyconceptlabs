@@ -5,6 +5,7 @@ import { Exam } from "@/services/exam/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 
 interface ExamCardProps {
   exam: Exam;
@@ -16,12 +17,14 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       setDeleteStatus('idle');
+      setErrorMessage(null);
       
       await onDelete(exam.id, exam.title);
       
@@ -36,11 +39,12 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         setTimeout(() => {
           onDeleteComplete();
           setShowConfirmation(false);
-        }, 1000); // Give a small delay to show success status
+        }, 1500); // Give a small delay to show success status
       }
     } catch (error) {
       console.error("Error deleting exam:", error);
       setDeleteStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
       toast({
         title: "Error",
         description: `Failed to delete exam "${exam.title}"`,
@@ -63,7 +67,6 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         </p>
       </div>
       
-      {/* Use Dialog instead of AlertDialog for more control */}
       <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <Button 
           variant="destructive" 
@@ -90,7 +93,8 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
           
           {deleteStatus === 'error' && (
             <div className="bg-red-50 p-3 rounded-md text-red-700 mb-4">
-              Failed to delete exam. Please try again or contact support.
+              <p>Failed to delete exam. Please try again or contact support.</p>
+              {errorMessage && <p className="text-sm mt-2 font-mono">{errorMessage}</p>}
             </div>
           )}
           
@@ -107,7 +111,12 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
               onClick={handleDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

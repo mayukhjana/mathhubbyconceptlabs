@@ -1,5 +1,5 @@
 
-import { AlertCircle, Trash2 } from "lucide-react";
+import { AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const ExamSection = ({
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleDeleteAll = async () => {
@@ -37,6 +38,7 @@ const ExamSection = ({
     try {
       setIsDeletingAll(true);
       setDeleteStatus('idle');
+      setErrorMessage(null);
       
       await onDeleteAll();
       
@@ -51,11 +53,12 @@ const ExamSection = ({
         setTimeout(() => {
           onDeleteComplete();
           setShowConfirmation(false);
-        }, 1000); // Small delay to show success message
+        }, 1500); // Small delay to show success message
       }
     } catch (error) {
       console.error(`Error deleting all ${title} exams:`, error);
       setDeleteStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
       toast({
         title: "Error",
         description: `Failed to delete all ${title} exams`,
@@ -69,7 +72,7 @@ const ExamSection = ({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle>{title}</CardTitle>
+        <CardTitle>{title} ({exams.length})</CardTitle>
         {showDeleteAll && onDeleteAll && exams.length > 0 && (
           <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
             <Button
@@ -98,7 +101,8 @@ const ExamSection = ({
               
               {deleteStatus === 'error' && (
                 <div className="bg-red-50 p-3 rounded-md text-red-700 mb-4">
-                  Failed to delete all exams. Please try again or contact support.
+                  <p>Failed to delete all exams. Please try again or contact support.</p>
+                  {errorMessage && <p className="text-sm mt-2 font-mono">{errorMessage}</p>}
                 </div>
               )}
               
@@ -115,7 +119,12 @@ const ExamSection = ({
                   onClick={handleDeleteAll}
                   disabled={isDeletingAll}
                 >
-                  {isDeletingAll ? "Deleting..." : "Delete All"}
+                  {isDeletingAll ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : "Delete All"}
                 </Button>
               </DialogFooter>
             </DialogContent>

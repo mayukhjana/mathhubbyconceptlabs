@@ -11,17 +11,19 @@ import { Exam, BOARD_OPTIONS, ENTRANCE_OPTIONS } from "@/services/exam/types";
 import { useNavigate } from "react-router-dom";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import ExamSection from "@/components/admin/ExamSection";
+import { RefreshCw } from "lucide-react";
 
 const AdminExamUploadPage = () => {
   const [entranceExams, setEntranceExams] = useState<Exam[]>([]);
   const [boardExamsList, setBoardExamsList] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const loadExams = useCallback(async () => {
+  const loadExams = useCallback(async (showToast: boolean = false) => {
     try {
-      setLoading(true);
+      setIsRefreshing(true);
       const [entrance, board] = await Promise.all([
         fetchEntranceExams(),
         fetchBoardExams()
@@ -30,6 +32,13 @@ const AdminExamUploadPage = () => {
       console.log("Loaded board exams:", board);
       setEntranceExams(entrance);
       setBoardExamsList(board);
+      
+      if (showToast) {
+        toast({
+          title: "Refreshed",
+          description: `Successfully loaded ${entrance.length + board.length} exams`
+        });
+      }
     } catch (error) {
       console.error("Error loading exams:", error);
       toast({
@@ -39,15 +48,29 @@ const AdminExamUploadPage = () => {
       });
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   }, [toast]);
 
   useEffect(() => {
     loadExams();
+    
+    // Set up a focus event listener to refresh data when user returns to the tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadExams(false); // Don't show toast on visibility change refresh
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [loadExams]);
 
   const handleRefresh = () => {
-    loadExams();
+    loadExams(true); // Show toast on manual refresh
   };
 
   const handleDeleteBoard = async (board: string) => {
@@ -55,41 +78,45 @@ const AdminExamUploadPage = () => {
       if (board === 'WBJEE') {
         console.log("Deleting all WBJEE exams...");
         await deleteWBJEEExams();
-        await loadExams(); // Force reload after deletion
-        toast({
-          title: "Success",
-          description: `All ${board} exams deleted successfully`
-        });
+        await loadExams(true); // Force reload and show toast after deletion
       }
     } catch (error) {
       console.error(`Error deleting ${board} exams:`, error);
       toast({
         title: "Error",
-        description: `Failed to delete ${board} exams`,
+        description: `Failed to delete ${board} exams: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive"
       });
+      throw error; // Propagate error to component
     }
   };
 
   const handleDeleteExam = async (examId: string, examTitle: string) => {
     try {
-      console.log(`Deleting exam with ID: ${examId}`);
+      console.log(`Deleting exam with ID: ${examId} and title: ${examTitle}`);
       await deleteExamById(examId);
       
       toast({
         title: "Success",
         description: `Exam "${examTitle}" deleted successfully`
       });
+      
+      // Return without throwing to allow the ExamCard to show success
     } catch (error) {
       console.error(`Error deleting exam:`, error);
       toast({
         title: "Error",
-        description: "Failed to delete exam",
+        description: `Failed to delete exam: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive"
       });
       throw error; // Propagate error to component
     }
   };
+
+  const handleDeleteComplete = useCallback(() => {
+    console.log("Delete operation completed, refreshing exam data...");
+    loadExams(false); // Don't show toast as the component already showed success
+  }, [loadExams]);
 
   if (loading) {
     return (
@@ -115,8 +142,10 @@ const AdminExamUploadPage = () => {
               <Button 
                 variant="outline" 
                 onClick={handleRefresh}
+                disabled={isRefreshing}
               >
-                Refresh
+                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? "Refreshing..." : "Refresh"}
               </Button>
               <Button onClick={() => navigate("/admin/exam-upload/new")}>
                 Add New Exam
@@ -139,7 +168,7 @@ const AdminExamUploadPage = () => {
                     title={board}
                     exams={boardExams}
                     onDeleteExam={handleDeleteExam}
-                    onDeleteComplete={handleRefresh}
+                    onDeleteComplete={handleDeleteComplete}
                     onDeleteAll={board === 'WBJEE' ? () => handleDeleteBoard(board) : undefined}
                     showDeleteAll={board === 'WBJEE'}
                   />
@@ -156,7 +185,7 @@ const AdminExamUploadPage = () => {
                     title={board}
                     exams={filteredBoardExams}
                     onDeleteExam={handleDeleteExam}
-                    onDeleteComplete={handleRefresh}
+                    onDeleteComplete={handleDeleteComplete}
                   />
                 );
               })}
