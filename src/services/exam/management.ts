@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 
@@ -105,6 +106,8 @@ export const deleteExamById = async (examId: string) => {
     
     console.log(`Exam found, proceeding with deletion for ${examId}`);
     
+    // First, delete all user results associated with this exam
+    // This is important for avoiding foreign key constraint errors
     const { error: resultsError } = await supabase
       .from('user_results')
       .delete()
@@ -116,6 +119,7 @@ export const deleteExamById = async (examId: string) => {
       console.log(`Successfully deleted user results for exam ${examId}`);
     }
     
+    // Next, delete all questions associated with this exam
     const { error: questionsError } = await supabase
       .from('questions')
       .delete()
@@ -128,6 +132,7 @@ export const deleteExamById = async (examId: string) => {
     
     console.log(`Successfully deleted questions for exam ${examId}`);
     
+    // Finally, delete the exam itself
     const { error: examError } = await supabase
       .from('exams')
       .delete()
@@ -140,6 +145,21 @@ export const deleteExamById = async (examId: string) => {
     
     console.log(`Successfully deleted exam ${examId}`);
     
+    // Verify exam was actually deleted
+    const { data: examStillExists, error: verifyError } = await supabase
+      .from('exams')
+      .select('id')
+      .eq('id', examId);
+      
+    if (verifyError) {
+      console.error("Error verifying deletion:", verifyError);
+    } else if (examStillExists && examStillExists.length > 0) {
+      console.error("Exam still exists after deletion attempt!");
+      throw new Error("Failed to delete exam completely");
+    } else {
+      console.log("Verified exam deletion - exam no longer exists in database");
+    }
+    
     return { success: true, message: `Exam deleted successfully` };
   } catch (error) {
     console.error("Error in deleteExamById:", error);
@@ -151,6 +171,7 @@ export const deleteWBJEEExams = async () => {
   try {
     console.log("Starting deletion of all WBJEE exams");
     
+    // First, find all WBJEE exams
     const { data: wbjeeExams, error: fetchError } = await supabase
       .from('exams')
       .select('id')
@@ -161,50 +182,68 @@ export const deleteWBJEEExams = async () => {
       throw fetchError;
     }
     
-    if (wbjeeExams && wbjeeExams.length > 0) {
-      console.log(`Found ${wbjeeExams.length} WBJEE exams to delete`);
-      const examIds = wbjeeExams.map(exam => exam.id);
-      
-      const { error: resultsError } = await supabase
-        .from('user_results')
-        .delete()
-        .in('exam_id', examIds);
-        
-      if (resultsError) {
-        console.error("Error deleting WBJEE exam user results:", resultsError);
-      } else {
-        console.log("Successfully deleted WBJEE exam user results");
-      }
-      
-      const { error: questionsError } = await supabase
-        .from('questions')
-        .delete()
-        .in('exam_id', examIds);
-      
-      if (questionsError) {
-        console.error("Error deleting WBJEE exam questions:", questionsError);
-        throw questionsError;
-      }
-      
-      console.log("Successfully deleted WBJEE exam questions");
-      
-      const { error } = await supabase
-        .from('exams')
-        .delete()
-        .eq('board', 'WBJEE');
-      
-      if (error) {
-        console.error("Error deleting WBJEE exams:", error);
-        throw error;
-      }
-      
-      console.log(`Successfully deleted ${wbjeeExams.length} WBJEE exams`);
-      
-      return { success: true, message: `Deleted ${wbjeeExams.length} WBJEE exams` };
+    if (!wbjeeExams || wbjeeExams.length === 0) {
+      console.log("No WBJEE exams found to delete");
+      return { success: true, message: "No WBJEE exams to delete" };
     }
     
-    console.log("No WBJEE exams found to delete");
-    return { success: true, message: "No WBJEE exams to delete" };
+    console.log(`Found ${wbjeeExams.length} WBJEE exams to delete:`, wbjeeExams);
+    const examIds = wbjeeExams.map(exam => exam.id);
+    
+    // First delete all user results for these exams
+    const { error: resultsError } = await supabase
+      .from('user_results')
+      .delete()
+      .in('exam_id', examIds);
+      
+    if (resultsError) {
+      console.error("Error deleting WBJEE exam user results:", resultsError);
+    } else {
+      console.log("Successfully deleted WBJEE exam user results");
+    }
+    
+    // Then delete all questions for these exams
+    const { error: questionsError } = await supabase
+      .from('questions')
+      .delete()
+      .in('exam_id', examIds);
+    
+    if (questionsError) {
+      console.error("Error deleting WBJEE exam questions:", questionsError);
+      throw questionsError;
+    }
+    
+    console.log("Successfully deleted WBJEE exam questions");
+    
+    // Finally delete all exams
+    const { error: examsError } = await supabase
+      .from('exams')
+      .delete()
+      .eq('board', 'WBJEE');
+    
+    if (examsError) {
+      console.error("Error deleting WBJEE exams:", examsError);
+      throw examsError;
+    }
+    
+    console.log(`Successfully deleted ${wbjeeExams.length} WBJEE exams`);
+    
+    // Verify deletion
+    const { data: remainingExams, error: verifyError } = await supabase
+      .from('exams')
+      .select('id')
+      .eq('board', 'WBJEE');
+      
+    if (verifyError) {
+      console.error("Error verifying deletion:", verifyError);
+    } else if (remainingExams && remainingExams.length > 0) {
+      console.error(`There are still ${remainingExams.length} WBJEE exams after deletion!`);
+      throw new Error("Failed to delete all WBJEE exams");
+    } else {
+      console.log("Verified deletion - no WBJEE exams remain in database");
+    }
+    
+    return { success: true, message: `Deleted ${wbjeeExams.length} WBJEE exams` };
   } catch (error) {
     console.error("Error in deleteWBJEEExams:", error);
     throw error;

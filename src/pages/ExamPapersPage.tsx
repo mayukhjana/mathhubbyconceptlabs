@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { Exam, ENTRANCE_OPTIONS } from "@/services/exam/types";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const ExamPapersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,52 +24,62 @@ const ExamPapersPage = () => {
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { user } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
+  const { toast } = useToast();
+  
+  const loadExams = useCallback(async () => {
+    setLoading(true);
+    try {
+      const examData = await fetchEntranceExams();
+      console.log("Loaded entrance exams:", examData);
+      
+      if (user) {
+        const { data: attemptedExams } = await supabase
+          .from('user_results')
+          .select('exam_id')
+          .eq('user_id', user.id);
+          
+        const attemptedExamIds = new Set(attemptedExams?.map(result => result.exam_id) || []);
+        
+        const examDataWithAttempted = examData.map(exam => ({
+          ...exam,
+          isAttempted: attemptedExamIds.has(exam.id)
+        }));
+        
+        setExams(examDataWithAttempted);
+      } else {
+        setExams(examData);
+      }
+      toast({
+        title: "Exams refreshed",
+        description: `Successfully loaded ${examData.length} exams`
+      });
+    } catch (error) {
+      console.error("Error loading exams:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load exams. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [user, toast]);
   
   useEffect(() => {
     const isPremium = localStorage.getItem("userIsPremium") === "true";
     setUserIsPremium(isPremium);
     
-    const loadExams = async () => {
-      setLoading(true);
-      try {
-        const examData = await fetchEntranceExams();
-        console.log("Loaded entrance exams:", examData);
-        
-        if (user) {
-          const { data: attemptedExams } = await supabase
-            .from('user_results')
-            .select('exam_id')
-            .eq('user_id', user.id);
-            
-          const attemptedExamIds = new Set(attemptedExams?.map(result => result.exam_id) || []);
-          
-          const examDataWithAttempted = examData.map(exam => ({
-            ...exam,
-            isAttempted: attemptedExamIds.has(exam.id)
-          }));
-          
-          setExams(examDataWithAttempted);
-        } else {
-          setExams(examData);
-        }
-      } catch (error) {
-        console.error("Error loading exams:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     loadExams();
     
     // Set up an interval to periodically check for updates
     const refreshInterval = setInterval(() => {
-      setLastRefresh(Date.now());
+      loadExams();
     }, 60000); // Check every minute
     
     // Set up a focus event listener to refresh data when user returns to the tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        setLastRefresh(Date.now());
+        loadExams();
       }
     };
     
@@ -78,7 +89,7 @@ const ExamPapersPage = () => {
       clearInterval(refreshInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user, lastRefresh]);
+  }, [user, loadExams]);
   
   const examBoardTabs = [
     { id: "all", label: "All Entrance Exams" },
@@ -98,6 +109,10 @@ const ExamPapersPage = () => {
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+  };
+  
+  const handleRefresh = () => {
+    loadExams();
   };
   
   if (loading) {
@@ -133,7 +148,7 @@ const ExamPapersPage = () => {
             </div>
             <Button 
               variant="outline" 
-              onClick={() => setLastRefresh(Date.now())}
+              onClick={handleRefresh}
               className="whitespace-nowrap"
             >
               Refresh Exams

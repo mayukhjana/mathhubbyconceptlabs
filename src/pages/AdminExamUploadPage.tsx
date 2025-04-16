@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -16,11 +16,10 @@ const AdminExamUploadPage = () => {
   const [entranceExams, setEntranceExams] = useState<Exam[]>([]);
   const [boardExamsList, setBoardExamsList] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const loadExams = async () => {
+  const loadExams = useCallback(async () => {
     try {
       setLoading(true);
       const [entrance, board] = await Promise.all([
@@ -41,14 +40,14 @@ const AdminExamUploadPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadExams();
-  }, [toast, refreshTrigger]);
+  }, [loadExams]);
 
   const handleRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
+    loadExams();
   };
 
   const handleDeleteBoard = async (board: string) => {
@@ -56,7 +55,7 @@ const AdminExamUploadPage = () => {
       if (board === 'WBJEE') {
         console.log("Deleting all WBJEE exams...");
         await deleteWBJEEExams();
-        handleRefresh();
+        await loadExams(); // Force reload after deletion
         toast({
           title: "Success",
           description: `All ${board} exams deleted successfully`
@@ -76,7 +75,6 @@ const AdminExamUploadPage = () => {
     try {
       console.log(`Deleting exam with ID: ${examId}`);
       await deleteExamById(examId);
-      handleRefresh();
       
       toast({
         title: "Success",
@@ -89,6 +87,7 @@ const AdminExamUploadPage = () => {
         description: "Failed to delete exam",
         variant: "destructive"
       });
+      throw error; // Propagate error to component
     }
   };
 
