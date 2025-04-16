@@ -242,7 +242,7 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
               id={`negative-marks-${index}`}
               type="number"
               min="0"
-              step="0.5"
+              step="0.25"
               value={question.negative_marks}
               onChange={(e) => handleChange("negative_marks", e.target.value)}
               placeholder="Enter negative marks"
