@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ export type QuestionData = {
   marks: number;
   negative_marks: number;
   is_multi_correct?: boolean;
+  exam_id?: string; // Add this to match the backend type
 };
 
 interface QuestionFormProps {
@@ -30,6 +32,7 @@ interface QuestionFormProps {
 }
 
 const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProps) => {
+  // Initialize with empty or provided data
   const [question, setQuestion] = useState<QuestionData>(
     initialData || {
       question_text: "",
@@ -45,14 +48,19 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
     }
   );
 
-  const [isMultiCorrect, setIsMultiCorrect] = useState(initialData?.is_multi_correct || false);
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>(
-    Array.isArray(initialData?.correct_answer) 
-      ? initialData.correct_answer 
-      : initialData?.correct_answer 
-        ? [initialData.correct_answer]
-        : []
-  );
+  // Handle multi-correct initialization
+  const isInitiallyMultiCorrect = initialData?.is_multi_correct || false;
+  const initialSelectedAnswers = (() => {
+    if (Array.isArray(initialData?.correct_answer)) {
+      return initialData.correct_answer;
+    } else if (typeof initialData?.correct_answer === 'string' && initialData?.is_multi_correct) {
+      return initialData.correct_answer.split(',');
+    }
+    return initialData?.correct_answer ? [initialData.correct_answer] : [];
+  })();
+
+  const [isMultiCorrect, setIsMultiCorrect] = useState(isInitiallyMultiCorrect);
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>(initialSelectedAnswers);
   
   const handleChange = (field: keyof QuestionData, value: string | number | boolean) => {
     setQuestion({
@@ -63,12 +71,25 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
 
   const handleMultiCorrectToggle = (checked: boolean) => {
     setIsMultiCorrect(checked);
-    setSelectedAnswers([]);
-    setQuestion(prev => ({
-      ...prev,
-      correct_answer: checked ? [] : "a",
-      is_multi_correct: checked
-    }));
+    
+    // Reset selected answers when toggling
+    if (!checked) {
+      // If switching to single answer, default to "a"
+      setSelectedAnswers(["a"]);
+      setQuestion(prev => ({
+        ...prev,
+        correct_answer: "a",
+        is_multi_correct: false
+      }));
+    } else {
+      // If switching to multi-answer, start empty
+      setSelectedAnswers([]);
+      setQuestion(prev => ({
+        ...prev,
+        correct_answer: [],
+        is_multi_correct: true
+      }));
+    }
   };
 
   const handleCheckboxChange = (value: string) => {
@@ -85,11 +106,15 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prepare the final question data
     const finalQuestion = {
       ...question,
       correct_answer: isMultiCorrect ? selectedAnswers : question.correct_answer,
       is_multi_correct: isMultiCorrect
     };
+    
+    console.log("Saving question:", finalQuestion);
     onSave(finalQuestion);
   };
 

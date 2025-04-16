@@ -28,19 +28,37 @@ export const createExam = async (examData: Omit<Exam, 'id' | 'created_at'>) => {
 };
 
 export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
-  const questionsToInsert = questions.map(q => ({
-    exam_id: q.exam_id,
-    question_text: q.question_text,
-    option_a: q.option_a,
-    option_b: q.option_b,
-    option_c: q.option_c,
-    option_d: q.option_d,
-    correct_answer: Array.isArray(q.correct_answer) ? q.correct_answer.join(',') : q.correct_answer,
-    order_number: q.order_number,
-    marks: q.marks,
-    negative_marks: q.negative_marks,
-    is_multi_correct: q.is_multi_correct || false
-  }));
+  const questionsToInsert = questions.map(q => {
+    // Format the correct_answer based on whether it's a multi-correct answer
+    let formattedAnswer: string;
+    
+    if (q.is_multi_correct && Array.isArray(q.correct_answer)) {
+      // If it's a multi-correct question and the answer is already an array, join it
+      formattedAnswer = q.correct_answer.join(',');
+    } else if (q.is_multi_correct && typeof q.correct_answer === 'string' && q.correct_answer.includes(',')) {
+      // If it's already a comma-separated string, use it as is
+      formattedAnswer = q.correct_answer;
+    } else {
+      // For single answers or when the format is unknown, convert to string
+      formattedAnswer = String(q.correct_answer);
+    }
+    
+    return {
+      exam_id: q.exam_id,
+      question_text: q.question_text,
+      option_a: q.option_a,
+      option_b: q.option_b,
+      option_c: q.option_c,
+      option_d: q.option_d,
+      correct_answer: formattedAnswer,
+      order_number: q.order_number,
+      marks: q.marks,
+      negative_marks: q.negative_marks,
+      is_multi_correct: q.is_multi_correct || false
+    };
+  });
+
+  console.log("Inserting questions:", JSON.stringify(questionsToInsert, null, 2));
 
   const { data, error } = await supabase
     .from('questions')

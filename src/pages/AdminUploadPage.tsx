@@ -138,6 +138,8 @@ const AdminUploadPage = () => {
   };
 
   const handleSaveQuestion = (questionData: QuestionData) => {
+    console.log("Question data received:", questionData);
+    
     const existingIndex = questions.findIndex(q => q.order_number === questionData.order_number);
     if (existingIndex !== -1) {
       const updatedQuestions = [...questions];
@@ -252,11 +254,19 @@ const AdminUploadPage = () => {
       setUploadProgress(70);
       
       if (questions.length > 0) {
-        const questionsWithExamId = questions.map(question => ({
-          ...question,
-          exam_id: insertedExam.id
-        }));
+        console.log("Questions before adding exam_id:", questions);
         
+        const questionsWithExamId = questions.map(question => {
+          let processedQuestion = { ...question, exam_id: insertedExam.id };
+          
+          if (processedQuestion.is_multi_correct && Array.isArray(processedQuestion.correct_answer)) {
+            console.log("Processing multi-correct question:", processedQuestion);
+          }
+          
+          return processedQuestion;
+        });
+        
+        console.log("Questions to be inserted:", questionsWithExamId);
         await createQuestions(questionsWithExamId);
       }
       setUploadProgress(90);

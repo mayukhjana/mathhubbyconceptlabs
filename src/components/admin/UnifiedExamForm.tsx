@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Save, PlusCircle } from "lucide-react";
@@ -41,6 +42,7 @@ const UnifiedExamForm = ({
   };
 
   const handleSaveQuestion = (questionData: QuestionData) => {
+    console.log("Saving question in UnifiedExamForm:", questionData);
     onSaveQuestion(questionData);
     
     setEditingQuestionIndex(null);
