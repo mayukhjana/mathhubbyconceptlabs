@@ -105,6 +105,7 @@ export type Database = {
           created_at: string | null
           exam_id: string
           id: string
+          is_multi_correct: boolean | null
           marks: number
           negative_marks: number
           option_a: string
@@ -119,6 +120,7 @@ export type Database = {
           created_at?: string | null
           exam_id: string
           id?: string
+          is_multi_correct?: boolean | null
           marks?: number
           negative_marks?: number
           option_a: string
@@ -133,6 +135,7 @@ export type Database = {
           created_at?: string | null
           exam_id?: string
           id?: string
+          is_multi_correct?: boolean | null
           marks?: number
           negative_marks?: number
           option_a?: string

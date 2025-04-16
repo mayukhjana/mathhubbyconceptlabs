@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 import { BOARD_OPTIONS, ENTRANCE_OPTIONS } from "./types";
@@ -255,16 +254,16 @@ const getMockQuestions = (examId: string): Question[] => {
     {
       id: "q5",
       exam_id: examId,
-      question_text: "The quadratic equation x² + px + 12 = 0 has equal roots. Find the value of p.",
-      option_a: "±4",
-      option_b: "±6",
-      option_c: "±8",
-      option_d: "±12",
-      correct_answer: "c",
+      question_text: "Select the odd numbers from the following: 1, 2, 3, 4, 5",
+      option_a: "1",
+      option_b: "3",
+      option_c: "5",
+      option_d: "All of above",
+      correct_answer: ["a", "b", "c"],
       order_number: 5,
       marks: 2,
       negative_marks: 0.5,
-      is_multi_correct: false
+      is_multi_correct: true
     }
   ];
 };
