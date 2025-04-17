@@ -25,11 +25,11 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        mathprimary: "#4F46E5",
-        mathsecondary: "#7C3AED",
-        mathaccent: "#C084FC",
-        mathlight: "#F5F3FF",
-        mathdark: "#1E293B",
+        mathprimary: "#333333", // Dark gray
+        mathsecondary: "#666666", // Medium gray
+        mathaccent: "#999999", // Light gray
+        mathlight: "#F5F5F5", // Very light gray
+        mathdark: "#1A1A1A", // Very dark gray
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
