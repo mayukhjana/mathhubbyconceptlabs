@@ -1,117 +1,85 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, ChevronRight } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import DashboardPreview from "@/components/DashboardPreview";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-background pt-20 pb-20">
-      {/* Enhanced gradient backgrounds */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] rounded-full bg-gradient-to-br from-violet-500/30 via-purple-500/20 to-blue-500/30 blur-3xl opacity-50 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-[800px] h-[600px] rounded-full bg-gradient-to-tr from-blue-500/20 via-cyan-500/20 to-transparent blur-3xl"></div>
-        <div className="absolute top-1/2 right-0 w-[600px] h-[400px] rounded-full bg-gradient-to-bl from-emerald-500/20 via-teal-500/20 to-transparent blur-3xl"></div>
+    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-background pt-24 pb-20">
+      {/* Background effects */}
+      <div className="absolute inset-0 opacity-50">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full bg-gradient-to-b from-gray-200/50 via-gray-100/20 to-transparent dark:from-gray-800/50 dark:via-gray-900/20 blur-3xl"></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
-          <div className="w-full lg:w-1/2 text-center lg:text-left">
-            {/* Trust badge with animation */}
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-500/10 dark:bg-blue-400/20 text-blue-600 dark:text-blue-300 text-sm mb-6 backdrop-blur-sm animate-fade-in hover:bg-blue-500/15 transition-colors">
+        {/* Grid layout for better organization */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Left column - Text content */}
+          <div className="text-center lg:text-left">
+            {/* Trust badge */}
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm mb-8 animate-fade-in">
               <Star className="w-4 h-4 mr-2" />
               <span>Trusted by 75,000+ students across India</span>
             </div>
             
-            {/* Enhanced heading with gradient */}
+            {/* Main heading with gradients */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-mathdark dark:text-white mb-6 tracking-tight leading-[1.1] animate-fade-in">
-              Master Mathematics with{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600 dark:from-blue-400 dark:via-violet-400 dark:to-purple-400">
-                  Precision
-                </span>
-                <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 10" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M0,5 Q50,0 100,5 T200,5" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400/30" />
-                </svg>
-              </span>
-              <br />and{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400">
-                Confidence
-              </span>
+              The Future of{' '}
+              <span className="bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">Mathematics Education</span>{' '}
+              is Here
             </h1>
             
-            {/* Enhanced description */}
+            {/* Enhanced subheading */}
             <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-fade-in">
-              Access comprehensive practice papers, interactive exams, and personalized analytics for ICSE, CBSE, and West Bengal boards to achieve academic excellence.
+              Master mathematics through interactive learning, comprehensive practice papers, and AI-powered personalized guidance.
             </p>
             
-            {/* Enhanced CTA buttons */}
+            {/* CTA buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
-              <Button size="lg" className="text-base h-14 px-8 gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 dark:from-blue-500 dark:to-violet-500 dark:hover:from-blue-600 dark:hover:to-violet-600 shadow-lg shadow-blue-500/25 dark:shadow-blue-900/30 animate-fade-in">
-                <span>Start Learning Now</span>
-                <ArrowRight size={16} />
+              <Button 
+                size="lg" 
+                className="h-14 px-8 bg-mathdark hover:bg-gray-800 dark:bg-white dark:text-mathdark dark:hover:bg-gray-200 text-white shadow-lg"
+              >
+                <Link to="/boards" className="flex items-center">
+                  Start Learning
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-base h-14 px-8 border-2 border-blue-500/30 text-blue-600 dark:border-blue-400/30 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 animate-fade-in" asChild>
-                <Link to="/boards">Explore Papers</Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="h-14 px-8 border-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                asChild
+              >
+                <Link to="/premium">View Study Materials</Link>
               </Button>
             </div>
-            
-            {/* Enhanced social proof section */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start animate-fade-in">
-              <div className="flex -space-x-4">
-                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  <img 
-                    src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81" 
-                    alt="Student A" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  <img 
-                    src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" 
-                    alt="Student B" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  <img 
-                    src="https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b" 
-                    alt="Student C" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  <img 
-                    src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce" 
-                    alt="Student D" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  <img 
-                    src="https://images.unsplash.com/photo-1629872430082-93d8912beccf" 
-                    alt="Student E" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+
+            {/* Stats section */}
+            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto lg:mx-0 animate-fade-in">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-mathdark dark:text-white mb-1">75K+</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Active Students</div>
               </div>
-              <div>
-                <div className="flex items-center gap-1 mb-1">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Star key={i} fill="currentColor" className="w-5 h-5 text-yellow-400" />
-                  ))}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-semibold text-gray-900 dark:text-white">4.9/5</span> from over 5,000 reviews
-                </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-mathdark dark:text-white mb-1">5000+</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Practice Papers</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-mathdark dark:text-white mb-1">98%</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Success Rate</div>
               </div>
             </div>
           </div>
-          
-          {/* Enhanced dashboard preview */}
-          <div className="w-full lg:w-1/2 perspective-1000">
-            <div className="relative mx-auto max-w-2xl animate-fade-in">
-              <DashboardPreview />
+
+          {/* Right column - Dashboard preview */}
+          <div className="relative lg:right-0 animate-fade-in perspective-1000">
+            <div className="relative mx-auto backdrop-blur-xl">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 opacity-80 shadow-2xl"></div>
+              <div className="relative">
+                <DashboardPreview />
+              </div>
             </div>
           </div>
         </div>
