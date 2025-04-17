@@ -66,25 +66,25 @@ const QuestionCard = ({
   const isIncorrect = showResult && !skipped && !isCorrect && selectedOptions.length > 0;
   
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm border mb-6">
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border mb-6">
       <div className="flex items-start gap-3">
-        <div className="bg-mathlight text-mathprimary font-semibold rounded-full w-8 h-8 flex items-center justify-center shrink-0">
+        <div className="bg-mathlight dark:bg-mathprimary/20 text-mathprimary dark:text-mathprimary font-semibold rounded-full w-8 h-8 flex items-center justify-center shrink-0">
           {questionNumber}
         </div>
         <div className="w-full">
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-medium">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
               {question.text}
               {question.is_multi_correct && (
-                <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
                   Multiple Correct
                 </span>
               )}
             </h3>
-            <div className="text-sm text-gray-500 shrink-0">
-              <span className="font-medium text-mathprimary">{question.marks} mark{question.marks !== 1 && 's'}</span>
+            <div className="text-sm text-gray-500 dark:text-gray-400 shrink-0">
+              <span className="font-medium text-mathprimary dark:text-mathprimary">{question.marks} mark{question.marks !== 1 && 's'}</span>
               {question.negative_marks > 0 && (
-                <span className="ml-1 text-red-500">(-{question.negative_marks})</span>
+                <span className="ml-1 text-red-500 dark:text-red-400">(-{question.negative_marks})</span>
               )}
             </div>
           </div>
@@ -107,12 +107,12 @@ const QuestionCard = ({
                     key={option.id}
                     className={`flex items-center space-x-2 p-3 rounded-md border ${
                       isOptionCorrect && showResult
-                        ? "bg-green-50 border-green-200"
+                        ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800"
                         : isOptionIncorrect
-                          ? "bg-red-50 border-red-200"
+                          ? "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800"
                           : isSelected
-                            ? "bg-mathlight border-mathprimary/30"
-                            : "hover:bg-muted/50"
+                            ? "bg-mathlight dark:bg-mathprimary/20 border-mathprimary/30"
+                            : "hover:bg-muted/50 dark:hover:bg-gray-700/50"
                     }`}
                   >
                     <Checkbox
@@ -124,11 +124,11 @@ const QuestionCard = ({
                     />
                     <Label
                       htmlFor={`${question.id}-${option.id}`}
-                      className="w-full cursor-pointer flex items-center justify-between"
+                      className="w-full cursor-pointer flex items-center justify-between text-gray-800 dark:text-gray-200"
                     >
                       <span>{option.text}</span>
-                      {showResult && isOptionCorrect && <Check className="h-4 w-4 text-green-600" />}
-                      {showResult && isOptionIncorrect && <X className="h-4 w-4 text-red-600" />}
+                      {showResult && isOptionCorrect && <Check className="h-4 w-4 text-green-600 dark:text-green-500" />}
+                      {showResult && isOptionIncorrect && <X className="h-4 w-4 text-red-600 dark:text-red-500" />}
                     </Label>
                   </div>
                 );
@@ -154,12 +154,12 @@ const QuestionCard = ({
                       key={option.id}
                       className={`flex items-center space-x-2 p-3 rounded-md border ${
                         isOptionCorrect && showResult
-                          ? "bg-green-50 border-green-200"
+                          ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800"
                           : isOptionIncorrect
-                            ? "bg-red-50 border-red-200"
+                            ? "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800"
                             : isSelected
-                              ? "bg-mathlight border-mathprimary/30"
-                              : "hover:bg-muted/50"
+                              ? "bg-mathlight dark:bg-mathprimary/20 border-mathprimary/30"
+                              : "hover:bg-muted/50 dark:hover:bg-gray-700/50"
                       }`}
                     >
                       <RadioGroupItem
@@ -170,11 +170,11 @@ const QuestionCard = ({
                       />
                       <Label
                         htmlFor={`${question.id}-${option.id}`}
-                        className="w-full cursor-pointer flex items-center justify-between"
+                        className="w-full cursor-pointer flex items-center justify-between text-gray-800 dark:text-gray-200"
                       >
                         <span>{option.text}</span>
-                        {showResult && isOptionCorrect && <Check className="h-4 w-4 text-green-600" />}
-                        {showResult && isOptionIncorrect && <X className="h-4 w-4 text-red-600" />}
+                        {showResult && isOptionCorrect && <Check className="h-4 w-4 text-green-600 dark:text-green-500" />}
+                        {showResult && isOptionIncorrect && <X className="h-4 w-4 text-red-600 dark:text-red-500" />}
                       </Label>
                     </div>
                   );
@@ -185,9 +185,9 @@ const QuestionCard = ({
           
           {showResult && (
             <div className={`mt-4 p-3 rounded-md ${
-              isCorrect ? "bg-green-50 text-green-800 border border-green-200" : 
-              isIncorrect ? "bg-red-50 text-red-800 border border-red-200" :
-              skipped ? "bg-gray-50 text-gray-800 border border-gray-200" : ""
+              isCorrect ? "bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800" : 
+              isIncorrect ? "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800" :
+              skipped ? "bg-gray-50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700" : ""
             }`}>
               {isCorrect ? (
                 <div className="flex items-center gap-2">
