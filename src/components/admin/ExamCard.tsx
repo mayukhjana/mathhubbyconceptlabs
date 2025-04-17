@@ -1,10 +1,10 @@
-
 import { Button } from "@/components/ui/button";
 import { Exam } from "@/services/exam/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ExamCardProps {
   exam: Exam;
@@ -19,6 +19,11 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleModify = () => {
+    navigate(`/admin/questions/${exam.id}`);
+  };
 
   const handleDelete = async () => {
     try {
@@ -34,12 +39,10 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         description: `Exam "${exam.title}" deleted successfully`,
       });
       
-      // Close the dialog after a brief delay to show the success message
       setTimeout(() => {
         setShowConfirmation(false);
         setIsDeleting(false);
         
-        // Call onDeleteComplete after dialog is closed
         if (onDeleteComplete) {
           onDeleteComplete();
         }
@@ -87,70 +90,81 @@ const ExamCard = ({ exam, onDelete, onDeleteComplete }: ExamCardProps) => {
         </p>
       </div>
       
-      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+      <div className="flex gap-2">
         <Button 
-          variant="destructive" 
+          variant="outline" 
           size="sm" 
-          disabled={isDeleting}
-          onClick={() => setShowConfirmation(true)}
+          onClick={handleModify}
         >
-          {isDeleting ? "Deleting..." : "Delete"}
+          <Edit className="h-4 w-4 mr-2" />
+          Modify
         </Button>
         
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Exam</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{exam.title}" (ID: {exam.id})? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
+        <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            disabled={isDeleting}
+            onClick={() => setShowConfirmation(true)}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
           
-          {deleteStatus === 'success' && (
-            <div className="bg-green-50 p-3 rounded-md text-green-700 mb-4">
-              Exam deleted successfully!
-            </div>
-          )}
-          
-          {deleteStatus === 'error' && (
-            <div className="bg-red-50 p-3 rounded-md text-red-700 mb-4">
-              <p>Failed to delete exam. {retryCount < 3 ? "Please try again." : "Please contact support."}</p>
-              {errorMessage && <p className="text-sm mt-2 font-mono">{errorMessage}</p>}
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowConfirmation(false)}
-              disabled={isDeleting || deleteStatus === 'success'}
-            >
-              Cancel
-            </Button>
-            {deleteStatus === 'error' && retryCount < 3 ? (
-              <Button
-                variant="destructive"
-                onClick={handleRetry}
-                disabled={isDeleting}
-              >
-                Retry Delete
-              </Button>
-            ) : (
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isDeleting || deleteStatus === 'success' || (deleteStatus === 'error' && retryCount >= 3)}
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : "Delete"}
-              </Button>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Exam</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{exam.title}" (ID: {exam.id})? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {deleteStatus === 'success' && (
+              <div className="bg-green-50 p-3 rounded-md text-green-700 mb-4">
+                Exam deleted successfully!
+              </div>
             )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            
+            {deleteStatus === 'error' && (
+              <div className="bg-red-50 p-3 rounded-md text-red-700 mb-4">
+                <p>Failed to delete exam. {retryCount < 3 ? "Please try again." : "Please contact support."}</p>
+                {errorMessage && <p className="text-sm mt-2 font-mono">{errorMessage}</p>}
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmation(false)}
+                disabled={isDeleting || deleteStatus === 'success'}
+              >
+                Cancel
+              </Button>
+              {deleteStatus === 'error' && retryCount < 3 ? (
+                <Button
+                  variant="destructive"
+                  onClick={handleRetry}
+                  disabled={isDeleting}
+                >
+                  Retry Delete
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting || deleteStatus === 'success' || (deleteStatus === 'error' && retryCount >= 3)}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : "Delete"}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };

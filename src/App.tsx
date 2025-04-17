@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SupportPage from "./pages/SupportPage";
 import AdminUploadPage from "./pages/AdminUploadPage";
 import AdminExamUploadPage from "./pages/AdminExamUploadPage";
+import AdminQuestionUploadPage from "./pages/AdminQuestionUploadPage";
 import AuthPage from "./pages/AuthPage";
 import MathHubAIPage from "./pages/MathHubAIPage";
 import ResourcesPage from "./pages/ResourcesPage";
@@ -79,6 +79,11 @@ const App = () => (
               <Route path="/admin/exam-upload" element={
                 <AuthGuard requireAdmin>
                   <AdminExamUploadPage />
+                </AuthGuard>
+              } />
+              <Route path="/admin/questions/:examId" element={
+                <AuthGuard requireAdmin>
+                  <AdminQuestionUploadPage />
                 </AuthGuard>
               } />
               <Route path="/auth" element={<AuthPage />} />

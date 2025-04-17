@@ -28,6 +28,9 @@ interface QuestionForm {
   option_c: string;
   option_d: string;
   correct_answer: string;
+  marks?: number;
+  negative_marks?: number;
+  is_multi_correct?: boolean;
 }
 
 const AdminQuestionUploadPage = () => {
@@ -40,20 +43,51 @@ const AdminQuestionUploadPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
-    const loadExam = async () => {
+    const loadExamAndQuestions = async () => {
       if (!examId) return;
       
-      const examData = await fetchExamById(examId);
-      setExam(examData);
-      
-      // Create initial empty question
-      setQuestions([createEmptyQuestion()]);
-      
-      setLoading(false);
+      try {
+        const [examData, { data: existingQuestions }] = await Promise.all([
+          fetchExamById(examId),
+          supabase
+            .from('questions')
+            .select('*')
+            .eq('exam_id', examId)
+            .order('order_number')
+        ]);
+        
+        setExam(examData);
+        
+        if (existingQuestions) {
+          const formattedQuestions = existingQuestions.map(q => ({
+            question_text: q.question_text,
+            option_a: q.option_a,
+            option_b: q.option_b,
+            option_c: q.option_c,
+            option_d: q.option_d,
+            correct_answer: q.correct_answer,
+            marks: q.marks,
+            negative_marks: q.negative_marks,
+            is_multi_correct: q.is_multi_correct
+          }));
+          setQuestions(formattedQuestions);
+        } else {
+          setQuestions([createEmptyQuestion()]);
+        }
+      } catch (error) {
+        console.error('Error loading exam and questions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load exam data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
     };
     
-    loadExam();
-  }, [examId]);
+    loadExamAndQuestions();
+  }, [examId, toast]);
   
   const createEmptyQuestion = (): QuestionForm => ({
     question_text: "",
@@ -86,7 +120,6 @@ const AdminQuestionUploadPage = () => {
   };
   
   const handleSaveQuestions = async () => {
-    // Validate questions
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.question_text || !q.option_a || !q.option_b || !q.option_c || !q.option_d) {
@@ -109,7 +142,10 @@ const AdminQuestionUploadPage = () => {
         option_c: q.option_c,
         option_d: q.option_d,
         correct_answer: q.correct_answer,
-        order_number: index + 1
+        order_number: index + 1,
+        marks: q.marks,
+        negative_marks: q.negative_marks,
+        is_multi_correct: q.is_multi_correct
       }));
       
       const { error } = await supabase
