@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -12,26 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchExamById, Exam } from "@/services/examService";
 import LoadingAnimation from "@/components/LoadingAnimation";
-
-interface QuestionForm {
-  question_text: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_answer: string;
-  marks?: number;
-  negative_marks?: number;
-  is_multi_correct?: boolean;
-}
+import QuestionForm, { QuestionData } from "@/components/QuestionForm";
+import { toast } from "sonner";
 
 const AdminQuestionUploadPage = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -39,7 +27,10 @@ const AdminQuestionUploadPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [exam, setExam] = useState<Exam | null>(null);
-  const [questions, setQuestions] = useState<QuestionForm[]>([]);
+  const [examDuration, setExamDuration] = useState<number>(60);
+  const [questions, setQuestions] = useState<QuestionData[]>([]);
+  const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
@@ -57,22 +48,26 @@ const AdminQuestionUploadPage = () => {
         ]);
         
         setExam(examData);
+        if (examData?.duration) {
+          setExamDuration(examData.duration);
+        }
         
-        if (existingQuestions) {
+        if (existingQuestions && existingQuestions.length > 0) {
           const formattedQuestions = existingQuestions.map(q => ({
+            id: q.id,
             question_text: q.question_text,
             option_a: q.option_a,
             option_b: q.option_b,
             option_c: q.option_c,
             option_d: q.option_d,
             correct_answer: q.correct_answer,
-            marks: q.marks,
-            negative_marks: q.negative_marks,
-            is_multi_correct: q.is_multi_correct
+            marks: q.marks || 1, // Ensure marks is never null
+            negative_marks: q.negative_marks || 0,
+            is_multi_correct: q.is_multi_correct || false,
+            order_number: q.order_number,
+            exam_id: q.exam_id
           }));
           setQuestions(formattedQuestions);
-        } else {
-          setQuestions([createEmptyQuestion()]);
         }
       } catch (error) {
         console.error('Error loading exam and questions:', error);
@@ -89,81 +84,104 @@ const AdminQuestionUploadPage = () => {
     loadExamAndQuestions();
   }, [examId, toast]);
   
-  const createEmptyQuestion = (): QuestionForm => ({
-    question_text: "",
-    option_a: "",
-    option_b: "",
-    option_c: "",
-    option_d: "",
-    correct_answer: "a"
-  });
-  
-  const handleQuestionChange = (index: number, field: keyof QuestionForm, value: string) => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[index] = { ...updatedQuestions[index], [field]: value };
-    setQuestions(updatedQuestions);
+  const handleSaveQuestion = (questionData: QuestionData) => {
+    if (editingQuestionIndex !== null) {
+      // Update existing question
+      const updatedQuestions = [...questions];
+      updatedQuestions[editingQuestionIndex] = {
+        ...questionData,
+        order_number: editingQuestionIndex + 1
+      };
+      setQuestions(updatedQuestions);
+      toast.success("Question updated successfully");
+    } else {
+      // Add new question
+      setQuestions([...questions, {
+        ...questionData,
+        order_number: questions.length + 1
+      }]);
+      toast.success("Question added successfully");
+    }
+    
+    setEditingQuestionIndex(null);
+    setShowQuestionForm(false);
   };
   
-  const handleAddQuestion = () => {
-    setQuestions([...questions, createEmptyQuestion()]);
+  const handleEditQuestion = (index: number) => {
+    setEditingQuestionIndex(index);
+    setShowQuestionForm(true);
   };
   
   const handleRemoveQuestion = (index: number) => {
-    if (questions.length === 1) {
-      toast({ title: "Error", description: "You must have at least one question" });
-      return;
-    }
-    
     const updatedQuestions = [...questions];
     updatedQuestions.splice(index, 1);
-    setQuestions(updatedQuestions);
+    
+    // Update order numbers
+    const reorderedQuestions = updatedQuestions.map((q, idx) => ({
+      ...q,
+      order_number: idx + 1
+    }));
+    
+    setQuestions(reorderedQuestions);
+    toast.success("Question removed");
   };
   
-  const handleSaveQuestions = async () => {
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i];
-      if (!q.question_text || !q.option_a || !q.option_b || !q.option_c || !q.option_d) {
-        toast({ 
-          title: "Validation Error", 
-          description: `Question ${i+1} has empty fields` 
-        });
-        return;
-      }
-    }
-    
-    setIsSaving(true);
+  const handleSaveExam = async () => {
+    if (!examId) return;
     
     try {
-      const questionsToInsert = questions.map((q, index) => ({
-        exam_id: examId,
-        question_text: q.question_text,
-        option_a: q.option_a,
-        option_b: q.option_b,
-        option_c: q.option_c,
-        option_d: q.option_d,
-        correct_answer: q.correct_answer,
-        order_number: index + 1,
-        marks: q.marks,
-        negative_marks: q.negative_marks,
-        is_multi_correct: q.is_multi_correct
-      }));
+      setIsSaving(true);
       
-      const { error } = await supabase
-        .from("questions")
-        .insert(questionsToInsert);
-        
-      if (error) {
-        throw new Error(error.message);
+      // First update the exam duration
+      if (exam && exam.duration !== examDuration) {
+        await supabase
+          .from('exams')
+          .update({ duration: examDuration })
+          .eq('id', examId);
       }
       
-      toast({ title: "Success", description: "Questions saved successfully" });
-      navigate("/admin/exams");
+      // Delete all existing questions
+      await supabase
+        .from('questions')
+        .delete()
+        .eq('exam_id', examId);
       
-    } catch (error: any) {
+      if (questions.length > 0) {
+        // Insert all questions
+        const questionsToInsert = questions.map(q => ({
+          exam_id: examId,
+          question_text: q.question_text,
+          option_a: q.option_a,
+          option_b: q.option_b,
+          option_c: q.option_c,
+          option_d: q.option_d,
+          correct_answer: Array.isArray(q.correct_answer) ? q.correct_answer.join(',') : q.correct_answer,
+          order_number: q.order_number,
+          marks: q.marks || 1, // Ensure marks is never null
+          negative_marks: q.negative_marks || 0,
+          is_multi_correct: q.is_multi_correct || false
+        }));
+        
+        const { error } = await supabase
+          .from('questions')
+          .insert(questionsToInsert);
+          
+        if (error) throw error;
+      }
+      
+      toast({
+        title: "Success",
+        description: "Exam questions saved successfully"
+      });
+      
+      navigate('/admin/exam-upload');
+      
+    } catch (error) {
       console.error("Error saving questions:", error);
-      toast({ 
-        title: "Error", 
-        description: error.message || "Failed to save questions" 
+      toast({
+        title: "Error",
+        description: "Failed to save exam questions",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
@@ -189,7 +207,7 @@ const AdminQuestionUploadPage = () => {
         <div className="container max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold">Add Exam Questions</h1>
+              <h1 className="text-3xl font-bold">Modify Exam</h1>
               <p className="text-muted-foreground mt-1">{exam?.title}</p>
             </div>
             <Button variant="outline" onClick={() => navigate(-1)}>
@@ -198,114 +216,139 @@ const AdminQuestionUploadPage = () => {
             </Button>
           </div>
           
-          <div className="space-y-6 mb-6">
-            {questions.map((question, index) => (
-              <Card key={index}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Question {index + 1}</CardTitle>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleRemoveQuestion(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor={`question-${index}`}>Question Text</Label>
-                    <Textarea
-                      id={`question-${index}`}
-                      value={question.question_text}
-                      onChange={(e) => handleQuestionChange(index, "question_text", e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Exam Settings</CardTitle>
+                <CardDescription>Manage exam duration and other settings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor={`option-a-${index}`}>Option A</Label>
+                      <label htmlFor="duration" className="text-sm font-medium">
+                        Duration (minutes)
+                      </label>
                       <Input
-                        id={`option-a-${index}`}
-                        value={question.option_a}
-                        onChange={(e) => handleQuestionChange(index, "option_a", e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`option-b-${index}`}>Option B</Label>
-                      <Input
-                        id={`option-b-${index}`}
-                        value={question.option_b}
-                        onChange={(e) => handleQuestionChange(index, "option_b", e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`option-c-${index}`}>Option C</Label>
-                      <Input
-                        id={`option-c-${index}`}
-                        value={question.option_c}
-                        onChange={(e) => handleQuestionChange(index, "option_c", e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`option-d-${index}`}>Option D</Label>
-                      <Input
-                        id={`option-d-${index}`}
-                        value={question.option_d}
-                        onChange={(e) => handleQuestionChange(index, "option_d", e.target.value)}
+                        id="duration"
+                        type="number"
+                        min="1"
+                        value={examDuration}
+                        onChange={(e) => setExamDuration(Number(e.target.value))}
                       />
                     </div>
                   </div>
-                  
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="space-y-6 mb-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Questions ({questions.length})</h2>
+              <Button 
+                onClick={() => {
+                  setEditingQuestionIndex(null);
+                  setShowQuestionForm(true);
+                }}
+                variant="outline"
+                disabled={showQuestionForm}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
+            
+            {showQuestionForm && (
+              <QuestionForm
+                initialData={editingQuestionIndex !== null ? questions[editingQuestionIndex] : undefined}
+                onSave={handleSaveQuestion}
+                onCancel={() => {
+                  setEditingQuestionIndex(null);
+                  setShowQuestionForm(false);
+                }}
+                index={editingQuestionIndex !== null ? editingQuestionIndex : questions.length}
+              />
+            )}
+            
+            {!showQuestionForm && questions.length === 0 && (
+              <Card className="border-dashed">
+                <CardContent className="py-6 text-center">
+                  <p className="text-muted-foreground">No questions added yet</p>
+                  <Button 
+                    onClick={() => setShowQuestionForm(true)}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Question
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+            
+            {!showQuestionForm && questions.map((question, index) => (
+              <Card key={index}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-base">Question {index + 1}</CardTitle>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleEditQuestion(index)}
+                      >
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleRemoveQuestion(index)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-2">
-                    <Label>Correct Answer</Label>
-                    <RadioGroup
-                      value={question.correct_answer}
-                      onValueChange={(value) => handleQuestionChange(index, "correct_answer", value)}
-                      className="flex space-x-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="a" id={`correct-a-${index}`} />
-                        <Label htmlFor={`correct-a-${index}`}>A</Label>
+                    <p>{question.question_text}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <div className="space-y-1">
+                        <p><span className="font-medium">A:</span> {question.option_a}</p>
+                        <p><span className="font-medium">B:</span> {question.option_b}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="b" id={`correct-b-${index}`} />
-                        <Label htmlFor={`correct-b-${index}`}>B</Label>
+                      <div className="space-y-1">
+                        <p><span className="font-medium">C:</span> {question.option_c}</p>
+                        <p><span className="font-medium">D:</span> {question.option_d}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="c" id={`correct-c-${index}`} />
-                        <Label htmlFor={`correct-c-${index}`}>C</Label>
+                    </div>
+                    <div className="flex text-sm mt-4 justify-between">
+                      <div>
+                        <span className="font-medium">Correct:</span> {
+                          Array.isArray(question.correct_answer) 
+                            ? question.correct_answer.map(a => a.toUpperCase()).join(', ') 
+                            : question.correct_answer.toUpperCase()
+                        }
+                        {question.is_multi_correct && <span className="text-xs ml-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">Multiple Correct</span>}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="d" id={`correct-d-${index}`} />
-                        <Label htmlFor={`correct-d-${index}`}>D</Label>
+                      <div>
+                        <span className="font-medium">Marks:</span> {question.marks} | <span className="font-medium">Negative:</span> {question.negative_marks}
                       </div>
-                    </RadioGroup>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
           
-          <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+          <div className="flex justify-end mt-8">
             <Button 
-              variant="outline" 
-              onClick={handleAddQuestion}
-              className="flex-1 sm:flex-grow-0"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Another Question
-            </Button>
-            
-            <Button 
-              onClick={handleSaveQuestions} 
+              onClick={handleSaveExam} 
               disabled={isSaving}
-              className="flex-1 sm:flex-grow-0"
+              size="lg"
             >
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving..." : "Save All Questions"}
+              {isSaving ? "Saving..." : "Save Exam"}
             </Button>
           </div>
         </div>
