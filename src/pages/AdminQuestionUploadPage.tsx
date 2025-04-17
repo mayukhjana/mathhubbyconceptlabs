@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchExamById, Exam } from "@/services/examService";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import QuestionForm, { QuestionData } from "@/components/QuestionForm";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 const AdminQuestionUploadPage = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -93,14 +93,14 @@ const AdminQuestionUploadPage = () => {
         order_number: editingQuestionIndex + 1
       };
       setQuestions(updatedQuestions);
-      toast.success("Question updated successfully");
+      sonnerToast.success("Question updated successfully");
     } else {
       // Add new question
       setQuestions([...questions, {
         ...questionData,
         order_number: questions.length + 1
       }]);
-      toast.success("Question added successfully");
+      sonnerToast.success("Question added successfully");
     }
     
     setEditingQuestionIndex(null);
@@ -123,7 +123,7 @@ const AdminQuestionUploadPage = () => {
     }));
     
     setQuestions(reorderedQuestions);
-    toast.success("Question removed");
+    sonnerToast.success("Question removed");
   };
   
   const handleSaveExam = async () => {
