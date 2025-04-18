@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,77 +32,79 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light">
-      <HelmetProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/boards" element={<BoardsPage />} />
-                <Route path="/boards/:boardId/*" element={<BoardDetail />} />
-                <Route path="/exams/:examId" element={<ExamPage />} />
-                <Route path="/exam-papers" element={<ExamPapersPage />} />
-                <Route path="/resources" element={<ResourcesPage />} />
-                <Route path="/results" element={
-                  <AuthGuard>
-                    <ResultsPage />
-                  </AuthGuard>
-                } />
-                <Route path="/premium" element={
-                  <AuthGuard>
-                    <PremiumPage />
-                  </AuthGuard>
-                } />
-                <Route path="/premium-success" element={
-                  <AuthGuard>
-                    <PremiumSuccessPage />
-                  </AuthGuard>
-                } />
-                <Route path="/profile" element={
-                  <AuthGuard>
-                    <ProfilePage />
-                  </AuthGuard>
-                } />
-                <Route path="/support" element={
-                  <AuthGuard>
-                    <SupportPage />
-                  </AuthGuard>
-                } />
-                <Route path="/mathhub-ai" element={
-                  <AuthGuard>
-                    <MathHubAIPage />
-                  </AuthGuard>
-                } />
-                <Route path="/admin/upload" element={
-                  <AuthGuard requireAdmin>
-                    <AdminUploadPage />
-                  </AuthGuard>
-                } />
-                <Route path="/admin/exam-upload" element={
-                  <AuthGuard requireAdmin>
-                    <AdminExamUploadPage />
-                  </AuthGuard>
-                } />
-                <Route path="/admin/questions/:examId" element={
-                  <AuthGuard requireAdmin>
-                    <AdminQuestionUploadPage />
-                  </AuthGuard>
-                } />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/refund-policy" element={<RefundPolicy />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </HelmetProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light">
+        <HelmetProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/boards" element={<BoardsPage />} />
+                  <Route path="/boards/:boardId/*" element={<BoardDetail />} />
+                  <Route path="/exams/:examId" element={<ExamPage />} />
+                  <Route path="/exam-papers" element={<ExamPapersPage />} />
+                  <Route path="/resources" element={<ResourcesPage />} />
+                  <Route path="/results" element={
+                    <AuthGuard>
+                      <ResultsPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/premium" element={
+                    <AuthGuard>
+                      <PremiumPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/premium-success" element={
+                    <AuthGuard>
+                      <PremiumSuccessPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/profile" element={
+                    <AuthGuard>
+                      <ProfilePage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/support" element={
+                    <AuthGuard>
+                      <SupportPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/mathhub-ai" element={
+                    <AuthGuard>
+                      <MathHubAIPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/admin/upload" element={
+                    <AuthGuard requireAdmin>
+                      <AdminUploadPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/admin/exam-upload" element={
+                    <AuthGuard requireAdmin>
+                      <AdminExamUploadPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/admin/questions/:examId" element={
+                    <AuthGuard requireAdmin>
+                      <AdminQuestionUploadPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/refund-policy" element={<RefundPolicy />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </HelmetProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
