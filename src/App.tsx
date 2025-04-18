@@ -28,6 +28,9 @@ import NotFound from "./pages/NotFound";
 import RefundPolicy from "./pages/RefundPolicy";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import StudyMaterialsPage from "./pages/StudyMaterialsPage";
+import PracticeSetsPage from "./pages/PracticeSetsPage";
+import VideoTutorialsPage from "./pages/VideoTutorialsPage";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +51,9 @@ const App = () => (
                   <Route path="/exams/:examId" element={<ExamPage />} />
                   <Route path="/exam-papers" element={<ExamPapersPage />} />
                   <Route path="/resources" element={<ResourcesPage />} />
+                  <Route path="/resources/study-materials" element={<StudyMaterialsPage />} />
+                  <Route path="/resources/practice-sets" element={<PracticeSetsPage />} />
+                  <Route path="/resources/video-tutorials" element={<VideoTutorialsPage />} />
                   <Route path="/results" element={
                     <AuthGuard>
                       <ResultsPage />
