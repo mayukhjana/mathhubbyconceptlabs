@@ -1,21 +1,20 @@
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Download, Eye, FileText, Lock, Award } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { FileText, LockKeyhole, Play, TrendingUp } from "lucide-react";
 
 interface PaperCardProps {
   title: string;
-  description: string;
+  description?: string;
   year: string;
   isPremium: boolean;
   userIsPremium: boolean;
   downloadUrl?: string;
-  solutionUrl?: string;
-  practiceUrl: string;
+  practiceUrl?: string;
   examBoard: string;
   isAttempted?: boolean;
-  totalMarks?: number;
 }
 
 const PaperCard = ({
@@ -25,80 +24,107 @@ const PaperCard = ({
   isPremium,
   userIsPremium,
   downloadUrl,
-  solutionUrl,
   practiceUrl,
   examBoard,
-  isAttempted = false,
-  totalMarks = 0
+  isAttempted = false
 }: PaperCardProps) => {
+  const canAccess = !isPremium || userIsPremium;
+
   return (
-    <Card className="flex flex-col h-full">
-      <CardContent className="flex-grow p-6">
-        <div className="flex justify-between items-start gap-4">
-          <div>
-            <h3 className="font-semibold mb-2">{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
-            {totalMarks > 0 && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                <Award className="h-4 w-4" />
-                <span>Total Marks: {totalMarks}</span>
-              </div>
-            )}
-          </div>
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+      <CardContent className="pt-6 pb-2 flex-1">
+        <div className="flex justify-between items-start mb-2">
+          <Badge variant="outline" className="bg-gray-50">
+            {examBoard}
+          </Badge>
           {isPremium && (
-            <div className="shrink-0">
-              <Lock className="h-4 w-4 text-yellow-500" />
-            </div>
+            <Badge className="bg-gradient-to-r from-amber-400 to-yellow-600 text-white border-0">
+              Premium
+            </Badge>
           )}
         </div>
+        <h3 className="font-medium mb-1 line-clamp-2">{title}</h3>
+        <div className="text-sm text-muted-foreground space-y-1">
+          {description && <p className="line-clamp-2">{description}</p>}
+          <p>Year: {year}</p>
+        </div>
       </CardContent>
-      
-      <CardFooter className="flex flex-col gap-3 p-6 pt-0">
-        {(!isPremium || userIsPremium) && (
-          <>
-            <div className="w-full flex gap-2">
-              {downloadUrl && (
-                <Button variant="outline" className="w-full" onClick={() => window.open(downloadUrl)}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-              )}
-              {solutionUrl && (
-                <Button variant="outline" className="w-full" onClick={() => window.open(solutionUrl)}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Solutions
-                </Button>
-              )}
-            </div>
-            
-            <div className="w-full">
-              {isAttempted ? (
-                <Button asChild variant="default" className="w-full">
-                  <Link to="/results">
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Results
-                  </Link>
-                </Button>
+      <CardFooter className="flex flex-col space-y-2 pt-0 pb-4">
+        <div className="grid grid-cols-2 gap-2 w-full">
+          {downloadUrl ? (
+            <Button
+              variant="outline"
+              size="sm"
+              asChild={canAccess}
+              disabled={!canAccess}
+              className="w-full"
+            >
+              {canAccess ? (
+                <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Solution
+                </a>
               ) : (
-                <Button asChild variant="default" className="w-full">
-                  <Link to={practiceUrl}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Practice Now
-                  </Link>
-                </Button>
+                <>
+                  <LockKeyhole className="h-4 w-4 mr-2" />
+                  Solution
+                </>
               )}
-            </div>
-          </>
-        )}
-        
-        {isPremium && !userIsPremium && (
-          <Button asChild variant="default" className="w-full">
-            <Link to="/premium">
-              <Lock className="mr-2 h-4 w-4" />
-              Unlock Premium
-            </Link>
-          </Button>
-        )}
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled className="w-full">
+              <FileText className="h-4 w-4 mr-2" />
+              No Solution
+            </Button>
+          )}
+
+          {practiceUrl && !isAttempted ? (
+            <Button
+              variant="default"
+              size="sm"
+              asChild={canAccess}
+              disabled={!canAccess}
+              className="w-full"
+            >
+              {canAccess ? (
+                <Link to={practiceUrl}>
+                  <Play className="h-4 w-4 mr-2" />
+                  Practice
+                </Link>
+              ) : (
+                <>
+                  <LockKeyhole className="h-4 w-4 mr-2" />
+                  Practice
+                </>
+              )}
+            </Button>
+          ) : practiceUrl && isAttempted ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              asChild={canAccess}
+              disabled={!canAccess}
+              className="w-full bg-slate-100"
+            >
+              {canAccess ? (
+                <Link to={practiceUrl}>
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  View Results
+                </Link>
+              ) : (
+                <>
+                  <LockKeyhole className="h-4 w-4 mr-2" />
+                  View Results
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button variant="default" size="sm" disabled className="w-full">
+              <Play className="h-4 w-4 mr-2" />
+              No Practice
+            </Button>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

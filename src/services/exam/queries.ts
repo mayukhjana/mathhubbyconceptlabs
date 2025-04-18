@@ -159,7 +159,13 @@ export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: stri
     }
     
     if (chapterFilter && chapterFilter !== "all") {
-      query = query.eq('chapter', chapterFilter);
+      if (chapterFilter === "full-mock") {
+        // Handle full mock test papers (where chapter is null or empty)
+        query = query.or('chapter.is.null,chapter.eq.');
+      } else {
+        // Handle specific chapter
+        query = query.eq('chapter', chapterFilter);
+      }
     }
       
     const { data, error } = await query;
@@ -176,6 +182,34 @@ export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: stri
   }
 };
 
+export const fetchBoardChapters = async (board: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('exams')
+      .select('chapter')
+      .eq('board', board)
+      .not('chapter', 'is', null)
+      .not('chapter', 'eq', '');
+      
+    if (error) {
+      console.error("Error fetching board chapters:", error);
+      return [];
+    }
+    
+    // Extract unique chapters
+    const chapters = data
+      .map(exam => exam.chapter)
+      .filter((chapter, index, self) => 
+        chapter && self.indexOf(chapter) === index
+      ) as string[];
+    
+    return chapters;
+  } catch (error) {
+    console.error("Exception fetching board chapters:", error);
+    return [];
+  }
+};
+
 const isMockExam = (examId: string) => {
   return examId.includes('icse-') || examId.includes('cbse-') || examId.includes('wb-');
 };
@@ -187,7 +221,7 @@ const getMockExamData = (examId: string): Exam => {
     board: examId.includes('icse-') ? 'ICSE' : examId.includes('cbse-') ? 'CBSE' : 'West Bengal Board',
     year: "2022",
     class: "10",
-    chapter: examId.includes('alg-') ? 'Algebra' : examId.includes('geo-') ? 'Geometry' : 'Trigonometry',
+    chapter: examId.includes('alg-') ? 'Algebra' : examId.includes('geo-') ? 'Geometry' : null,
     duration: 60,
     is_premium: false
   };

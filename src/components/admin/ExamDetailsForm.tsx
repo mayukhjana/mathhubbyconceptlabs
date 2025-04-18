@@ -1,8 +1,12 @@
 
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface ExamDetailsFormProps {
   examTitle: string;
@@ -33,10 +37,60 @@ const ExamDetailsForm = ({
   onDurationChange,
   onPremiumChange,
 }: ExamDetailsFormProps) => {
-  const classes = ["10", "12"];
-  const chapters: Record<string, string[]> = {
+  const [newChapter, setNewChapter] = useState("");
+  const [isAddingChapter, setIsAddingChapter] = useState(false);
+  
+  // Define base chapters for each class
+  const baseChapters: Record<string, string[]> = {
     "10": ["algebra", "geometry", "statistics", "trigonometry", "calculus"],
     "12": ["algebra", "calculus", "statistics", "vectors", "matrices", "probability"]
+  };
+  
+  // Get chapters from localStorage if available, otherwise use base chapters
+  const getChapters = (classLevel: string): string[] => {
+    const savedChapters = localStorage.getItem(`chapters_${classLevel}`);
+    if (savedChapters) {
+      return JSON.parse(savedChapters);
+    }
+    return baseChapters[classLevel] || [];
+  };
+  
+  // State to hold the current chapters list
+  const [chapters, setChapters] = useState<Record<string, string[]>>({
+    "10": getChapters("10"),
+    "12": getChapters("12")
+  });
+  
+  const handleAddChapter = () => {
+    if (!newChapter.trim() || !selectedClass) return;
+    
+    // Format chapter name - lowercase first letter capitalized
+    const formattedChapter = newChapter.trim().toLowerCase();
+    
+    // Check if chapter already exists
+    if (chapters[selectedClass].includes(formattedChapter)) {
+      setNewChapter("");
+      setIsAddingChapter(false);
+      return;
+    }
+    
+    // Update chapters
+    const updatedChapters = {
+      ...chapters,
+      [selectedClass]: [...chapters[selectedClass], formattedChapter]
+    };
+    
+    setChapters(updatedChapters);
+    
+    // Save to localStorage
+    localStorage.setItem(`chapters_${selectedClass}`, JSON.stringify(updatedChapters[selectedClass]));
+    
+    // Select the new chapter
+    onChapterChange(formattedChapter);
+    
+    // Reset form
+    setNewChapter("");
+    setIsAddingChapter(false);
   };
 
   return (
@@ -54,36 +108,82 @@ const ExamDetailsForm = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="mcq-class">Class</Label>
-          <Select value={selectedClass} onValueChange={onClassChange}>
+          <Select value={selectedClass} onValueChange={(value) => {
+            onClassChange(value);
+            onChapterChange(""); // Reset chapter when class changes
+          }}>
             <SelectTrigger id="mcq-class">
               <SelectValue placeholder="Select Class" />
             </SelectTrigger>
             <SelectContent>
-              {classes.map(cls => (
-                <SelectItem key={cls} value={cls}>
-                  Class {cls}
-                </SelectItem>
-              ))}
+              <SelectItem value="10">Class 10</SelectItem>
+              <SelectItem value="12">Class 12</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="mcq-chapter">Chapter (Optional)</Label>
-          <Select value={selectedChapter} onValueChange={onChapterChange} disabled={!selectedClass}>
-            <SelectTrigger id="mcq-chapter">
-              <SelectValue placeholder="Select Chapter" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectedClass && chapters[selectedClass] ? (
-                chapters[selectedClass].map(chapter => (
-                  <SelectItem key={chapter} value={chapter}>
-                    {chapter.charAt(0).toUpperCase() + chapter.slice(1)}
-                  </SelectItem>
-                ))
-              ) : null}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="mcq-chapter">Chapter</Label>
+          <div className="flex gap-2">
+            <Select 
+              value={selectedChapter} 
+              onValueChange={onChapterChange} 
+              disabled={!selectedClass}
+              className="flex-1"
+            >
+              <SelectTrigger id="mcq-chapter">
+                <SelectValue placeholder="Select Chapter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Full Mock Test</SelectItem>
+                <SelectGroup>
+                  {selectedClass && chapters[selectedClass] ? (
+                    chapters[selectedClass].map(chapter => (
+                      <SelectItem key={chapter} value={chapter}>
+                        {chapter.charAt(0).toUpperCase() + chapter.slice(1)}
+                      </SelectItem>
+                    ))
+                  ) : null}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            
+            <Popover open={isAddingChapter} onOpenChange={setIsAddingChapter}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="shrink-0" 
+                  disabled={!selectedClass}
+                  onClick={() => setIsAddingChapter(true)}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="end">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Add New Chapter</h4>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Enter chapter name" 
+                      value={newChapter}
+                      onChange={(e) => setNewChapter(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddChapter();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleAddChapter}>Add</Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {!selectedChapter ? "Leave empty for full mock test papers" : ""}
+          </p>
         </div>
 
         <div className="space-y-2">

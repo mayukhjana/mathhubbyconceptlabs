@@ -69,6 +69,28 @@ export const fetchExamResults = async (userId: string) => {
   }
 };
 
+export const checkExamAttempted = async (userId: string, examId: string): Promise<boolean> => {
+  if (!userId) return false;
+  
+  try {
+    const { count, error } = await supabase
+      .from('user_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('exam_id', examId);
+      
+    if (error) {
+      console.error("Error checking if exam was attempted:", error);
+      return false;
+    }
+    
+    return count !== null && count > 0;
+  } catch (err) {
+    console.error("Exception when checking if exam was attempted:", err);
+    return false;
+  }
+};
+
 export const examHasMCQs = async (examId: string): Promise<boolean> => {
   try {
     const { count, error } = await supabase
