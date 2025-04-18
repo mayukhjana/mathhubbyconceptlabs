@@ -151,31 +151,39 @@ export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: stri
   try {
     console.log(`Fetching board exams with filters - board: ${boardFilter}, chapter: ${chapterFilter}, class: ${classFilter}`);
     
+    // Build the query
     let query = supabase
       .from('exams')
-      .select()
-      .in('board', BOARD_OPTIONS);
-      
+      .select('*');
+    
+    // Apply board filter  
     if (boardFilter && boardFilter !== "all") {
       query = query.eq('board', boardFilter);
+    } else if (!boardFilter) {
+      // If no board filter, use all board options
+      query = query.in('board', BOARD_OPTIONS);
     }
     
+    // Apply class filter
     if (classFilter && classFilter !== "all") {
       query = query.eq('class', classFilter);
     }
     
+    // Apply chapter filter
     if (chapterFilter) {
       if (chapterFilter === "full-mock") {
-        // Handle full mock test papers (where chapter is null or empty)
+        // For full mock tests, chapter is null, empty or "none"
         query = query.or('chapter.is.null,chapter.eq.,chapter.eq.none');
       } else if (chapterFilter !== "all") {
-        // Handle specific chapter
+        // For specific chapter
         query = query.eq('chapter', chapterFilter);
       }
     }
     
+    // Order by year descending
     query = query.order('year', { ascending: false });
-      
+    
+    // Execute the query
     const { data, error } = await query;
       
     if (error) {
@@ -183,7 +191,9 @@ export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: stri
       return [];
     }
     
-    console.log(`Retrieved ${data?.length || 0} board exams:`, data);
+    console.log(`Retrieved ${data?.length || 0} board exams for filters:`, { boardFilter, chapterFilter, classFilter });
+    console.log("Exam data:", data);
+    
     return data as Exam[];
   } catch (error) {
     console.error("Exception fetching board exams:", error);
@@ -213,6 +223,7 @@ export const fetchBoardChapters = async (board: string): Promise<string[]> => {
         chapter && self.indexOf(chapter) === index
       ) as string[];
     
+    console.log(`Fetched ${chapters.length} unique chapters for ${board}:`, chapters);
     return chapters;
   } catch (error) {
     console.error("Exception fetching board chapters:", error);
@@ -220,6 +231,7 @@ export const fetchBoardChapters = async (board: string): Promise<string[]> => {
   }
 };
 
+// Helper functions for mock data
 const isMockExam = (examId: string) => {
   return examId.includes('icse-') || examId.includes('cbse-') || examId.includes('wb-');
 };

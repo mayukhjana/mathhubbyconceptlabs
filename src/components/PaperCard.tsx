@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, LockKeyhole, Play, TrendingUp } from "lucide-react";
 
-interface PaperCardProps {
+export interface PaperCardProps {
   title: string;
   description?: string;
   year: string;
   isPremium: boolean;
   userIsPremium: boolean;
   downloadUrl?: string;
-  solutionUrl?: string; // Add solutionUrl prop
+  solutionUrl?: string;
   practiceUrl?: string;
   examBoard: string;
   isAttempted?: boolean;
@@ -25,7 +25,7 @@ const PaperCard = ({
   isPremium,
   userIsPremium,
   downloadUrl,
-  solutionUrl, // Include solutionUrl in component props
+  solutionUrl,
   practiceUrl,
   examBoard,
   isAttempted = false
