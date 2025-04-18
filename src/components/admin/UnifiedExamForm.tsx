@@ -88,7 +88,7 @@ const UnifiedExamForm = ({
           description="Upload solution in PDF format only"
         />
         
-        <Alert variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
+        <Alert className="bg-amber-50 text-amber-800 border-amber-200">
           <AlertDescription className="text-sm">
             <strong>Note:</strong> For board exams, leaving the chapter empty will mark it as a Full Mock Test.
             Selecting a specific chapter will categorize it under that chapter in the board's chapter list.
@@ -114,7 +114,7 @@ const UnifiedExamForm = ({
           <Card className="border-dashed">
             <CardContent className="py-6 text-center">
               <p className="text-muted-foreground mb-4">No questions added yet</p>
-              <Button onClick={() => setShowQuestionForm(true)} variant="outline">
+              <Button onClick={() => setShowQuestionForm(true)} variant="default">
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Add First Question
               </Button>
@@ -132,7 +132,7 @@ const UnifiedExamForm = ({
         ) : (
           <Button 
             onClick={handleAddAnotherQuestion} 
-            variant="outline" 
+            variant="default"
             className="w-full"
           >
             <PlusCircle className="h-4 w-4 mr-2" />

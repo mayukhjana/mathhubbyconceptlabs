@@ -12,6 +12,7 @@ interface PaperCardProps {
   isPremium: boolean;
   userIsPremium: boolean;
   downloadUrl?: string;
+  solutionUrl?: string; // Add solutionUrl prop
   practiceUrl?: string;
   examBoard: string;
   isAttempted?: boolean;
@@ -24,6 +25,7 @@ const PaperCard = ({
   isPremium,
   userIsPremium,
   downloadUrl,
+  solutionUrl, // Include solutionUrl in component props
   practiceUrl,
   examBoard,
   isAttempted = false
@@ -51,7 +53,7 @@ const PaperCard = ({
       </CardContent>
       <CardFooter className="flex flex-col space-y-2 pt-0 pb-4">
         <div className="grid grid-cols-2 gap-2 w-full">
-          {downloadUrl ? (
+          {downloadUrl || solutionUrl ? (
             <Button
               variant="outline"
               size="sm"
@@ -60,7 +62,7 @@ const PaperCard = ({
               className="w-full"
             >
               {canAccess ? (
-                <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                <a href={solutionUrl || downloadUrl} target="_blank" rel="noopener noreferrer">
                   <FileText className="h-4 w-4 mr-2" />
                   Solution
                 </a>

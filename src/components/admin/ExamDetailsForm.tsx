@@ -129,9 +129,8 @@ const ExamDetailsForm = ({
               value={selectedChapter} 
               onValueChange={onChapterChange} 
               disabled={!selectedClass}
-              className="flex-1"
             >
-              <SelectTrigger id="mcq-chapter">
+              <SelectTrigger id="mcq-chapter" className="flex-1">
                 <SelectValue placeholder="Select Chapter" />
               </SelectTrigger>
               <SelectContent>
