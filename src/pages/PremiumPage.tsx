@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -9,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, CheckCircle, Clock, Crown } from "lucide-react";
 import { toast } from "sonner";
+import PhonePeButton from "@/components/PhonePeButton";
 
 const PremiumPage = () => {
   const { isAuthenticated, isPremium, premiumExpiresAt, refreshPremiumStatus } = useAuth();
@@ -18,7 +18,6 @@ const PremiumPage = () => {
   });
   const navigate = useNavigate();
   
-  // Format expiry date if available
   const formattedExpiryDate = premiumExpiresAt 
     ? new Date(premiumExpiresAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -45,7 +44,6 @@ const PremiumPage = () => {
         throw new Error(error.message);
       }
       
-      // Redirect to Stripe checkout
       if (data?.url) {
         window.location.href = data.url;
       } else {
@@ -64,7 +62,6 @@ const PremiumPage = () => {
       <Navbar />
       
       <main className="flex-grow">
-        {/* Hero section */}
         <div className="bg-gradient-to-b from-mathprimary/10 to-transparent">
           <div className="container mx-auto px-4 py-16 text-center">
             <div className="flex justify-center mb-4">
@@ -80,7 +77,6 @@ const PremiumPage = () => {
           </div>
         </div>
         
-        {/* Premium status section */}
         {isPremium && (
           <div className="container mx-auto px-4 py-8">
             <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-12 flex flex-col md:flex-row items-center justify-between">
@@ -106,10 +102,8 @@ const PremiumPage = () => {
           </div>
         )}
         
-        {/* Pricing plans */}
         <div className="container mx-auto px-4 py-8 md:py-16">
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Monthly plan */}
             <div className="border rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col">
               <div className="mb-4">
                 <Badge variant="outline" className="text-mathprimary border-mathprimary mb-2">
@@ -144,22 +138,32 @@ const PremiumPage = () => {
                 </ul>
               </div>
               
-              <Button 
-                className="w-full"
-                onClick={() => handleSubscribe("monthly")}
-                disabled={isLoading.monthly || isPremium}
-              >
-                {isLoading.monthly ? (
-                  <span className="flex items-center"><Clock className="mr-2 h-4 w-4 animate-spin" /> Processing...</span>
-                ) : isPremium ? (
-                  "Already Subscribed"
-                ) : (
-                  "Subscribe Monthly"
+              <div className="space-y-3">
+                <Button 
+                  className="w-full"
+                  onClick={() => handleSubscribe("monthly")}
+                  disabled={isLoading.monthly || isPremium}
+                >
+                  {isLoading.monthly ? (
+                    <span className="flex items-center">
+                      <Clock className="mr-2 h-4 w-4 animate-spin" /> Processing...
+                    </span>
+                  ) : isPremium ? (
+                    "Already Subscribed"
+                  ) : (
+                    "Pay with Stripe"
+                  )}
+                </Button>
+                
+                {!isPremium && (
+                  <PhonePeButton 
+                    subscriptionType="monthly" 
+                    className="w-full"
+                  />
                 )}
-              </Button>
+              </div>
             </div>
             
-            {/* Annual plan */}
             <div className="border rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 relative flex flex-col">
               <div className="absolute top-0 right-0 bg-yellow-500 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-medium">
                 Best Value
@@ -202,24 +206,34 @@ const PremiumPage = () => {
                 </ul>
               </div>
               
-              <Button 
-                className="w-full bg-yellow-500 hover:bg-yellow-600"
-                onClick={() => handleSubscribe("annual")}
-                disabled={isLoading.annual || isPremium}
-              >
-                {isLoading.annual ? (
-                  <span className="flex items-center"><Clock className="mr-2 h-4 w-4 animate-spin" /> Processing...</span>
-                ) : isPremium ? (
-                  "Already Subscribed"
-                ) : (
-                  "Subscribe Annual"
+              <div className="space-y-3">
+                <Button 
+                  className="w-full bg-yellow-500 hover:bg-yellow-600"
+                  onClick={() => handleSubscribe("annual")}
+                  disabled={isLoading.annual || isPremium}
+                >
+                  {isLoading.annual ? (
+                    <span className="flex items-center">
+                      <Clock className="mr-2 h-4 w-4 animate-spin" /> Processing...
+                    </span>
+                  ) : isPremium ? (
+                    "Already Subscribed"
+                  ) : (
+                    "Pay with Stripe"
+                  )}
+                </Button>
+                
+                {!isPremium && (
+                  <PhonePeButton 
+                    subscriptionType="annual"
+                    className="w-full bg-white border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                  />
                 )}
-              </Button>
+              </div>
             </div>
           </div>
         </div>
         
-        {/* FAQ Section */}
         <div className="container mx-auto px-4 py-16">
           <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
           

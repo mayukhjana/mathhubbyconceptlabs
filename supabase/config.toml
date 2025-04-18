@@ -1,43 +1,23 @@
 
 project_id = "gpzoytysrrormkmytmyk"
 
-[api]
-enabled = true
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
+[functions.check-premium]
+verify_jwt = true
 
-[db]
-port = 54322
-shadow_port = 54320
-major_version = 15
+[functions.create-checkout]
+verify_jwt = true
 
-[studio]
-enabled = true
-port = 54323
-api_url = "http://localhost"
+[functions.create-phonepe-checkout]
+verify_jwt = true
 
-[inbucket]
-enabled = true
-port = 54324
+[functions.stripe-webhook]
+verify_jwt = false
 
-[auth]
-enabled = true
-port = 9999
-
-[storage]
-enabled = true
-
-[realtime]
-enabled = true
+[functions.sql-execute]
+verify_jwt = true
 
 [functions.mathhub-ai]
 verify_jwt = true
 
 [functions.submit-support-ticket]
-verify_jwt = true
-
-[functions.sql-execute]
-verify_jwt = true
-
-[functions.create-avatars-bucket]
 verify_jwt = true
