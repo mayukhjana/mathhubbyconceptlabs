@@ -23,6 +23,8 @@ import AuthPage from "./pages/AuthPage";
 import MathHubAIPage from "./pages/MathHubAIPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import NotFound from "./pages/NotFound";
+import RefundPolicy from "./pages/RefundPolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +89,8 @@ const App = () => (
                 </AuthGuard>
               } />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

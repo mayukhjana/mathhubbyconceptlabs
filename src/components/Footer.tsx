@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { GraduationCap, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+
 const Footer = () => {
   return <footer className="bg-mathdark text-white pt-12 pb-8">
       <div className="container mx-auto px-4">
@@ -44,6 +45,12 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/premium" className="text-gray-300 hover:text-white transition-colors">Premium</Link>
+              </li>
+              <li>
+                <Link to="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link>
+              </li>
+              <li>
+                <Link to="/refund-policy" className="text-gray-300 hover:text-white transition-colors">Refund Policy</Link>
               </li>
             </ul>
           </div>
@@ -91,4 +98,5 @@ const Footer = () => {
       </div>
     </footer>;
 };
+
 export default Footer;
