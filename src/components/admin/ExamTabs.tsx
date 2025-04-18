@@ -49,18 +49,20 @@ const ExamTabs = ({
       <TabsContent value="board" className="space-y-6">
         {BOARD_OPTIONS.map(board => {
           const filteredBoardExams = boardExamsList.filter(exam => exam.board === board);
+          console.log(`Processing ${board} exams:`, filteredBoardExams);
 
           // Group exams by chapter
           const examsByChapter: Record<string, Exam[]> = {};
           
           // Add "Full Mock Tests" category
           examsByChapter["Full Mock Tests"] = filteredBoardExams.filter(
-            exam => !exam.chapter || exam.chapter === ""
+            exam => !exam.chapter || exam.chapter === "" || exam.chapter === "none"
           );
+          console.log(`${board} full mock tests:`, examsByChapter["Full Mock Tests"]);
           
           // Group by chapters
           filteredBoardExams.forEach(exam => {
-            if (exam.chapter) {
+            if (exam.chapter && exam.chapter !== "none" && exam.chapter !== "") {
               if (!examsByChapter[exam.chapter]) {
                 examsByChapter[exam.chapter] = [];
               }
@@ -73,7 +75,7 @@ const ExamTabs = ({
               <h3 className="text-lg font-semibold">{board}</h3>
               
               {/* Full Mock Tests */}
-              {examsByChapter["Full Mock Tests"].length > 0 && (
+              {examsByChapter["Full Mock Tests"] && examsByChapter["Full Mock Tests"].length > 0 && (
                 <ExamSection
                   title="Full Mock Tests"
                   exams={examsByChapter["Full Mock Tests"]}

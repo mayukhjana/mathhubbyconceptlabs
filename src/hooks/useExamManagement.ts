@@ -17,10 +17,15 @@ export const useExamManagement = () => {
   const loadExams = useCallback(async (showToast: boolean = false) => {
     try {
       setIsRefreshing(true);
+      console.log("Loading exams...");
       const [entrance, board] = await Promise.all([
         fetchEntranceExams(),
-        fetchBoardExams()
+        fetchBoardExams() // Fetch all board exams without filters
       ]);
+      
+      console.log("Loaded entrance exams:", entrance.length);
+      console.log("Loaded board exams:", board.length);
+      
       setEntranceExams(entrance);
       setBoardExamsList(board);
       setLastRefreshTime(Date.now());

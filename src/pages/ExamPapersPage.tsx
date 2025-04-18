@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -242,7 +243,7 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
           .select('id')
           .eq('exam_id', exam.id)
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
         setIsAttempted(!!results);
       }
@@ -263,7 +264,7 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       solutionUrl={solutionUrl || undefined}
       practiceUrl={`/exams/${exam.id}`}
       examBoard={exam.board}
-      isAttempted={isAttempted}
+      isAttempted={exam.isAttempted || isAttempted}
     />
   );
 };

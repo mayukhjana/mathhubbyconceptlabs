@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 import { BOARD_OPTIONS, ENTRANCE_OPTIONS } from "./types";
@@ -146,27 +147,34 @@ export const fetchEntranceExams = async (boardFilter?: string) => {
   }
 };
 
-export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: string) => {
+export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: string, classFilter?: string) => {
   try {
+    console.log(`Fetching board exams with filters - board: ${boardFilter}, chapter: ${chapterFilter}, class: ${classFilter}`);
+    
     let query = supabase
       .from('exams')
       .select()
-      .in('board', BOARD_OPTIONS)
-      .order('year', { ascending: false });
+      .in('board', BOARD_OPTIONS);
       
     if (boardFilter && boardFilter !== "all") {
       query = query.eq('board', boardFilter);
     }
     
-    if (chapterFilter && chapterFilter !== "all") {
+    if (classFilter && classFilter !== "all") {
+      query = query.eq('class', classFilter);
+    }
+    
+    if (chapterFilter) {
       if (chapterFilter === "full-mock") {
         // Handle full mock test papers (where chapter is null or empty)
-        query = query.or('chapter.is.null,chapter.eq.');
-      } else {
+        query = query.or('chapter.is.null,chapter.eq.,chapter.eq.none');
+      } else if (chapterFilter !== "all") {
         // Handle specific chapter
         query = query.eq('chapter', chapterFilter);
       }
     }
+    
+    query = query.order('year', { ascending: false });
       
     const { data, error } = await query;
       
@@ -175,6 +183,7 @@ export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: stri
       return [];
     }
     
+    console.log(`Retrieved ${data?.length || 0} board exams:`, data);
     return data as Exam[];
   } catch (error) {
     console.error("Exception fetching board exams:", error);
@@ -189,7 +198,8 @@ export const fetchBoardChapters = async (board: string): Promise<string[]> => {
       .select('chapter')
       .eq('board', board)
       .not('chapter', 'is', null)
-      .not('chapter', 'eq', '');
+      .not('chapter', 'eq', '')
+      .not('chapter', 'eq', 'none');
       
     if (error) {
       console.error("Error fetching board chapters:", error);

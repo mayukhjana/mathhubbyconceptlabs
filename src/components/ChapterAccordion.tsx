@@ -17,6 +17,7 @@ export interface Chapter {
     year: string;
     isPremium: boolean;
     downloadUrl?: string;
+    solutionUrl?: string;
     practiceUrl?: string;
     examBoard: string;
     isAttempted?: boolean;
@@ -29,6 +30,8 @@ interface ChapterAccordionProps {
 }
 
 const ChapterAccordion = ({ chapters, userIsPremium = false }: ChapterAccordionProps) => {
+  console.log("Rendering ChapterAccordion with chapters:", chapters);
+  
   return (
     <Accordion type="single" collapsible className="w-full">
       {chapters.map((chapter) => (
@@ -51,6 +54,7 @@ const ChapterAccordion = ({ chapters, userIsPremium = false }: ChapterAccordionP
                     isPremium={paper.isPremium}
                     userIsPremium={userIsPremium}
                     downloadUrl={paper.downloadUrl}
+                    solutionUrl={paper.solutionUrl}
                     practiceUrl={paper.practiceUrl}
                     examBoard={paper.examBoard}
                     isAttempted={paper.isAttempted}
