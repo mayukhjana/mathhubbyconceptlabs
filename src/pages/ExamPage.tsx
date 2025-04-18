@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -363,6 +364,7 @@ const ExamPage = () => {
                 onAnswer={handleAnswer}
                 userAnswer={userAnswers[currentQuestion.id]}
                 questionNumber={currentQuestionIndex + 1}
+                key={currentQuestion.id} // Add key based on question ID to force re-render
               />
               
               <div className="flex justify-between mt-6">

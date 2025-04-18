@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Check, X, AlertCircle } from "lucide-react";
@@ -38,6 +38,11 @@ const QuestionCard = ({
   const [selectedOptions, setSelectedOptions] = useState<string[]>(
     userAnswer ? userAnswer.split(',') : []
   );
+  
+  // Reset selected options when question changes
+  useEffect(() => {
+    setSelectedOptions(userAnswer ? userAnswer.split(',') : []);
+  }, [question.id, userAnswer]);
   
   const handleOptionChange = (optionId: string, checked?: boolean) => {
     if (showResult) return;
