@@ -1,8 +1,10 @@
+
 import { Link } from "react-router-dom";
 import { GraduationCap, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 
 const Footer = () => {
-  return <footer className="bg-mathdark text-white pt-12 pb-8">
+  return (
+    <footer className="bg-mathdark text-white pt-12 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
@@ -45,6 +47,9 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/premium" className="text-gray-300 hover:text-white transition-colors">Premium</Link>
+              </li>
+              <li>
+                <Link to="/terms-and-conditions" className="text-gray-300 hover:text-white transition-colors">Terms & Conditions</Link>
               </li>
               <li>
                 <Link to="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link>
@@ -96,7 +101,8 @@ const Footer = () => {
           <p>© {new Date().getFullYear()} MathHub. All rights reserved.</p>
         </div>
       </div>
-    </footer>;
+    </footer>
+  );
 };
 
 export default Footer;
