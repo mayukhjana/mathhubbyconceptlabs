@@ -3,7 +3,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const PHONEPE_API_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox";
+// Update to production URL when ready
+const PHONEPE_API_URL = "https://api-preprod.phonepe.com/apis/hermes-pg/pg/v1";
+const MERCHANT_ID = Deno.env.get("PHONEPE_CLIENT_ID") || "";
+const MERCHANT_SECRET = Deno.env.get("PHONEPE_CLIENT_SECRET") || "";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -36,7 +39,7 @@ serve(async (req) => {
 
     // Create payload for PhonePe
     const payload = {
-      merchantId: Deno.env.get("PHONEPE_CLIENT_ID"),
+      merchantId: MERCHANT_ID,
       merchantTransactionId,
       merchantUserId: user.id,
       amount,
@@ -47,18 +50,22 @@ serve(async (req) => {
       }
     };
 
+    console.log("PhonePe Payload:", JSON.stringify(payload));
+
     // Base64 encode the payload
     const base64Payload = btoa(JSON.stringify(payload));
 
     // Create checksum (SHA256 hash of base64 payload + "/pg/v1/pay" + merchant ID + salt key)
-    const message = base64Payload + "/pg/v1/pay" + Deno.env.get("PHONEPE_CLIENT_ID") + Deno.env.get("PHONEPE_CLIENT_SECRET");
+    const message = base64Payload + "/pg/v1/pay" + MERCHANT_ID + MERCHANT_SECRET;
     const msgBuffer = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const checksum = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
+    console.log("Generated X-VERIFY:", checksum);
+
     // Make request to PhonePe
-    const response = await fetch(`${PHONEPE_API_URL}/pg/v1/pay`, {
+    const response = await fetch(`${PHONEPE_API_URL}/pay`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -69,15 +76,20 @@ serve(async (req) => {
       })
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
+    console.log("PhonePe API Response:", JSON.stringify(responseData));
 
     if (!response.ok) {
-      throw new Error(data.message || "Failed to initialize payment");
+      throw new Error(responseData.message || "Failed to initialize payment");
     }
 
     // Return success with redirect URL
     return new Response(
-      JSON.stringify({ url: data.data.instrumentResponse.redirectInfo.url }),
+      JSON.stringify({ 
+        url: responseData.data?.instrumentResponse?.redirectInfo?.url || null,
+        status: responseData.code,
+        message: responseData.message
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 

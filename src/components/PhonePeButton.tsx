@@ -16,6 +16,7 @@ const PhonePeButton = ({ subscriptionType, className }: PhonePeButtonProps) => {
   const handlePhonePePayment = async () => {
     try {
       setIsLoading(true);
+      toast.info("Initializing PhonePe payment...");
       
       const { data, error } = await supabase.functions.invoke("create-phonepe-checkout", {
         body: { subscriptionType }
@@ -25,10 +26,12 @@ const PhonePeButton = ({ subscriptionType, className }: PhonePeButtonProps) => {
         throw new Error(error.message);
       }
       
+      console.log("PhonePe checkout response:", data);
+      
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        throw new Error("No checkout URL returned");
+        throw new Error(data?.message || "No checkout URL returned");
       }
     } catch (error) {
       console.error("PhonePe payment error:", error);
