@@ -3,10 +3,11 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-// Update to production URL when ready
-const PHONEPE_API_URL = "https://api-preprod.phonepe.com/apis/hermes-pg/pg/v1";
+// Use the sandbox URL as specified in the documentation
+const PHONEPE_API_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1";
 const MERCHANT_ID = Deno.env.get("PHONEPE_CLIENT_ID") || "";
 const MERCHANT_SECRET = Deno.env.get("PHONEPE_CLIENT_SECRET") || "";
+const SALT_INDEX = "1"; // Default salt index, can be configured if needed
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -55,8 +56,8 @@ serve(async (req) => {
     // Base64 encode the payload
     const base64Payload = btoa(JSON.stringify(payload));
 
-    // Create checksum (SHA256 hash of base64 payload + "/pg/v1/pay" + merchant ID + salt key)
-    const message = base64Payload + "/pg/v1/pay" + MERCHANT_ID + MERCHANT_SECRET;
+    // Create X-VERIFY header (SHA256 hash of base64 payload + API path + salt key + ### + salt index)
+    const message = base64Payload + "/pg/v1/pay" + MERCHANT_SECRET + "###" + SALT_INDEX;
     const msgBuffer = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -70,6 +71,7 @@ serve(async (req) => {
       headers: {
         "Content-Type": "application/json",
         "X-VERIFY": checksum,
+        "X-MERCHANT-ID": MERCHANT_ID
       },
       body: JSON.stringify({
         request: base64Payload
