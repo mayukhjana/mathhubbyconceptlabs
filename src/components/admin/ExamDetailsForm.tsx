@@ -110,7 +110,7 @@ const ExamDetailsForm = ({
           <Label htmlFor="mcq-class">Class</Label>
           <Select value={selectedClass} onValueChange={(value) => {
             onClassChange(value);
-            onChapterChange(""); // Reset chapter when class changes
+            onChapterChange("none"); // Reset chapter when class changes
           }}>
             <SelectTrigger id="mcq-class">
               <SelectValue placeholder="Select Class" />
@@ -134,7 +134,7 @@ const ExamDetailsForm = ({
                 <SelectValue placeholder="Select Chapter" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Full Mock Test</SelectItem>
+                <SelectItem value="none">Full Mock Test</SelectItem>
                 <SelectGroup>
                   {selectedClass && chapters[selectedClass] ? (
                     chapters[selectedClass].map(chapter => (
@@ -181,7 +181,7 @@ const ExamDetailsForm = ({
             </Popover>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {!selectedChapter ? "Leave empty for full mock test papers" : ""}
+            {selectedChapter === "none" ? "Leave as 'Full Mock Test' for full mock test papers" : ""}
           </p>
         </div>
 

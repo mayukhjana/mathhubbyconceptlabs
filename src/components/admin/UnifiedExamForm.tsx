@@ -90,7 +90,7 @@ const UnifiedExamForm = ({
         
         <Alert className="bg-amber-50 text-amber-800 border-amber-200">
           <AlertDescription className="text-sm">
-            <strong>Note:</strong> For board exams, leaving the chapter empty will mark it as a Full Mock Test.
+            <strong>Note:</strong> For board exams, selecting "Full Mock Test" will mark it as a complete exam.
             Selecting a specific chapter will categorize it under that chapter in the board's chapter list.
           </AlertDescription>
         </Alert>

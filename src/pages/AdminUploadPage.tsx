@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -24,7 +25,7 @@ const AdminUploadPage = () => {
   const [examType, setExamType] = useState("entrance");
   const [selectedBoard, setSelectedBoard] = useState("WBJEE");
   const [selectedClass, setSelectedClass] = useState("11-12");
-  const [selectedChapter, setSelectedChapter] = useState("");
+  const [selectedChapter, setSelectedChapter] = useState("none");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [examTitle, setExamTitle] = useState("");
   const [examDuration, setExamDuration] = useState(60);
@@ -69,7 +70,7 @@ const AdminUploadPage = () => {
     setExamTitle("");
     setSelectedBoard("WBJEE");
     setSelectedClass("11-12");
-    setSelectedChapter("");
+    setSelectedChapter("none");
     setSelectedYear(new Date().getFullYear().toString());
     setExamDuration(60);
     setIsPremium(false);
@@ -90,8 +91,7 @@ const AdminUploadPage = () => {
           name: exam.title,
           board: exam.board,
           class: exam.class,
-          year: exam.year,
-          url: `/exams/${exam.id}`
+          year: exam.year
         }));
         
         setRecentUploads(formattedUploads);
@@ -208,11 +208,14 @@ const AdminUploadPage = () => {
     setError(null);
     
     try {
+      // Convert "none" chapter back to null for the database
+      const finalChapter = selectedChapter === "none" ? null : selectedChapter;
+      
       const examPayload = {
         title: examTitle || `${selectedBoard} Mathematics ${selectedYear}`,
         board: selectedBoard,
         class: selectedClass,
-        chapter: selectedChapter || null,
+        chapter: finalChapter,
         year: selectedYear,
         duration: examDuration,
         is_premium: isPremium
