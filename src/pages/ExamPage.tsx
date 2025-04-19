@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { fetchExamById, fetchQuestionsForExam } from "@/services/examService";
+import { checkExamAttempted } from "@/services/exam/results"; // Import the missing function
 import type { Question } from "@/services/exam/types";
 
 const ExamPage = () => {

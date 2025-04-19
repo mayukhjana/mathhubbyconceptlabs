@@ -1,3 +1,4 @@
+
 export interface Question {
   id: string;
   question_text: string;
@@ -23,6 +24,7 @@ export interface Exam {
   chapter?: string | null;
   duration: number;
   is_premium: boolean;
+  isAttempted?: boolean; // Add this property for ExamPapersPage.tsx
 }
 
 export const BOARD_OPTIONS = [
@@ -57,4 +59,11 @@ export interface ExamResult {
   total_questions: number;
   time_taken: number | null;
   completed_at: string | null;
+  exams?: {    // Add the exams property that's being referenced
+    id: string;
+    title: string;
+    board: string;
+    year: string;
+    chapter?: string | null;
+  };
 }
