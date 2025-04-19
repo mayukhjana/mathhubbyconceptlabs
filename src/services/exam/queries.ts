@@ -21,12 +21,7 @@ export const fetchExamByBoardAndYear = async (board: string, year: string) => {
       return null;
     }
     
-    // Convert database result to Exam type with default values for new fields
-    return {
-      ...data,
-      allow_paper_download: data.allow_paper_download !== undefined ? data.allow_paper_download : true,
-      allow_solution_download: data.allow_solution_download !== undefined ? data.allow_solution_download : true,
-    } as Exam;
+    return data as Exam;
   } catch (error) {
     console.error("Exception fetching exam by board and year:", error);
     return null;
@@ -51,12 +46,7 @@ export const fetchExamById = async (examId: string) => {
     }
     
     console.log("Fetched exam data:", data);
-    // Convert database result to Exam type with default values for new fields
-    return {
-      ...data,
-      allow_paper_download: data.allow_paper_download !== undefined ? data.allow_paper_download : true,
-      allow_solution_download: data.allow_solution_download !== undefined ? data.allow_solution_download : true,
-    } as Exam;
+    return data as Exam;
   } catch (error) {
     console.error("Exception fetching exam:", error);
     return null;
@@ -124,12 +114,7 @@ export const fetchPracticePapers = async () => {
       return [];
     }
     
-    // Convert database results to Exam type with default values for new fields
-    return data.map(exam => ({
-      ...exam,
-      allow_paper_download: exam.allow_paper_download !== undefined ? exam.allow_paper_download : true,
-      allow_solution_download: exam.allow_solution_download !== undefined ? exam.allow_solution_download : true,
-    })) as Exam[];
+    return data as Exam[];
   } catch (error) {
     console.error("Exception fetching practice papers:", error);
     return [];
@@ -155,12 +140,7 @@ export const fetchEntranceExams = async (boardFilter?: string) => {
       return [];
     }
     
-    // Convert database results to Exam type with default values for new fields
-    return data.map(exam => ({
-      ...exam,
-      allow_paper_download: exam.allow_paper_download !== undefined ? exam.allow_paper_download : true,
-      allow_solution_download: exam.allow_solution_download !== undefined ? exam.allow_solution_download : true,
-    })) as Exam[];
+    return data as Exam[];
   } catch (error) {
     console.error("Exception fetching entrance exams:", error);
     return [];
@@ -214,12 +194,7 @@ export const fetchBoardExams = async (boardFilter?: string, chapterFilter?: stri
     console.log(`Retrieved ${data?.length || 0} board exams for filters:`, { boardFilter, chapterFilter, classFilter });
     console.log("Exam data:", data);
     
-    // Convert database results to Exam type with default values for new fields
-    return data.map(exam => ({
-      ...exam,
-      allow_paper_download: exam.allow_paper_download !== undefined ? exam.allow_paper_download : true,
-      allow_solution_download: exam.allow_solution_download !== undefined ? exam.allow_solution_download : true,
-    })) as Exam[];
+    return data as Exam[];
   } catch (error) {
     console.error("Exception fetching board exams:", error);
     return [];
@@ -270,9 +245,7 @@ const getMockExamData = (examId: string): Exam => {
     class: "10",
     chapter: examId.includes('alg-') ? 'Algebra' : examId.includes('geo-') ? 'Geometry' : null,
     duration: 60,
-    is_premium: false,
-    allow_paper_download: true,
-    allow_solution_download: true
+    is_premium: false
   };
 };
 

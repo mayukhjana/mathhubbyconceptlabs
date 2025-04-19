@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
   title: string;
-  description?: string;
+  description?: string;  // Keep this optional
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
@@ -20,13 +21,11 @@ interface PaperCardProps {
   isAttempted?: boolean;
   requireAuth?: boolean;
   isFullMock?: boolean;
-  allowPaperDownload?: boolean;
-  allowSolutionDownload?: boolean;
 }
 
 const PaperCard = ({
   title,
-  description,
+  description,  // We'll keep the parameter but won't render it
   downloadUrl,
   solutionUrl,
   practiceUrl,
@@ -37,9 +36,8 @@ const PaperCard = ({
   isAttempted = false,
   requireAuth = true,
   isFullMock = false,
-  allowPaperDownload = true,
-  allowSolutionDownload = true,
 }: PaperCardProps) => {
+  // Build badge array
   const badges = [];
   if (year) badges.push({ text: year, variant: 'outline' as const });
   if (examBoard) badges.push({ text: examBoard, variant: 'default' as const });
@@ -47,10 +45,6 @@ const PaperCard = ({
   if (isAttempted) badges.push({ text: 'Attempted', variant: 'secondary' as const });
 
   const canAccessPremium = !isPremium || userIsPremium;
-  
-  const shouldShowPaperDownload = downloadUrl && allowPaperDownload;
-  const shouldShowSolutionDownload = solutionUrl && allowSolutionDownload;
-  const shouldShowPractice = practiceUrl;
   
   return (
     <Card className={`overflow-hidden transition border ${
@@ -80,13 +74,10 @@ const PaperCard = ({
         </div>
         
         <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
-        
-        {description && (
-          <p className="text-sm text-muted-foreground mb-3">{description}</p>
-        )}
+        {/* Description line is removed as requested */}
 
         <div className="flex flex-wrap gap-2 mt-4">
-          {shouldShowPaperDownload && (
+          {downloadUrl && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -133,7 +124,7 @@ const PaperCard = ({
             </TooltipProvider>
           )}
 
-          {shouldShowSolutionDownload && (
+          {solutionUrl && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -189,8 +180,8 @@ const PaperCard = ({
         )}
       </CardContent>
 
-      {shouldShowPractice && (
-        <CardFooter className="p-4 pt-0 flex items-center justify-between">
+      <CardFooter className="p-4 pt-0 flex items-center justify-between">
+        {practiceUrl ? (
           <AuthWrapper
             requireAuth={requireAuth}
             tooltipText="Sign in to practice this exam"
@@ -218,8 +209,10 @@ const PaperCard = ({
               </Button>
             )}
           </AuthWrapper>
-        </CardFooter>
-      )}
+        ) : (
+          <span className="text-xs text-muted-foreground">Coming Soon</span>
+        )}
+      </CardFooter>
     </Card>
   );
 };

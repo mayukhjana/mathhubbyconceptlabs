@@ -1,3 +1,4 @@
+
 import { 
   Accordion,
   AccordionContent,
@@ -12,7 +13,7 @@ export interface Chapter {
   papers: {
     id: string;
     title: string;
-    description?: string;
+    description: string;
     year: string;
     isPremium: boolean;
     downloadUrl?: string;
