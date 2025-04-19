@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Exam, Question } from "./types";
 import { BOARD_OPTIONS, ENTRANCE_OPTIONS } from "./types";
@@ -78,7 +77,6 @@ export const fetchQuestionsForExam = async (examId: string) => {
       const baseQuestion = { ...question };
       
       // Add is_multi_correct property if not present in the database result
-      // We'll determine this based on whether correct_answer contains commas
       if (baseQuestion.is_multi_correct === undefined) {
         baseQuestion.is_multi_correct = typeof question.correct_answer === 'string' && 
                                         question.correct_answer.includes(',');
@@ -263,7 +261,8 @@ const getMockQuestions = (examId: string): Question[] => {
       order_number: 1,
       marks: 2,
       negative_marks: 0.5,
-      is_multi_correct: false
+      is_multi_correct: false,
+      image_url: "https://example.com/sample-math-image.png"
     },
     {
       id: "q2",

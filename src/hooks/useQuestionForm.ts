@@ -29,6 +29,7 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | undefined>(initialData?.image_url);
+  const [isUploading, setIsUploading] = useState(false);
   const [selectedCorrectAnswers, setSelectedCorrectAnswers] = useState<string[]>(
     formData.is_multi_correct && formData.correct_answer 
       ? (Array.isArray(formData.correct_answer) 
@@ -43,11 +44,20 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
       return;
     }
 
+    setIsUploading(true);
+
     try {
-      const fileName = `${Date.now()}-${file.name}`;
+      // Ensure the questions bucket exists
+      await ensureQuestionsBucket();
+
+      const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
       const { data, error } = await supabase.storage
         .from('questions')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type
+        });
       
       if (error) throw error;
       
@@ -55,11 +65,51 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
         .from('questions')
         .getPublicUrl(fileName);
       
+      console.log("Image uploaded successfully:", publicUrl);
       setImageFile(file);
       setImageUrl(publicUrl);
-    } catch (error) {
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      toast.error("Failed to upload image");
+      toast.error(`Failed to upload image: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const ensureQuestionsBucket = async () => {
+    try {
+      // Check if bucket exists
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error("Error checking buckets:", listError);
+        return false;
+      }
+      
+      const bucketExists = buckets?.some(b => b.name === 'questions');
+      
+      if (!bucketExists) {
+        console.log("Questions bucket does not exist, creating it...");
+        
+        const { error: createError } = await supabase.storage.createBucket('questions', { 
+          public: true,
+          fileSizeLimit: 5 * 1024 * 1024, // 5MB
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+        });
+        
+        if (createError) {
+          console.error("Error creating questions bucket:", createError);
+          return false;
+        }
+        
+        console.log("Successfully created questions bucket");
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error ensuring questions bucket:", error);
+      return false;
     }
   };
 
@@ -90,7 +140,6 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     }
 
     // Create a complete question object with placeholders for id and exam_id
-    // These will be replaced with actual values by the component that uses this hook
     const completeQuestion: Question = {
       ...formData,
       image_url: imageUrl,
@@ -101,6 +150,7 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
       exam_id: initialData?.exam_id || ''
     };
 
+    console.log("Saving question with data:", completeQuestion);
     onSave(completeQuestion);
   };
 
@@ -109,6 +159,7 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     setFormData,
     imageUrl,
     selectedCorrectAnswers,
+    isUploading,
     handleImageUpload,
     handleCorrectAnswerChange,
     handleSubmit,

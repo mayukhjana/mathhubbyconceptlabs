@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Save, PlusCircle } from "lucide-react";
@@ -8,6 +9,7 @@ import FileUploadZone from "@/components/admin/FileUploadZone";
 import MCQQuestionsList from "@/components/admin/MCQQuestionsList";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 
 interface UnifiedExamFormProps {
   uploadedFile: File | null;
@@ -45,6 +47,7 @@ const UnifiedExamForm = ({
     onSaveQuestion(questionData);
     
     setEditingQuestionIndex(null);
+    setShowQuestionForm(false);
     
     if (editingQuestionIndex !== null) {
       toast.success("Question updated successfully!");
@@ -141,12 +144,9 @@ const UnifiedExamForm = ({
       </div>
       
       {isUploading && (
-        <div className="space-y-2">
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-mathprimary h-2.5 rounded-full transition-all duration-300" 
-              style={{ width: `${uploadProgress}%` }}
-            ></div>
+        <div className="space-y-2 mt-4 p-4 border rounded-md bg-gray-50 dark:bg-gray-900">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <Progress value={uploadProgress} className="h-2.5 transition-all duration-300" />
           </div>
           <p className="text-sm text-center text-muted-foreground">
             Uploading... {uploadProgress}%

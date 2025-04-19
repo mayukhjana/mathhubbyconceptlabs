@@ -25,7 +25,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { fetchExamById, fetchQuestionsForExam } from "@/services/examService";
-import { checkExamAttempted } from "@/services/exam/results"; // Import the missing function
+import { checkExamAttempted } from "@/services/exam/results"; 
 import type { Question } from "@/services/exam/types";
 
 const ExamPage = () => {
@@ -91,6 +91,8 @@ const ExamPage = () => {
           setLoading(false);
           return;
         }
+        
+        console.log("Fetched questions:", questionsData);
         
         setExam({
           id: examData.id,
@@ -368,12 +370,13 @@ const ExamPage = () => {
                   correctAnswer: currentQuestion.correct_answer,
                   marks: currentQuestion.marks,
                   negative_marks: currentQuestion.negative_marks,
-                  is_multi_correct: currentQuestion.is_multi_correct
+                  is_multi_correct: currentQuestion.is_multi_correct,
+                  image_url: currentQuestion.image_url
                 }}
                 onAnswer={handleAnswer}
                 userAnswer={userAnswers[currentQuestion.id]}
                 questionNumber={currentQuestionIndex + 1}
-                key={currentQuestion.id} // Add key based on question ID to force re-render
+                key={currentQuestion.id}
               />
               
               <div className="flex justify-between mt-6">

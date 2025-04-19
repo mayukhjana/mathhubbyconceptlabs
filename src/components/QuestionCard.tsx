@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -54,19 +55,21 @@ const QuestionCard = ({
     )}>
       <CardHeader>
         <CardTitle className="flex justify-between items-start">
-          <span>Question {questionNumber}</span>
+          <span className="text-muted-foreground font-normal">Question {questionNumber}</span>
           <span className="text-sm text-muted-foreground">
             {question.marks} marks {question.negative_marks > 0 && `(-${question.negative_marks} negative)`}
           </span>
         </CardTitle>
-        <CardDescription>
-          {question.text}
+        <CardDescription className="space-y-4">
+          <p className="font-bold text-foreground text-base">{question.text}</p>
           {question.image_url && (
-            <img 
-              src={question.image_url} 
-              alt="Question" 
-              className="max-w-full h-auto mt-2 rounded-lg" 
-            />
+            <div className="mt-4">
+              <img 
+                src={question.image_url} 
+                alt="Question" 
+                className="max-w-full h-auto rounded-lg border border-border" 
+              />
+            </div>
           )}
         </CardDescription>
       </CardHeader>
