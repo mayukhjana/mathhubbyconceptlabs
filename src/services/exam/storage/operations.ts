@@ -160,18 +160,18 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
     const contentType = getContentTypeFromFile(file);
     console.log(`Using content type: ${contentType}`);
     
-    // Create blob with proper type
+    // Convert file to properly typed blob
     const typedBlob = await fileToTypedBlob(file);
-    console.log(`Created typed blob with type: ${typedBlob.type}`);
+    console.log(`Created typed blob with type: ${typedBlob.type}, size: ${typedBlob.size}`);
     
     // Ensure bucket exists
     await ensureAvatarsBucket();
     
-    // Upload image
+    // Upload image directly without any processing or parsing that could change the type
     const { data, error } = await supabase.storage
       .from('avatars')
-      .upload(fileName, typedBlob, {
-        contentType,
+      .upload(fileName, file, {
+        contentType: contentType,
         upsert: true,
         cacheControl: '3600'
       });

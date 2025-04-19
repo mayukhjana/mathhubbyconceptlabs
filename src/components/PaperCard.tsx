@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Download, FileCheck, Lock, Star, Sparkle } from 'lucide-react';
+import { Download, FileCheck, Lock, Star, Sparkle, InfoCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AuthWrapper from './AuthWrapper';
@@ -19,6 +20,7 @@ interface PaperCardProps {
   examBoard?: string;
   isAttempted?: boolean;
   requireAuth?: boolean;
+  isFullMock?: boolean;
 }
 
 const PaperCard = ({
@@ -33,6 +35,7 @@ const PaperCard = ({
   examBoard,
   isAttempted = false,
   requireAuth = true,
+  isFullMock = false,
 }: PaperCardProps) => {
   // Build badge array
   const badges = [];
@@ -71,7 +74,7 @@ const PaperCard = ({
         </div>
         
         <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
-        {/* Description line is now removed */}
+        {/* Description line is now removed as requested */}
 
         <div className="flex flex-wrap gap-2 mt-4">
           {downloadUrl && (
@@ -168,6 +171,13 @@ const PaperCard = ({
             </TooltipProvider>
           )}
         </div>
+        
+        {isFullMock && (
+          <div className="mt-3 text-xs flex items-start gap-1 text-muted-foreground">
+            <InfoCircle className="w-3 h-3 mt-0.5 shrink-0" />
+            <span>Only MCQ questions can be practiced using our exam management system</span>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex items-center justify-between">
