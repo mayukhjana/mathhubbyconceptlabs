@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, TrashIcon, MessageSquare } from "lucide-react";
+import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, DownloadIcon, TrashIcon, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -25,15 +25,6 @@ interface Message {
   image?: string;
 }
 
-interface ChatHistoryItem {
-  id: string;
-  user_id: string;
-  question: string;
-  answer: string;
-  created_at: string;
-  has_image?: boolean;
-}
-
 const MathHubAI: React.FC = () => {
   const [question, setQuestion] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -41,12 +32,12 @@ const MathHubAI: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [dailyQuestionsCount, setDailyQuestionsCount] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const { user, isPremium } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Fetch previous chat history when component mounts
   useEffect(() => {
     if (user) {
       fetchChatHistory();
@@ -54,6 +45,7 @@ const MathHubAI: React.FC = () => {
     }
   }, [user]);
 
+  // Scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -77,7 +69,7 @@ const MathHubAI: React.FC = () => {
       }
 
       if (data) {
-        const formattedMessages: Message[] = data.map((item: ChatHistoryItem) => ({
+        const formattedMessages: Message[] = data.map(item => ({
           id: item.id,
           role: 'user' as const,
           content: item.question,
@@ -136,6 +128,7 @@ const MathHubAI: React.FC = () => {
         if (file.size <= 10 * 1024 * 1024) { // 10MB limit
           setImage(file);
           
+          // Create preview
           const reader = new FileReader();
           reader.onloadend = () => {
             setImagePreview(reader.result as string);
@@ -168,7 +161,6 @@ const MathHubAI: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     
     if (!question.trim() && !image) {
       toast({
@@ -179,6 +171,7 @@ const MathHubAI: React.FC = () => {
       return;
     }
 
+    // Check daily limit for free users
     if (!isPremium && dailyQuestionsCount >= 5) {
       toast({
         title: "Daily limit reached",
@@ -191,6 +184,7 @@ const MathHubAI: React.FC = () => {
     try {
       setIsLoading(true);
 
+      // Create optimistic UI update
       const tempId = Date.now().toString();
       const userMessage: Message = {
         id: tempId,
@@ -202,21 +196,21 @@ const MathHubAI: React.FC = () => {
       
       setMessages(prev => [...prev, userMessage]);
       
+      // Convert image to base64 if exists
       let imageBase64 = null;
       if (image) {
         const reader = new FileReader();
         imageBase64 = await new Promise<string | null>((resolve) => {
           reader.onloadend = () => {
             const result = reader.result as string;
-            resolve(result.split(',')[1]);
+            resolve(result.split(',')[1]); // Remove the data URL prefix
           };
           reader.onerror = () => resolve(null);
           reader.readAsDataURL(image);
         });
       }
       
-      console.log("Calling Gemini Math AI function with question:", question.substring(0, 50));
-      
+      // Call Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('gemini-math-ai', {
         body: {
           question,
@@ -226,56 +220,18 @@ const MathHubAI: React.FC = () => {
 
       if (error) {
         console.error("Error calling AI function:", error);
-        setError(`Error: ${error.message || "Failed to get an answer. Please try again."}`);
         toast({
           title: "Error",
           description: error.message || "Failed to get an answer. Please try again.",
           variant: "destructive"
         });
         
+        // Remove optimistic update
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
         return;
       }
 
-      if (!data) {
-        const errorMsg = "Received empty response from the AI.";
-        setError(errorMsg);
-        toast({
-          title: "Error",
-          description: errorMsg,
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-      
-      if (data.error) {
-        console.error("AI service returned error:", data.error);
-        const errorDetails = data.details ? `${data.error}: ${data.details}` : data.error;
-        setError(errorDetails);
-        toast({
-          title: "AI Service Error",
-          description: errorDetails,
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-
-      if (!data.answer) {
-        setError("AI returned an empty answer.");
-        toast({
-          title: "Error",
-          description: "Received an empty response from the AI. Please try again.",
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-
+      // Add assistant response to messages
       const assistantMessage: Message = {
         id: `assistant-${tempId}`,
         role: 'assistant',
@@ -285,16 +241,17 @@ const MathHubAI: React.FC = () => {
       
       setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
       
+      // Clear inputs
       setQuestion("");
       removeImage();
       
+      // Update daily count for free users
       if (!isPremium) {
         setDailyQuestionsCount(prev => prev + 1);
       }
       
     } catch (error: any) {
       console.error("Error in handleSubmit:", error);
-      setError(`${error.message || "Something went wrong. Please try again."}`);
       toast({
         title: "Error",
         description: error.message || "Something went wrong. Please try again.",
@@ -310,6 +267,7 @@ const MathHubAI: React.FC = () => {
       try {
         setIsLoading(true);
         
+        // Delete all chat history from database
         const { error } = await supabase
           .from('ai_chat_history')
           .delete()
@@ -319,6 +277,7 @@ const MathHubAI: React.FC = () => {
           throw error;
         }
           
+        // Clear messages state
         setMessages([]);
         setDailyQuestionsCount(0);
         
@@ -360,14 +319,6 @@ const MathHubAI: React.FC = () => {
             </div>
           )}
         </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
 
         <Card>
           <CardHeader className="pb-3">

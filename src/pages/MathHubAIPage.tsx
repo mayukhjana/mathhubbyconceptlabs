@@ -2,7 +2,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MathHubAI from "@/components/MathHubAI";
-import { Toaster } from "@/components/ui/toaster";
 
 const MathHubAIPage = () => {
   return (
@@ -12,7 +11,6 @@ const MathHubAIPage = () => {
         <MathHubAI />
       </main>
       <Footer />
-      <Toaster />
     </div>
   );
 };

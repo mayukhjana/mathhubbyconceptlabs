@@ -33,9 +33,9 @@ enabled = true
 [vector]
 enabled = true
 
+[edge_functions]
 [edge_functions.mathhub-ai]
 verify_jwt = true
 
 [edge_functions.gemini-math-ai]
 verify_jwt = true
-

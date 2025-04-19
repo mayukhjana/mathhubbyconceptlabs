@@ -1,5 +1,5 @@
 
-import { BookOpen, Trophy, Zap, BarChart, Clock, Book, FileText, Target, Calendar, Award } from "lucide-react";
+import { Database, BookOpen, Trophy, Zap, BarChart, Clock, Book, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import SubjectProgress from "@/components/SubjectProgress";
@@ -20,38 +20,38 @@ const DashboardPreview = () => {
 
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-lg text-mathdark dark:text-white">Learning Dashboard</h3>
+            <h3 className="font-semibold text-lg text-mathdark dark:text-white">Your Learning Dashboard</h3>
             <div className="flex items-center gap-1 text-xs bg-gradient-to-r from-mathprimary/10 to-blue-500/10 dark:from-blue-900/30 dark:to-purple-900/30 text-mathprimary dark:text-blue-400 px-3 py-1.5 rounded-full backdrop-blur-sm">
               <Clock size={12} />
-              <span>Last updated: 2 hours ago</span>
+              <span>Last updated: Today</span>
             </div>
           </div>
           
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold text-mathdark dark:text-white flex items-center gap-1">
-                <Target size={16} className="text-mathprimary dark:text-blue-400" />
+                <BarChart size={16} className="text-mathprimary dark:text-blue-400" />
                 <span>Progress Overview</span>
               </h3>
-              <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full font-medium backdrop-blur-sm">82% Complete</span>
+              <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full font-medium backdrop-blur-sm">75% Complete</span>
             </div>
             <div className="h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-mathprimary via-blue-500 to-mathsecondary dark:from-blue-500 dark:via-blue-400 dark:to-purple-500 rounded-full transition-all duration-1000" style={{
-                width: "82%"
+                width: "75%"
               }}></div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 flex flex-col items-center text-center border border-gray-100/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300 backdrop-blur-sm">
-              <Calendar className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
-              <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">23/25</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Chapters Completed</span>
+              <FileText className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
+              <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">5,000+</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Practice Papers</span>
             </div>
             <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 flex flex-col items-center text-center border border-gray-100/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300 backdrop-blur-sm">
-              <Award className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
-              <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">92%</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Average Score</span>
+              <Book className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
+              <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">150+</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Math Chapters</span>
             </div>
           </div>
           
@@ -73,8 +73,8 @@ const DashboardPreview = () => {
       
       <div className="absolute -bottom-4 -left-4 md:-left-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl p-3 rounded-lg shadow-xl -rotate-3 hidden sm:block border border-gray-100/20 dark:border-gray-700/20 hover:rotate-0 transition-all duration-300">
         <div className="flex items-center gap-2 text-mathdark dark:text-white">
-          <BookOpen size={16} className="text-mathprimary dark:text-blue-400" />
-          <span>Next test: Tomorrow</span>
+          <Zap size={16} className="text-mathprimary dark:text-blue-400" />
+          <span>Next quiz: Tomorrow</span>
         </div>
       </div>
     </>
