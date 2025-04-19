@@ -18,7 +18,7 @@ export const ExamNavigation = ({
   onSubmit,
 }: ExamNavigationProps) => {
   return (
-    <div className="flex justify-between mt-6">
+    <div className="flex justify-between items-center mt-6">
       <Button 
         variant="outline" 
         onClick={onPrevious}

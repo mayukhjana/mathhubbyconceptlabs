@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +74,14 @@ const ExamPage = () => {
           return;
         }
         
+        // Check if exam was already attempted
+        if (user) {
+          const wasAttempted = await checkExamAttempted(user.id, examId);
+          if (wasAttempted) {
+            toast.warning("Note: Results won't be saved as you've already attempted this exam once.");
+          }
+        }
+        
         const questionsData = await fetchQuestionsForExam(examId);
         
         if (!questionsData || questionsData.length === 0) {
@@ -106,7 +113,7 @@ const ExamPage = () => {
     };
     
     loadExam();
-  }, [examId]);
+  }, [examId, user]);
   
   useEffect(() => {
     if (!timeRemaining || timeRemaining <= 0 || examCompleted) return;

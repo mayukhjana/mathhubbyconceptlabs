@@ -1,15 +1,15 @@
-
 import { useState } from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Check, X, Upload, Image } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { X, Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export type QuestionData = {
+export interface QuestionData {
   id?: string;
   question_text: string;
   option_a: string;
@@ -17,285 +17,254 @@ export type QuestionData = {
   option_c: string;
   option_d: string;
   correct_answer: string | string[];
-  order_number: number;
   marks: number;
   negative_marks: number;
-  is_multi_correct?: boolean;
-  exam_id?: string; // Add this to match the backend type
-};
+  is_multi_correct: boolean;
+  order_number: number;
+  exam_id?: string;
+  image_url?: string;
+}
 
 interface QuestionFormProps {
   initialData?: QuestionData;
-  onSave: (questionData: QuestionData) => void;
-  onCancel?: () => void;
+  onSave: (question: QuestionData) => void;
+  onCancel: () => void;
   index: number;
 }
 
 const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProps) => {
-  // Initialize with empty or provided data
-  const [question, setQuestion] = useState<QuestionData>(
-    initialData || {
-      question_text: "",
-      option_a: "",
-      option_b: "",
-      option_c: "",
-      option_d: "",
-      correct_answer: "a",
-      order_number: index + 1,
-      marks: 1,
-      negative_marks: 0.25,  // Changed from 0 to 0.25
-      is_multi_correct: false,
-    }
-  );
+  const [formData, setFormData] = useState<Omit<QuestionData, 'id' | 'exam_id'>>({
+    question_text: initialData?.question_text || "",
+    option_a: initialData?.option_a || "",
+    option_b: initialData?.option_b || "",
+    option_c: initialData?.option_c || "",
+    option_d: initialData?.option_d || "",
+    correct_answer: initialData?.correct_answer || "a",
+    marks: initialData?.marks || 1,
+    negative_marks: initialData?.negative_marks || 0,
+    is_multi_correct: initialData?.is_multi_correct || false,
+    order_number: initialData?.order_number || index + 1,
+  });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(initialData?.image_url);
 
-  // Handle multi-correct initialization
-  const isInitiallyMultiCorrect = initialData?.is_multi_correct || false;
-  const initialSelectedAnswers = (() => {
-    if (Array.isArray(initialData?.correct_answer)) {
-      return initialData.correct_answer;
-    } else if (typeof initialData?.correct_answer === 'string' && initialData?.is_multi_correct) {
-      return initialData.correct_answer.split(',');
-    }
-    return initialData?.correct_answer ? [initialData.correct_answer] : [];
-  })();
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  const [isMultiCorrect, setIsMultiCorrect] = useState(isInitiallyMultiCorrect);
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>(initialSelectedAnswers);
-  
-  const handleChange = (field: keyof QuestionData, value: string | number | boolean) => {
-    setQuestion({
-      ...question,
-      [field]: field === 'marks' || field === 'negative_marks' ? Number(value) : value,
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    setImageFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    let finalImageUrl = imageUrl;
+    
+    if (imageFile) {
+      try {
+        const fileName = `${Date.now()}-${imageFile.name}`;
+        const { data, error } = await supabase.storage
+          .from('questions')
+          .upload(fileName, imageFile);
+          
+        if (error) throw error;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('questions')
+          .getPublicUrl(fileName);
+          
+        finalImageUrl = publicUrl;
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast.error("Failed to upload image");
+        return;
+      }
+    }
+    
+    if (!formData.question_text || !formData.option_a || !formData.option_b || !formData.option_c || !formData.option_d || !formData.correct_answer) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    onSave({
+      ...formData,
+      image_url: finalImageUrl
     });
   };
 
-  const handleMultiCorrectToggle = (checked: boolean) => {
-    setIsMultiCorrect(checked);
-    
-    // Reset selected answers when toggling
-    if (!checked) {
-      // If switching to single answer, default to "a"
-      setSelectedAnswers(["a"]);
-      setQuestion(prev => ({
-        ...prev,
-        correct_answer: "a",
-        is_multi_correct: false
-      }));
-    } else {
-      // If switching to multi-answer, start empty
-      setSelectedAnswers([]);
-      setQuestion(prev => ({
-        ...prev,
-        correct_answer: [],
-        is_multi_correct: true
-      }));
-    }
-  };
-
-  const handleCheckboxChange = (value: string) => {
-    const newSelected = selectedAnswers.includes(value)
-      ? selectedAnswers.filter(item => item !== value)
-      : [...selectedAnswers, value];
-    
-    setSelectedAnswers(newSelected);
-    setQuestion(prev => ({
-      ...prev,
-      correct_answer: newSelected
-    }));
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Prepare the final question data
-    const finalQuestion = {
-      ...question,
-      correct_answer: isMultiCorrect ? selectedAnswers : question.correct_answer,
-      is_multi_correct: isMultiCorrect
-    };
-    
-    console.log("Saving question:", finalQuestion);
-    onSave(finalQuestion);
-  };
-
-  const isFormValid = () => {
-    return (
-      question.question_text.trim() !== "" &&
-      question.option_a.trim() !== "" &&
-      question.option_b.trim() !== "" &&
-      question.option_c.trim() !== "" &&
-      question.option_d.trim() !== "" &&
-      question.marks > 0 &&
-      (isMultiCorrect ? selectedAnswers.length > 0 : !!question.correct_answer)
-    );
-  };
-  
   return (
-    <form onSubmit={handleSubmit} className="border rounded-md p-4 mb-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Question #{question.order_number}</h3>
-        {onCancel && (
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="sm" 
-            onClick={onCancel}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-          >
-            <X className="h-4 w-4 mr-1" /> Cancel
-          </Button>
-        )}
-      </div>
-      
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={isMultiCorrect}
-            onCheckedChange={handleMultiCorrectToggle}
-            id={`multi-correct-${index}`}
-          />
-          <Label htmlFor={`multi-correct-${index}`}>Allow multiple correct answers</Label>
-        </div>
+    <Card>
+      <form onSubmit={handleSubmit}>
+        <CardHeader>
+          <CardTitle>Question {index + 1}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Question Text</Label>
+            <Textarea
+              value={formData.question_text}
+              onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
+              required
+            />
+          </div>
 
-        <div>
-          <Label htmlFor={`question-${index}`}>Question Text</Label>
-          <Textarea
-            id={`question-${index}`}
-            value={question.question_text}
-            onChange={(e) => handleChange("question_text", e.target.value)}
-            placeholder="Enter the question text here..."
-            className="mt-1"
-            rows={2}
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor={`option-a-${index}`}>Option A</Label>
-            <Input
-              id={`option-a-${index}`}
-              value={question.option_a}
-              onChange={(e) => handleChange("option_a", e.target.value)}
-              placeholder="Option A"
-              className="mt-1"
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor={`option-b-${index}`}>Option B</Label>
-            <Input
-              id={`option-b-${index}`}
-              value={question.option_b}
-              onChange={(e) => handleChange("option_b", e.target.value)}
-              placeholder="Option B"
-              className="mt-1"
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor={`option-c-${index}`}>Option C</Label>
-            <Input
-              id={`option-c-${index}`}
-              value={question.option_c}
-              onChange={(e) => handleChange("option_c", e.target.value)}
-              placeholder="Option C"
-              className="mt-1"
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor={`option-d-${index}`}>Option D</Label>
-            <Input
-              id={`option-d-${index}`}
-              value={question.option_d}
-              onChange={(e) => handleChange("option_d", e.target.value)}
-              placeholder="Option D"
-              className="mt-1"
-              required
-            />
-          </div>
-        </div>
-        
-        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor={`marks-${index}`}>Marks for Correct Answer</Label>
-            <Input
-              id={`marks-${index}`}
-              type="number"
-              min="0"
-              step="0.5"
-              value={question.marks}
-              onChange={(e) => handleChange("marks", e.target.value)}
-              placeholder="Enter marks"
-              className="mt-1"
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor={`negative-marks-${index}`}>Negative Marks (if wrong)</Label>
-            <Input
-              id={`negative-marks-${index}`}
-              type="number"
-              min="0"
-              step="0.25"
-              value={question.negative_marks}
-              onChange={(e) => handleChange("negative_marks", e.target.value)}
-              placeholder="Enter negative marks"
-              className="mt-1"
-            />
-          </div>
-        </div>
-        
-        <div>
-          <Label>Correct Answer{isMultiCorrect ? "s" : ""}</Label>
-          {isMultiCorrect ? (
-            <div className="grid grid-cols-2 gap-4 mt-2">
-              {['a', 'b', 'c', 'd'].map((option) => (
-                <div key={option} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`correct-${option}-${index}`}
-                    checked={selectedAnswers.includes(option)}
-                    onCheckedChange={() => handleCheckboxChange(option)}
-                  />
-                  <Label htmlFor={`correct-${option}-${index}`} className="cursor-pointer">
-                    Option {option.toUpperCase()}
-                  </Label>
+          <div className="space-y-2">
+            <Label>Question Image (Optional)</Label>
+            <div className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-accent transition-colors"
+                 onClick={() => document.getElementById(`question-image-${index}`)?.click()}>
+              {imageUrl ? (
+                <div className="space-y-2">
+                  <img src={imageUrl} alt="Question" className="max-w-full h-auto mx-auto" />
+                  <p className="text-sm text-muted-foreground">Click to change image</p>
                 </div>
-              ))}
+              ) : (
+                <div className="py-4">
+                  <Image className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Click to upload an image</p>
+                </div>
+              )}
+              <Input
+                id={`question-image-${index}`}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
             </div>
-          ) : (
-            <RadioGroup
-              value={question.correct_answer as string}
-              onValueChange={(value) => handleChange("correct_answer", value)}
-              className="flex space-x-4 mt-1"
-            >
-              {['a', 'b', 'c', 'd'].map((option) => (
-                <div key={option} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`correct-${option}-${index}`} />
-                  <Label htmlFor={`correct-${option}-${index}`} className="cursor-pointer">
-                    {option.toUpperCase()}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          )}
-        </div>
-      </div>
-      
-      <Button 
-        type="submit" 
-        className="w-full mt-4"
-        disabled={!isFormValid()}
-      >
-        <Save className="h-4 w-4 mr-2" />
-        {initialData ? "Update Question" : "Save Question"}
-      </Button>
-    </form>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Option A</Label>
+              <Input
+                value={formData.option_a}
+                onChange={(e) => setFormData({ ...formData, option_a: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Option B</Label>
+              <Input
+                value={formData.option_b}
+                onChange={(e) => setFormData({ ...formData, option_b: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Option C</Label>
+              <Input
+                value={formData.option_c}
+                onChange={(e) => setFormData({ ...formData, option_c: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Option D</Label>
+              <Input
+                value={formData.option_d}
+                onChange={(e) => setFormData({ ...formData, option_d: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Correct Answer</Label>
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="radio"
+                  id={`correct-a-${index}`}
+                  name={`correct-answer-${index}`}
+                  value="a"
+                  checked={formData.correct_answer === "a"}
+                  onChange={() => setFormData({ ...formData, correct_answer: "a" })}
+                />
+                <Label htmlFor={`correct-a-${index}`}>A</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="radio"
+                  id={`correct-b-${index}`}
+                  name={`correct-answer-${index}`}
+                  value="b"
+                  checked={formData.correct_answer === "b"}
+                  onChange={() => setFormData({ ...formData, correct_answer: "b" })}
+                />
+                <Label htmlFor={`correct-b-${index}`}>B</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="radio"
+                  id={`correct-c-${index}`}
+                  name={`correct-answer-${index}`}
+                  value="c"
+                  checked={formData.correct_answer === "c"}
+                  onChange={() => setFormData({ ...formData, correct_answer: "c" })}
+                />
+                <Label htmlFor={`correct-c-${index}`}>C</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="radio"
+                  id={`correct-d-${index}`}
+                  name={`correct-answer-${index}`}
+                  value="d"
+                  checked={formData.correct_answer === "d"}
+                  onChange={() => setFormData({ ...formData, correct_answer: "d" })}
+                />
+                <Label htmlFor={`correct-d-${index}`}>D</Label>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Marks</Label>
+              <Input
+                type="number"
+                min="0"
+                value={String(formData.marks)}
+                onChange={(e) => setFormData({ ...formData, marks: Number(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Negative Marks</Label>
+              <Input
+                type="number"
+                min="0"
+                value={String(formData.negative_marks)}
+                onChange={(e) => setFormData({ ...formData, negative_marks: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={`is-multi-correct-${index}`}
+              checked={formData.is_multi_correct}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_multi_correct: checked })}
+            />
+            <Label htmlFor={`is-multi-correct-${index}`}>Multiple Correct Answers</Label>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onCancel}>
+            <X className="h-4 w-4 mr-2" /> Cancel
+          </Button>
+          <Button type="submit">
+            <Check className="h-4 w-4 mr-2" /> Save Question
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   );
 };
 
