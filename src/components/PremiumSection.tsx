@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Award, CheckCircle, Sparkles } from "lucide-react";
@@ -30,7 +29,7 @@ const PremiumSection = () => {
           </p>
         </div>
         
-        <div className="flex flex-col lg:flex-row items-stretch gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <PremiumFeatures />
           <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
