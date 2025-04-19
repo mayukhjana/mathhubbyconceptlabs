@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for file handling and content type detection
  */
@@ -7,14 +8,6 @@
  * based on its extension or type property
  */
 export const getContentTypeFromFile = (file: File): string => {
-  // First check the native type if it seems valid
-  if (file.type && 
-      file.type !== 'application/octet-stream' && 
-      file.type !== 'application/json') {
-    return file.type;
-  }
-  
-  // Otherwise, determine by extension
   const extension = file.name.split('.').pop()?.toLowerCase();
   
   // Map of common file extensions to MIME types
@@ -35,10 +28,24 @@ export const getContentTypeFromFile = (file: File): string => {
     'xls': 'application/vnd.ms-excel',
     'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'txt': 'text/plain',
+    
+    // Other types can be added as needed
   };
   
-  // Try to get the content type from the extension map
+  // Try to get the content type from the extension map first
   if (extension && contentTypeMap[extension]) {
+    return contentTypeMap[extension];
+  }
+  
+  // If file.type is set and isn't application/json or octet-stream, use it
+  if (file.type && 
+      file.type !== 'application/octet-stream' && 
+      file.type !== 'application/json') {
+    return file.type;
+  }
+  
+  // For image files, try to determine by extension
+  if (extension && ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'].includes(extension)) {
     return contentTypeMap[extension];
   }
   

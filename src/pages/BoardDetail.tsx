@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -41,6 +42,7 @@ const BoardDetail = () => {
   const [chapterExams, setChapterExams] = useState<Record<string, Chapter[]>>({});
   const navigate = useNavigate();
   
+  // Convert boardId to match the database format (e.g., "icse" to "ICSE")
   const formattedBoardId = boardId ? boardId.toUpperCase() : "";
   
   const boardInfo = boardId ? boardsInfo[boardId as keyof typeof boardsInfo] : null;
@@ -62,6 +64,7 @@ const BoardDetail = () => {
     try {
       console.log(`Fetching exams for board: ${formattedBoardId}`);
       
+      // Fetch full mock exams (where chapter is null, empty or 'none')
       const class10MockExams = await fetchBoardExams(formattedBoardId, "full-mock", "10");
       const class12MockExams = await fetchBoardExams(formattedBoardId, "full-mock", "12");
       
@@ -72,23 +75,29 @@ const BoardDetail = () => {
         class12: class12MockExams
       });
       
+      // Fetch chapters for this board
       const chapters = await fetchBoardChapters(formattedBoardId);
       console.log(`Retrieved ${chapters.length} chapters for ${formattedBoardId}:`, chapters);
       
+      // Create chapter structure for Class 10 and 12
       const class10Chapters: Chapter[] = [];
       const class12Chapters: Chapter[] = [];
       
+      // Process each chapter
       for (const chapter of chapters) {
+        // Fetch exams for this chapter, both Class 10 and 12
         const class10ChapterExams = await fetchBoardExams(formattedBoardId, chapter, "10");
         const class12ChapterExams = await fetchBoardExams(formattedBoardId, chapter, "12");
         
         console.log(`Retrieved ${class10ChapterExams.length} Class 10 exams and ${class12ChapterExams.length} Class 12 exams for chapter ${chapter}`);
         
+        // Only add chapters that have exams
         if (class10ChapterExams.length > 0) {
           const formattedChapter: Chapter = {
             id: chapter,
-            title: chapter.charAt(0).toUpperCase() + chapter.slice(1),
+            title: chapter.charAt(0).toUpperCase() + chapter.slice(1), // Capitalize first letter
             papers: await Promise.all(class10ChapterExams.map(async (exam) => {
+              // Get download URLs for each exam
               const downloadUrl = await getFileDownloadUrl(exam.id, 'paper', exam.board);
               const solutionUrl = await getFileDownloadUrl(exam.id, 'solution', exam.board);
               
@@ -111,8 +120,9 @@ const BoardDetail = () => {
         if (class12ChapterExams.length > 0) {
           const formattedChapter: Chapter = {
             id: chapter,
-            title: chapter.charAt(0).toUpperCase() + chapter.slice(1),
+            title: chapter.charAt(0).toUpperCase() + chapter.slice(1), // Capitalize first letter
             papers: await Promise.all(class12ChapterExams.map(async (exam) => {
+              // Get download URLs for each exam
               const downloadUrl = await getFileDownloadUrl(exam.id, 'paper', exam.board);
               const solutionUrl = await getFileDownloadUrl(exam.id, 'solution', exam.board);
               
@@ -298,6 +308,7 @@ const PapersList = ({ boardId, userIsPremium, fullMockExams }: {
   );
 };
 
+// Component to render exam papers grid
 const ExamPapersGrid = ({ exams, userIsPremium }: { exams: Exam[], userIsPremium: boolean }) => {
   const [paperUrls, setPaperUrls] = useState<Record<string, string>>({});
   const [solutionUrls, setSolutionUrls] = useState<Record<string, string>>({});
@@ -350,7 +361,6 @@ const ExamPapersGrid = ({ exams, userIsPremium }: { exams: Exam[], userIsPremium
           solutionUrl={solutionUrls[exam.id]}
           practiceUrl={`/exams/${exam.id}`}
           examBoard={exam.board}
-          isFullMock={true}
         />
       ))}
     </div>

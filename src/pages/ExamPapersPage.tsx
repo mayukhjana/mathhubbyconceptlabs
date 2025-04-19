@@ -266,7 +266,6 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       examBoard={exam.board}
       isAttempted={exam.isAttempted || isAttempted}
       requireAuth={true}
-      isFullMock={true} // Added isFullMock flag for entrance exams
     />
   );
 };
