@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAuth } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +31,7 @@ const AdminUploadPage = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [solutionFile, setSolutionFile] = useState<File | null>(null);
-  const [questions, setQuestions] = useState<QuestionData[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -137,9 +136,7 @@ const AdminUploadPage = () => {
     setSolutionFile(file);
   };
 
-  const handleSaveQuestion = (questionData: QuestionData) => {
-    console.log("Question data received:", questionData);
-    
+  const handleSaveQuestion = (questionData: Question) => {
     const existingIndex = questions.findIndex(q => q.order_number === questionData.order_number);
     if (existingIndex !== -1) {
       const updatedQuestions = [...questions];
@@ -208,7 +205,6 @@ const AdminUploadPage = () => {
     setError(null);
     
     try {
-      // Convert "none" chapter back to null for the database
       const finalChapter = selectedChapter === "none" ? null : selectedChapter;
       
       const examPayload = {
