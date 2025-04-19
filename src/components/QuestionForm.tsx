@@ -47,6 +47,13 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | undefined>(initialData?.image_url);
+  const [selectedCorrectAnswers, setSelectedCorrectAnswers] = useState<string[]>(
+    formData.is_multi_correct && formData.correct_answer 
+      ? (Array.isArray(formData.correct_answer) 
+          ? formData.correct_answer 
+          : formData.correct_answer.split(','))
+      : []
+  );
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -57,45 +64,58 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
       return;
     }
 
-    setImageFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setImageUrl(objectUrl);
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('questions')
+        .upload(fileName, file);
+      
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('questions')
+        .getPublicUrl(fileName);
+      
+      setImageFile(file);
+      setImageUrl(publicUrl);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error("Failed to upload image");
+    }
+  };
+
+  const handleCorrectAnswerChange = (option: string) => {
+    if (!formData.is_multi_correct) {
+      setFormData({ ...formData, correct_answer: option });
+    } else {
+      const currentAnswers = selectedCorrectAnswers.includes(option)
+        ? selectedCorrectAnswers.filter(ans => ans !== option)
+        : [...selectedCorrectAnswers, option];
+      
+      setSelectedCorrectAnswers(currentAnswers);
+      setFormData({ 
+        ...formData, 
+        correct_answer: currentAnswers.sort() 
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    let finalImageUrl = imageUrl;
-    
-    if (imageFile) {
-      try {
-        const fileName = `${Date.now()}-${imageFile.name}`;
-        const { data, error } = await supabase.storage
-          .from('questions')
-          .upload(fileName, imageFile);
-          
-        if (error) throw error;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('questions')
-          .getPublicUrl(fileName);
-          
-        finalImageUrl = publicUrl;
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        toast.error("Failed to upload image");
-        return;
-      }
-    }
-    
-    if (!formData.question_text || !formData.option_a || !formData.option_b || !formData.option_c || !formData.option_d || !formData.correct_answer) {
-      toast.error("Please fill in all fields");
+    if (!formData.question_text || !formData.option_a || !formData.option_b || 
+        !formData.option_c || !formData.option_d || 
+        (formData.is_multi_correct && selectedCorrectAnswers.length === 0)) {
+      toast.error("Please fill in all fields and select at least one correct answer");
       return;
     }
 
     onSave({
       ...formData,
-      image_url: finalImageUrl
+      image_url: imageUrl,
+      correct_answer: formData.is_multi_correct 
+        ? selectedCorrectAnswers.sort() 
+        : formData.correct_answer
     });
   };
 
@@ -178,50 +198,22 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
           <div className="space-y-2">
             <Label>Correct Answer</Label>
             <div className="flex gap-4">
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  id={`correct-a-${index}`}
-                  name={`correct-answer-${index}`}
-                  value="a"
-                  checked={formData.correct_answer === "a"}
-                  onChange={() => setFormData({ ...formData, correct_answer: "a" })}
-                />
-                <Label htmlFor={`correct-a-${index}`}>A</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  id={`correct-b-${index}`}
-                  name={`correct-answer-${index}`}
-                  value="b"
-                  checked={formData.correct_answer === "b"}
-                  onChange={() => setFormData({ ...formData, correct_answer: "b" })}
-                />
-                <Label htmlFor={`correct-b-${index}`}>B</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  id={`correct-c-${index}`}
-                  name={`correct-answer-${index}`}
-                  value="c"
-                  checked={formData.correct_answer === "c"}
-                  onChange={() => setFormData({ ...formData, correct_answer: "c" })}
-                />
-                <Label htmlFor={`correct-c-${index}`}>C</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  id={`correct-d-${index}`}
-                  name={`correct-answer-${index}`}
-                  value="d"
-                  checked={formData.correct_answer === "d"}
-                  onChange={() => setFormData({ ...formData, correct_answer: "d" })}
-                />
-                <Label htmlFor={`correct-d-${index}`}>D</Label>
-              </div>
+              {['a', 'b', 'c', 'd'].map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Input
+                    type={formData.is_multi_correct ? "checkbox" : "radio"}
+                    id={`correct-${option}-${index}`}
+                    name={`correct-answer-${index}`}
+                    checked={
+                      formData.is_multi_correct
+                        ? selectedCorrectAnswers.includes(option)
+                        : formData.correct_answer === option
+                    }
+                    onChange={() => handleCorrectAnswerChange(option)}
+                  />
+                  <Label htmlFor={`correct-${option}-${index}`}>{option.toUpperCase()}</Label>
+                </div>
+              ))}
             </div>
           </div>
 
