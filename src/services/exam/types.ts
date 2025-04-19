@@ -1,3 +1,4 @@
+
 export interface Exam {
   id: string;
   title: string;
@@ -27,3 +28,24 @@ export interface Question {
   negative_marks: number;
   is_multi_correct: boolean;
 }
+
+export interface ExamResult {
+  id: string;
+  user_id: string;
+  exam_id: string;
+  score: number;
+  total_questions: number;
+  obtained_marks?: number;
+  total_marks?: number;
+  time_taken?: number;
+  completed_at?: string;
+  exams?: Exam;
+}
+
+export const EXAM_TYPES = {
+  BOARD: "board",
+  ENTRANCE: "entrance",
+};
+
+export const BOARD_OPTIONS = ["ICSE", "CBSE", "West Bengal Board"];
+export const ENTRANCE_OPTIONS = ["WBJEE", "JEE MAINS", "JEE ADVANCED"];
