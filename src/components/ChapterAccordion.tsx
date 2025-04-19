@@ -1,4 +1,3 @@
-
 import { 
   Accordion,
   AccordionContent,
@@ -49,6 +48,7 @@ const ChapterAccordion = ({ chapters, userIsPremium = false }: ChapterAccordionP
                   <PaperCard
                     key={paper.id}
                     title={paper.title}
+                    description={paper.description || `${paper.examBoard} ${paper.year}`}
                     year={paper.year}
                     isPremium={paper.isPremium}
                     userIsPremium={userIsPremium}

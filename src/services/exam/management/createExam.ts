@@ -6,18 +6,9 @@ export const createExam = async (examData: Omit<Exam, 'id' | 'created_at' | 'upd
   try {
     console.log("Creating exam with data:", examData);
     
-    // Prepare data for insertion, ensuring all required fields are present
-    const insertData = {
-      ...examData,
-      // Set default values for any potentially missing fields
-      allow_paper_download: examData.allow_paper_download ?? true,
-      allow_solution_download: examData.allow_solution_download ?? true,
-    };
-    
-    // Insert exam into database
     const { data, error } = await supabase
       .from('exams')
-      .insert([insertData])
+      .insert([examData])
       .select()
       .single();
       
@@ -27,11 +18,7 @@ export const createExam = async (examData: Omit<Exam, 'id' | 'created_at' | 'upd
     }
     
     console.log("Created exam:", data);
-    return {
-      ...data,
-      allow_paper_download: data.allow_paper_download !== undefined ? data.allow_paper_download : true,
-      allow_solution_download: data.allow_solution_download !== undefined ? data.allow_solution_download : true,
-    } as Exam;
+    return data as Exam;
   } catch (error) {
     console.error("Exception creating exam:", error);
     throw error;
@@ -42,10 +29,12 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
   try {
     console.log("Creating questions:", questions);
     
-    // Insert questions into database
     const { data, error } = await supabase
       .from('questions')
-      .insert(questions)
+      .insert(questions.map(q => ({
+        ...q,
+        is_multi_correct: q.is_multi_correct || false
+      })))
       .select();
       
     if (error) {
@@ -54,7 +43,7 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
     }
     
     console.log("Created questions:", data);
-    return data;
+    return data as Question[];
   } catch (error) {
     console.error("Exception creating questions:", error);
     throw error;

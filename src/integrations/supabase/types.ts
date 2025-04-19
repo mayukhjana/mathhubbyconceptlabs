@@ -35,6 +35,8 @@ export type Database = {
       }
       exams: {
         Row: {
+          allow_paper_download: boolean
+          allow_solution_download: boolean
           board: string
           chapter: string | null
           class: string
@@ -47,6 +49,8 @@ export type Database = {
           year: string
         }
         Insert: {
+          allow_paper_download?: boolean
+          allow_solution_download?: boolean
           board: string
           chapter?: string | null
           class: string
@@ -59,6 +63,8 @@ export type Database = {
           year: string
         }
         Update: {
+          allow_paper_download?: boolean
+          allow_solution_download?: boolean
           board?: string
           chapter?: string | null
           class?: string

@@ -10,7 +10,7 @@ export interface Exam {
   is_premium: boolean;
   allow_paper_download: boolean;
   allow_solution_download: boolean;
-  isAttempted?: boolean; // Add this property to match usage in ExamPapersPage.tsx
+  isAttempted?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -30,19 +30,7 @@ export interface Question {
   is_multi_correct: boolean;
 }
 
-export interface ExamResult {
-  id: string;
-  user_id: string;
-  exam_id: string;
-  score: number;
-  total_questions: number;
-  obtained_marks?: number;
-  total_marks?: number;
-  time_taken?: number;
-  completed_at?: string;
-  exams?: Exam;
-}
-
+// Constants
 export const EXAM_TYPES = {
   BOARD: "board",
   ENTRANCE: "entrance",

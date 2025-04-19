@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
   title: string;
-  description?: string; // Add description prop
+  description?: string;
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
@@ -41,7 +40,6 @@ const PaperCard = ({
   allowPaperDownload = true,
   allowSolutionDownload = true,
 }: PaperCardProps) => {
-  // Build badge array
   const badges = [];
   if (year) badges.push({ text: year, variant: 'outline' as const });
   if (examBoard) badges.push({ text: examBoard, variant: 'default' as const });
@@ -50,7 +48,6 @@ const PaperCard = ({
 
   const canAccessPremium = !isPremium || userIsPremium;
   
-  // Helper to determine what buttons to show
   const shouldShowPaperDownload = downloadUrl && allowPaperDownload;
   const shouldShowSolutionDownload = solutionUrl && allowSolutionDownload;
   const shouldShowPractice = practiceUrl;
