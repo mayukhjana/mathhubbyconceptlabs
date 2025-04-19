@@ -29,12 +29,17 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
   try {
     console.log("Creating questions:", questions);
     
+    // Handle the string[] type for correct_answer by converting arrays to strings if needed
+    const processedQuestions = questions.map(q => ({
+      ...q,
+      is_multi_correct: q.is_multi_correct,
+      // Convert array answers to string format for database storage if needed
+      correct_answer: Array.isArray(q.correct_answer) ? q.correct_answer.join(',') : q.correct_answer
+    }));
+    
     const { data, error } = await supabase
       .from('questions')
-      .insert(questions.map(q => ({
-        ...q,
-        is_multi_correct: q.is_multi_correct || false
-      })))
+      .insert(processedQuestions)
       .select();
       
     if (error) {

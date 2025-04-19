@@ -30,6 +30,19 @@ export interface Question {
   is_multi_correct: boolean;
 }
 
+export interface ExamResult {
+  id: string;
+  user_id: string;
+  exam_id: string;
+  score: number;
+  total_questions: number;
+  obtained_marks?: number;
+  total_marks?: number;
+  time_taken?: number;
+  completed_at?: string;
+  exams?: Exam;
+}
+
 // Constants
 export const EXAM_TYPES = {
   BOARD: "board",

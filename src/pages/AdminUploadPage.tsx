@@ -262,13 +262,11 @@ const AdminUploadPage = () => {
         console.log("Questions before adding exam_id:", questions);
         
         const questionsWithExamId = questions.map(question => {
-          let processedQuestion = { ...question, exam_id: insertedExam.id };
-          
-          if (processedQuestion.is_multi_correct && Array.isArray(processedQuestion.correct_answer)) {
-            console.log("Processing multi-correct question:", processedQuestion);
-          }
-          
-          return processedQuestion;
+          return { 
+            ...question, 
+            exam_id: insertedExam.id,
+            is_multi_correct: question.is_multi_correct === true 
+          };
         });
         
         console.log("Questions to be inserted:", questionsWithExamId);
