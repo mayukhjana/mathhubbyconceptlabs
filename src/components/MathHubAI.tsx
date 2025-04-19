@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, TrashIcon, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -13,10 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-// Import remark-math and rehype-katex without type declarations
-// @ts-ignore
 import remarkMath from 'remark-math';
-// @ts-ignore
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
@@ -49,7 +45,6 @@ const MathHubAI: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch previous chat history when component mounts
   useEffect(() => {
     if (user) {
       fetchChatHistory();
@@ -57,7 +52,6 @@ const MathHubAI: React.FC = () => {
     }
   }, [user]);
 
-  // Scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -140,7 +134,6 @@ const MathHubAI: React.FC = () => {
         if (file.size <= 10 * 1024 * 1024) { // 10MB limit
           setImage(file);
           
-          // Create preview
           const reader = new FileReader();
           reader.onloadend = () => {
             setImagePreview(reader.result as string);
@@ -183,7 +176,6 @@ const MathHubAI: React.FC = () => {
       return;
     }
 
-    // Check daily limit for free users
     if (!isPremium && dailyQuestionsCount >= 5) {
       toast({
         title: "Daily limit reached",
@@ -196,7 +188,6 @@ const MathHubAI: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Create optimistic UI update
       const tempId = Date.now().toString();
       const userMessage: Message = {
         id: tempId,
@@ -208,21 +199,19 @@ const MathHubAI: React.FC = () => {
       
       setMessages(prev => [...prev, userMessage]);
       
-      // Convert image to base64 if exists
       let imageBase64 = null;
       if (image) {
         const reader = new FileReader();
         imageBase64 = await new Promise<string | null>((resolve) => {
           reader.onloadend = () => {
             const result = reader.result as string;
-            resolve(result.split(',')[1]); // Remove the data URL prefix
+            resolve(result.split(',')[1]);
           };
           reader.onerror = () => resolve(null);
           reader.readAsDataURL(image);
         });
       }
       
-      // Call Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('gemini-math-ai', {
         body: {
           question,
@@ -238,12 +227,10 @@ const MathHubAI: React.FC = () => {
           variant: "destructive"
         });
         
-        // Remove optimistic update
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
         return;
       }
 
-      // Add assistant response to messages
       const assistantMessage: Message = {
         id: `assistant-${tempId}`,
         role: 'assistant',
@@ -253,11 +240,9 @@ const MathHubAI: React.FC = () => {
       
       setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
       
-      // Clear inputs
       setQuestion("");
       removeImage();
       
-      // Update daily count for free users
       if (!isPremium) {
         setDailyQuestionsCount(prev => prev + 1);
       }
@@ -279,7 +264,6 @@ const MathHubAI: React.FC = () => {
       try {
         setIsLoading(true);
         
-        // Delete all chat history from database
         const { error } = await supabase
           .from('ai_chat_history')
           .delete()
@@ -289,7 +273,6 @@ const MathHubAI: React.FC = () => {
           throw error;
         }
           
-        // Clear messages state
         setMessages([]);
         setDailyQuestionsCount(0);
         
