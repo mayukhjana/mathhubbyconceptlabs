@@ -15,7 +15,7 @@ import RecentUploads from "@/components/admin/RecentUploads";
 import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
 import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
-import type { QuestionData } from "@/components/QuestionForm";
+import { Question } from "@/services/exam/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 

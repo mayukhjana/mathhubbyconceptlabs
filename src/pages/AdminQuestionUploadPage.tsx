@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -18,7 +17,8 @@ import { Plus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchExamById, Exam } from "@/services/examService";
 import LoadingAnimation from "@/components/LoadingAnimation";
-import QuestionForm, { QuestionData } from "@/components/QuestionForm";
+import QuestionForm from "@/components/QuestionForm";
+import { Question } from "@/services/exam/types";
 import { toast as sonnerToast } from "sonner";
 
 const AdminQuestionUploadPage = () => {
@@ -28,7 +28,7 @@ const AdminQuestionUploadPage = () => {
   const [loading, setLoading] = useState(true);
   const [exam, setExam] = useState<Exam | null>(null);
   const [examDuration, setExamDuration] = useState<number>(60);
-  const [questions, setQuestions] = useState<QuestionData[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -84,7 +84,7 @@ const AdminQuestionUploadPage = () => {
     loadExamAndQuestions();
   }, [examId, toast]);
   
-  const handleSaveQuestion = (questionData: QuestionData) => {
+  const handleSaveQuestion = (questionData: Question) => {
     if (editingQuestionIndex !== null) {
       // Update existing question
       const updatedQuestions = [...questions];

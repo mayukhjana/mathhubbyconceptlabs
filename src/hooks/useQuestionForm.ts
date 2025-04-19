@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,7 +11,10 @@ interface UseQuestionFormProps {
 }
 
 export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormProps) => {
-  const [formData, setFormData] = useState<Omit<Question, 'id' | 'exam_id'>>({
+  // Define a temporary type for formData that doesn't require id and exam_id
+  type QuestionFormData = Omit<Question, 'id' | 'exam_id'>;
+  
+  const [formData, setFormData] = useState<QuestionFormData>({
     question_text: initialData?.question_text || "",
     option_a: initialData?.option_a || "",
     option_b: initialData?.option_b || "",
@@ -85,13 +89,19 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
       return;
     }
 
-    onSave({
+    // Create a complete question object with placeholders for id and exam_id
+    // These will be replaced with actual values by the component that uses this hook
+    const completeQuestion: Question = {
       ...formData,
       image_url: imageUrl,
       correct_answer: formData.is_multi_correct 
         ? selectedCorrectAnswers.sort() 
-        : formData.correct_answer
-    });
+        : formData.correct_answer,
+      id: initialData?.id || '',
+      exam_id: initialData?.exam_id || ''
+    };
+
+    onSave(completeQuestion);
   };
 
   return {
