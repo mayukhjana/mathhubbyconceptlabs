@@ -3,14 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Download, FileCheck, Lock, Star, Sparkle } from 'lucide-react';
+import { Download, FileCheck, Lock, Star, Sparkle, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
   title: string;
-  description?: string;
+  description?: string;  // Keep this optional
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
@@ -20,11 +20,12 @@ interface PaperCardProps {
   examBoard?: string;
   isAttempted?: boolean;
   requireAuth?: boolean;
+  isFullMock?: boolean;
 }
 
 const PaperCard = ({
   title,
-  description,
+  description,  // We'll keep the parameter but won't render it
   downloadUrl,
   solutionUrl,
   practiceUrl,
@@ -34,9 +35,8 @@ const PaperCard = ({
   examBoard,
   isAttempted = false,
   requireAuth = true,
+  isFullMock = false,
 }: PaperCardProps) => {
-  const canAccessPremium = !isPremium || userIsPremium;
-  
   // Build badge array
   const badges = [];
   if (year) badges.push({ text: year, variant: 'outline' as const });
@@ -44,6 +44,8 @@ const PaperCard = ({
   if (isPremium) badges.push({ text: 'Premium', variant: 'secondary' as const });
   if (isAttempted) badges.push({ text: 'Attempted', variant: 'secondary' as const });
 
+  const canAccessPremium = !isPremium || userIsPremium;
+  
   return (
     <Card className={`overflow-hidden transition border ${
       isPremium 
@@ -72,9 +74,7 @@ const PaperCard = ({
         </div>
         
         <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
-        {description && (
-          <p className="text-sm text-muted-foreground mb-4">{description}</p>
-        )}
+        {/* Description line is removed as requested */}
 
         <div className="flex flex-wrap gap-2 mt-4">
           {downloadUrl && (
@@ -171,6 +171,13 @@ const PaperCard = ({
             </TooltipProvider>
           )}
         </div>
+        
+        {isFullMock && (
+          <div className="mt-3 text-xs flex items-start gap-1 text-muted-foreground">
+            <Info className="w-3 h-3 mt-0.5 shrink-0" />
+            <span>Only MCQ questions can be practiced using our exam management system</span>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex items-center justify-between">

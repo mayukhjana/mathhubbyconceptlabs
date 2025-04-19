@@ -85,8 +85,9 @@ const FileUploadZone = ({
       
       // Log the file details for debugging purposes
       const contentType = getContentTypeFromFile(selectedFile);
-      console.log(`Selected file: ${selectedFile.name}, type: ${contentType}`);
+      console.log(`Selected file: ${selectedFile.name}, type: ${contentType}, native type: ${selectedFile.type}`);
       
+      // Pass the file directly without modifying it
       onChange(event);
     }
   };
