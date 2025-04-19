@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
   title: string;
-  description?: string;
+  description?: string;  // Keep this optional
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
@@ -24,7 +23,7 @@ interface PaperCardProps {
 
 const PaperCard = ({
   title,
-  description,
+  description,  // We'll keep the parameter but won't render it
   downloadUrl,
   solutionUrl,
   practiceUrl,
@@ -35,8 +34,6 @@ const PaperCard = ({
   isAttempted = false,
   requireAuth = true,
 }: PaperCardProps) => {
-  const canAccessPremium = !isPremium || userIsPremium;
-  
   // Build badge array
   const badges = [];
   if (year) badges.push({ text: year, variant: 'outline' as const });
@@ -44,6 +41,8 @@ const PaperCard = ({
   if (isPremium) badges.push({ text: 'Premium', variant: 'secondary' as const });
   if (isAttempted) badges.push({ text: 'Attempted', variant: 'secondary' as const });
 
+  const canAccessPremium = !isPremium || userIsPremium;
+  
   return (
     <Card className={`overflow-hidden transition border ${
       isPremium 
@@ -72,9 +71,7 @@ const PaperCard = ({
         </div>
         
         <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
-        {description && (
-          <p className="text-sm text-muted-foreground mb-4">{description}</p>
-        )}
+        {/* Description line is now removed */}
 
         <div className="flex flex-wrap gap-2 mt-4">
           {downloadUrl && (
