@@ -27,18 +27,31 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get auth header and create supabase client
     const authHeader = req.headers.get('Authorization');
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
-      global: { headers: { Authorization: authHeader || '' } }
-    });
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Create Supabase client with proper authentication
+    const supabase = createClient(
+      supabaseUrl || '',
+      supabaseServiceKey || '', 
+      {
+        global: { 
+          headers: { Authorization: authHeader } 
+        }
+      }
+    );
 
     // Get user info from JWT
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
+      console.error("Authentication error:", userError);
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -46,7 +59,18 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { question, image } = await req.json() as RequestBody;
+    let requestBody: RequestBody;
+    try {
+      requestBody = await req.json();
+    } catch (e) {
+      console.error("Error parsing request body:", e);
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { question, image } = requestBody;
 
     if (!question) {
       return new Response(JSON.stringify({ error: 'Question is required' }), {
@@ -59,12 +83,16 @@ Deno.serve(async (req) => {
     const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD
     
     // Check if user is premium
-    const { data: premiumData } = await supabase
+    const { data: premiumData, error: premiumError } = await supabase
       .from('user_premium')
       .select('*')
       .eq('user_id', user.id)
       .eq('is_active', true)
       .maybeSingle();
+    
+    if (premiumError) {
+      console.error("Error checking premium status:", premiumError);
+    }
     
     const isPremium = !!premiumData;
     
@@ -109,39 +137,84 @@ User Question: ${question}`
 
     // Add image to request if provided
     if (image) {
-      payload.contents[0].parts.push({
-        inline_data: {
-          mime_type: "image/jpeg", // Assuming JPEG; adjust as needed
-          data: image
-        }
-      });
+      try {
+        payload.contents[0].parts.push({
+          inline_data: {
+            mime_type: "image/jpeg", // Assuming JPEG; adjust as needed
+            data: image
+          }
+        });
+      } catch (error) {
+        console.error("Error adding image to payload:", error);
+        // Continue without the image if there's an error
+      }
     }
 
-    console.log("Calling Gemini API with payload:", JSON.stringify(payload).substring(0, 200) + "...");
+    console.log("Calling Gemini API with question:", question.substring(0, 50) + "...");
 
-    // Call Gemini API
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.text();
-      console.error('Gemini API error:', errorData);
+    // Call Gemini API with proper error handling
+    let geminiResponse;
+    try {
+      geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      console.error("Network error calling Gemini API:", error);
       return new Response(JSON.stringify({ 
-        error: 'Failed to generate answer',
-        details: errorData,
-        status: geminiResponse.status
+        error: 'Failed to connect to AI service',
+        details: error.message || String(error)
       }), {
-        status: 500, 
+        status: 503, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const geminiData = await geminiResponse.json();
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error('Gemini API error status:', geminiResponse.status);
+      console.error('Gemini API error response:', errorText);
+      
+      try {
+        // Try to parse the error as JSON
+        const errorJson = JSON.parse(errorText);
+        return new Response(JSON.stringify({ 
+          error: 'AI service error',
+          details: errorJson.error?.message || 'Unknown error',
+          status: geminiResponse.status
+        }), {
+          status: 502, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        // If parsing fails, return the raw error text
+        return new Response(JSON.stringify({ 
+          error: 'AI service error',
+          details: errorText.substring(0, 200),
+          status: geminiResponse.status
+        }), {
+          status: 502, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    let geminiData;
+    try {
+      geminiData = await geminiResponse.json();
+    } catch (error) {
+      console.error("Error parsing Gemini response:", error);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid response from AI service',
+        details: error.message || String(error)
+      }), {
+        status: 502, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
     
     // Debug response structure
     console.log("Gemini API response structure:", Object.keys(geminiData));
@@ -152,8 +225,14 @@ User Question: ${question}`
         geminiData.candidates[0].content.parts.length > 0) {
       answer = geminiData.candidates[0].content.parts[0].text;
     } else {
-      console.error("Unexpected response structure from Gemini:", JSON.stringify(geminiData));
-      answer = "I'm sorry, I couldn't generate an answer. The response format was unexpected.";
+      console.error("Unexpected response structure from Gemini:", JSON.stringify(geminiData).substring(0, 200));
+      return new Response(JSON.stringify({ 
+        error: "Failed to generate an answer",
+        details: "The AI service returned an unexpected response format"
+      }), {
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     // Save the interaction to history
@@ -168,6 +247,7 @@ User Question: ${question}`
 
     if (historyError) {
       console.error('Error saving to chat history:', historyError);
+      // Continue even if saving to history fails
     }
 
     return new Response(JSON.stringify({ answer }), {

@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -41,6 +41,7 @@ const MathHubAI: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [dailyQuestionsCount, setDailyQuestionsCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const { user, isPremium } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,6 +168,7 @@ const MathHubAI: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     if (!question.trim() && !image) {
       toast({
@@ -213,6 +215,8 @@ const MathHubAI: React.FC = () => {
         });
       }
       
+      console.log("Calling Gemini Math AI function with question:", question.substring(0, 50));
+      
       const { data, error } = await supabase.functions.invoke('gemini-math-ai', {
         body: {
           question,
@@ -222,6 +226,7 @@ const MathHubAI: React.FC = () => {
 
       if (error) {
         console.error("Error calling AI function:", error);
+        setError(`Error: ${error.message || "Failed to get an answer. Please try again."}`);
         toast({
           title: "Error",
           description: error.message || "Failed to get an answer. Please try again.",
@@ -232,7 +237,35 @@ const MathHubAI: React.FC = () => {
         return;
       }
 
-      if (!data || !data.answer) {
+      if (!data) {
+        const errorMsg = "Received empty response from the AI.";
+        setError(errorMsg);
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive"
+        });
+        
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        return;
+      }
+      
+      if (data.error) {
+        console.error("AI service returned error:", data.error);
+        const errorDetails = data.details ? `${data.error}: ${data.details}` : data.error;
+        setError(errorDetails);
+        toast({
+          title: "AI Service Error",
+          description: errorDetails,
+          variant: "destructive"
+        });
+        
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        return;
+      }
+
+      if (!data.answer) {
+        setError("AI returned an empty answer.");
         toast({
           title: "Error",
           description: "Received an empty response from the AI. Please try again.",
@@ -261,6 +294,7 @@ const MathHubAI: React.FC = () => {
       
     } catch (error: any) {
       console.error("Error in handleSubmit:", error);
+      setError(`${error.message || "Something went wrong. Please try again."}`);
       toast({
         title: "Error",
         description: error.message || "Something went wrong. Please try again.",
@@ -326,6 +360,14 @@ const MathHubAI: React.FC = () => {
             </div>
           )}
         </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Card>
           <CardHeader className="pb-3">
