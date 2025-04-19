@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Download, FileText, Lock, Star, Sparkle, FileCheck } from 'lucide-react';
+import { Download, FileCheck, Lock, Star, Sparkle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AuthWrapper from './AuthWrapper';
@@ -19,7 +20,6 @@ interface PaperCardProps {
   examBoard?: string;
   isAttempted?: boolean;
   requireAuth?: boolean;
-  hasMCQs?: boolean;
 }
 
 const PaperCard = ({
@@ -34,17 +34,15 @@ const PaperCard = ({
   examBoard,
   isAttempted = false,
   requireAuth = true,
-  hasMCQs = false,
 }: PaperCardProps) => {
   const canAccessPremium = !isPremium || userIsPremium;
   
+  // Build badge array
   const badges = [];
   if (year) badges.push({ text: year, variant: 'outline' as const });
   if (examBoard) badges.push({ text: examBoard, variant: 'default' as const });
   if (isPremium) badges.push({ text: 'Premium', variant: 'secondary' as const });
   if (isAttempted) badges.push({ text: 'Attempted', variant: 'secondary' as const });
-
-  const isCompactVersion = !hasMCQs;
 
   return (
     <Card className={`overflow-hidden transition border ${
@@ -52,7 +50,7 @@ const PaperCard = ({
         ? 'border-amber-200/50 dark:border-amber-700/50 shadow-amber-100/20 dark:shadow-amber-900/10' 
         : 'border-gray-200 dark:border-gray-800'
     } hover:shadow-md`}>
-      <CardContent className={`p-6 ${isCompactVersion ? 'pb-4' : 'pb-6'}`}>
+      <CardContent className="p-6">
         <div className="flex flex-wrap gap-1 mb-3">
           {badges.map((badge, index) => (
             <Badge
@@ -78,200 +76,136 @@ const PaperCard = ({
           <p className="text-sm text-muted-foreground mb-4">{description}</p>
         )}
 
-        {isCompactVersion ? (
-          <div className="flex gap-2 mt-4">
-            {downloadUrl && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-block flex-1">
-                      <AuthWrapper requireAuth={requireAuth} tooltipText="Sign in to download this paper">
-                        {canAccessPremium ? (
-                          <Button variant="outline" className="w-full" asChild>
-                            <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-4 h-4 mr-2" />
-                              Paper
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button variant="outline" className="w-full" asChild disabled>
-                            <Link to="/premium">
-                              <Lock className="w-4 h-4 mr-2" />
-                              Premium
-                            </Link>
-                          </Button>
-                        )}
-                      </AuthWrapper>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{canAccessPremium ? 'Download question paper' : 'Premium feature'}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+        <div className="flex flex-wrap gap-2 mt-4">
+          {downloadUrl && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <AuthWrapper
+                      requireAuth={requireAuth}
+                      tooltipText="Sign in to download this paper"
+                    >
+                      {canAccessPremium ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                        >
+                          <a
+                            href={downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Paper
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                          disabled
+                        >
+                          <Link to="/premium">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Premium
+                          </Link>
+                        </Button>
+                      )}
+                    </AuthWrapper>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{canAccessPremium ? 'Download question paper' : 'Premium feature'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
-            {solutionUrl && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-block flex-1">
-                      <AuthWrapper requireAuth={requireAuth} tooltipText="Sign in to view solutions">
-                        {canAccessPremium ? (
-                          <Button variant="outline" className="w-full" asChild>
-                            <a href={solutionUrl} target="_blank" rel="noopener noreferrer">
-                              <FileText className="w-4 h-4 mr-2" />
-                              Solutions
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button variant="outline" className="w-full" asChild disabled>
-                            <Link to="/premium">
-                              <Lock className="w-4 h-4 mr-2" />
-                              Premium
-                            </Link>
-                          </Button>
-                        )}
-                      </AuthWrapper>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{canAccessPremium ? 'View solutions' : 'Premium feature'}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {downloadUrl && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-block">
-                      <AuthWrapper
-                        requireAuth={requireAuth}
-                        tooltipText="Sign in to download this paper"
-                      >
-                        {canAccessPremium ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                            className="text-xs"
+          {solutionUrl && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <AuthWrapper
+                      requireAuth={requireAuth}
+                      tooltipText="Sign in to view solutions"
+                    >
+                      {canAccessPremium ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                        >
+                          <a
+                            href={solutionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
                           >
-                            <a
-                              href={downloadUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Download className="w-3 h-3 mr-1" />
-                              Paper
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                            className="text-xs"
-                            disabled
-                          >
-                            <Link to="/premium">
-                              <Lock className="w-3 h-3 mr-1" />
-                              Premium
-                            </Link>
-                          </Button>
-                        )}
-                      </AuthWrapper>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{canAccessPremium ? 'Download question paper' : 'Premium feature'}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            {solutionUrl && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-block">
-                      <AuthWrapper
-                        requireAuth={requireAuth}
-                        tooltipText="Sign in to view solutions"
-                      >
-                        {canAccessPremium ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                            className="text-xs"
-                          >
-                            <a
-                              href={solutionUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FileCheck className="w-3 h-3 mr-1" />
-                              Solutions
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                            className="text-xs"
-                            disabled
-                          >
-                            <Link to="/premium">
-                              <Lock className="w-3 h-3 mr-1" />
-                              Premium
-                            </Link>
-                          </Button>
-                        )}
-                      </AuthWrapper>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{canAccessPremium ? 'View solutions' : 'Premium feature'}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        )}
+                            <FileCheck className="w-3 h-3 mr-1" />
+                            Solutions
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                          disabled
+                        >
+                          <Link to="/premium">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Premium
+                          </Link>
+                        </Button>
+                      )}
+                    </AuthWrapper>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{canAccessPremium ? 'View solutions' : 'Premium feature'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </CardContent>
 
-      {!isCompactVersion && (
-        <CardFooter className="p-4 pt-0 flex items-center justify-between">
-          {practiceUrl ? (
-            <AuthWrapper
-              requireAuth={requireAuth}
-              tooltipText="Sign in to practice this exam"
-            >
-              {canAccessPremium ? (
-                <Button
-                  variant="default"
-                  size="sm"
-                  asChild
-                  className="w-full bg-gradient-to-r from-mathprimary to-blue-600 hover:from-mathprimary/90 hover:to-blue-600/90"
-                >
-                  <Link to={practiceUrl}>Practice Now</Link>
-                </Button>
-              ) : (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  asChild
-                  className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
-                >
-                  <Link to="/premium">
-                    <Star className="w-3 h-3 mr-1" />
-                    Upgrade
-                  </Link>
-                </Button>
-              )}
-            </AuthWrapper>
-          ) : (
-            <span className="text-xs text-muted-foreground">Coming Soon</span>
-          )}
-        </CardFooter>
-      )}
+      <CardFooter className="p-4 pt-0 flex items-center justify-between">
+        {practiceUrl ? (
+          <AuthWrapper
+            requireAuth={requireAuth}
+            tooltipText="Sign in to practice this exam"
+          >
+            {canAccessPremium ? (
+              <Button
+                variant="default"
+                size="sm"
+                asChild
+                className="w-full bg-gradient-to-r from-mathprimary to-blue-600 hover:from-mathprimary/90 hover:to-blue-600/90"
+              >
+                <Link to={practiceUrl}>Practice Now</Link>
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                asChild
+                className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
+              >
+                <Link to="/premium">
+                  <Star className="w-3 h-3 mr-1" />
+                  Upgrade
+                </Link>
+              </Button>
+            )}
+          </AuthWrapper>
+        ) : (
+          <span className="text-xs text-muted-foreground">Coming Soon</span>
+        )}
+      </CardFooter>
     </Card>
   );
 };
