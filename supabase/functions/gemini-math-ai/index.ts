@@ -18,6 +18,15 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify API key exists
+    if (!geminiApiKey) {
+      console.error("Missing Gemini API key");
+      return new Response(JSON.stringify({ error: "Server configuration error: Missing API key" }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const authHeader = req.headers.get('Authorization');
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
       global: { headers: { Authorization: authHeader || '' } }
@@ -90,7 +99,12 @@ Deno.serve(async (req) => {
 User Question: ${question}`
           }
         ]
-      }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40
+      }
     };
 
     // Add image to request if provided
@@ -103,8 +117,10 @@ User Question: ${question}`
       });
     }
 
+    console.log("Calling Gemini API with payload:", JSON.stringify(payload).substring(0, 200) + "...");
+
     // Call Gemini API
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`, {
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -115,14 +131,30 @@ User Question: ${question}`
     if (!geminiResponse.ok) {
       const errorData = await geminiResponse.text();
       console.error('Gemini API error:', errorData);
-      return new Response(JSON.stringify({ error: 'Failed to generate answer' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Failed to generate answer',
+        details: errorData,
+        status: geminiResponse.status
+      }), {
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     const geminiData = await geminiResponse.json();
-    const answer = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate an answer.';
+    
+    // Debug response structure
+    console.log("Gemini API response structure:", Object.keys(geminiData));
+    
+    let answer;
+    if (geminiData.candidates && geminiData.candidates.length > 0 && 
+        geminiData.candidates[0].content && geminiData.candidates[0].content.parts && 
+        geminiData.candidates[0].content.parts.length > 0) {
+      answer = geminiData.candidates[0].content.parts[0].text;
+    } else {
+      console.error("Unexpected response structure from Gemini:", JSON.stringify(geminiData));
+      answer = "I'm sorry, I couldn't generate an answer. The response format was unexpected.";
+    }
 
     // Save the interaction to history
     const { error: historyError } = await supabase
@@ -145,7 +177,10 @@ User Question: ${question}`
     
   } catch (error) {
     console.error('Error processing request:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error.message || String(error)
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

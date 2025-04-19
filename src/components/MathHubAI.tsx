@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, TrashIcon, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -224,6 +225,17 @@ const MathHubAI: React.FC = () => {
         toast({
           title: "Error",
           description: error.message || "Failed to get an answer. Please try again.",
+          variant: "destructive"
+        });
+        
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        return;
+      }
+
+      if (!data || !data.answer) {
+        toast({
+          title: "Error",
+          description: "Received an empty response from the AI. Please try again.",
           variant: "destructive"
         });
         
