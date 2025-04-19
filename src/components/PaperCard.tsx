@@ -1,132 +1,218 @@
 
-import { Link } from "react-router-dom";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { FileText, LockKeyhole, Play, TrendingUp } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Download, FileCheck, Lock, Star, Sparkle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import AuthWrapper from './AuthWrapper';
 
-export interface PaperCardProps {
+interface PaperCardProps {
   title: string;
   description?: string;
-  year: string;
-  isPremium: boolean;
-  userIsPremium: boolean;
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
-  examBoard: string;
+  year?: string;
+  isPremium?: boolean;
+  userIsPremium?: boolean;
+  examBoard?: string;
   isAttempted?: boolean;
+  requireAuth?: boolean;
 }
 
 const PaperCard = ({
   title,
   description,
-  year,
-  isPremium,
-  userIsPremium,
   downloadUrl,
   solutionUrl,
   practiceUrl,
+  year,
+  isPremium = false,
+  userIsPremium = false,
   examBoard,
-  isAttempted = false
+  isAttempted = false,
+  requireAuth = true,
 }: PaperCardProps) => {
-  const canAccess = !isPremium || userIsPremium;
+  const canAccessPremium = !isPremium || userIsPremium;
+  
+  // Build badge array
+  const badges = [];
+  if (year) badges.push({ text: year, variant: 'outline' });
+  if (examBoard) badges.push({ text: examBoard, variant: 'default' });
+  if (isPremium) badges.push({ text: 'Premium', variant: 'premium' });
+  if (isAttempted) badges.push({ text: 'Attempted', variant: 'attempted' });
 
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
-      <CardContent className="pt-6 pb-2 flex-1">
-        <div className="flex justify-between items-start mb-2">
-          <Badge variant="outline" className="bg-gray-50">
-            {examBoard}
-          </Badge>
-          {isPremium && (
-            <Badge className="bg-gradient-to-r from-amber-400 to-yellow-600 text-white border-0">
-              Premium
-            </Badge>
-          )}
-        </div>
-        <h3 className="font-medium mb-1 line-clamp-2">{title}</h3>
-        <div className="text-sm text-muted-foreground space-y-1">
-          {description && <p className="line-clamp-2">{description}</p>}
-          <p>Year: {year}</p>
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-2 pt-0 pb-4">
-        <div className="grid grid-cols-2 gap-2 w-full">
-          {downloadUrl || solutionUrl ? (
-            <Button
-              variant="outline"
-              size="sm"
-              asChild={canAccess}
-              disabled={!canAccess}
-              className="w-full"
+    <Card className={`overflow-hidden transition border ${
+      isPremium 
+        ? 'border-amber-200/50 dark:border-amber-700/50 shadow-amber-100/20 dark:shadow-amber-900/10' 
+        : 'border-gray-200 dark:border-gray-800'
+    } hover:shadow-md`}>
+      <CardContent className="p-6">
+        <div className="flex flex-wrap gap-1 mb-3">
+          {badges.map((badge, index) => (
+            <Badge
+              key={index}
+              variant={
+                badge.variant === 'premium'
+                  ? 'premium'
+                  : badge.variant === 'attempted'
+                  ? 'success'
+                  : badge.variant === 'outline'
+                  ? 'outline'
+                  : 'default'
+              }
+              className={
+                badge.variant === 'premium'
+                  ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0'
+                  : badge.variant === 'attempted'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0'
+                  : ''
+              }
             >
-              {canAccess ? (
-                <a href={solutionUrl || downloadUrl} target="_blank" rel="noopener noreferrer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Solution
-                </a>
-              ) : (
-                <>
-                  <LockKeyhole className="h-4 w-4 mr-2" />
-                  Solution
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" disabled className="w-full">
-              <FileText className="h-4 w-4 mr-2" />
-              No Solution
-            </Button>
+              {badge.variant === 'premium' && <Sparkle className="w-3 h-3 mr-1" />}
+              {badge.variant === 'attempted' && <FileCheck className="w-3 h-3 mr-1" />}
+              {badge.text}
+            </Badge>
+          ))}
+        </div>
+        
+        <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
+        {description && (
+          <p className="text-sm text-muted-foreground mb-4">{description}</p>
+        )}
+
+        <div className="flex flex-wrap gap-2 mt-4">
+          {downloadUrl && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <AuthWrapper
+                      requireAuth={requireAuth}
+                      tooltipText="Sign in to download this paper"
+                    >
+                      {canAccessPremium ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                        >
+                          <a
+                            href={downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Paper
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                          disabled
+                        >
+                          <Link to="/premium">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Premium
+                          </Link>
+                        </Button>
+                      )}
+                    </AuthWrapper>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{canAccessPremium ? 'Download question paper' : 'Premium feature'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
 
-          {practiceUrl && !isAttempted ? (
-            <Button
-              variant="default"
-              size="sm"
-              asChild={canAccess}
-              disabled={!canAccess}
-              className="w-full"
-            >
-              {canAccess ? (
-                <Link to={practiceUrl}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Practice
-                </Link>
-              ) : (
-                <>
-                  <LockKeyhole className="h-4 w-4 mr-2" />
-                  Practice
-                </>
-              )}
-            </Button>
-          ) : practiceUrl && isAttempted ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              asChild={canAccess}
-              disabled={!canAccess}
-              className="w-full bg-slate-100"
-            >
-              {canAccess ? (
-                <Link to={practiceUrl}>
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  View Results
-                </Link>
-              ) : (
-                <>
-                  <LockKeyhole className="h-4 w-4 mr-2" />
-                  View Results
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button variant="default" size="sm" disabled className="w-full">
-              <Play className="h-4 w-4 mr-2" />
-              No Practice
-            </Button>
+          {solutionUrl && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <AuthWrapper
+                      requireAuth={requireAuth}
+                      tooltipText="Sign in to view solutions"
+                    >
+                      {canAccessPremium ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                        >
+                          <a
+                            href={solutionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <FileCheck className="w-3 h-3 mr-1" />
+                            Solutions
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                          disabled
+                        >
+                          <Link to="/premium">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Premium
+                          </Link>
+                        </Button>
+                      )}
+                    </AuthWrapper>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{canAccessPremium ? 'View solutions' : 'Premium feature'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
+      </CardContent>
+
+      <CardFooter className="p-4 pt-0 flex items-center justify-between">
+        {practiceUrl ? (
+          <AuthWrapper
+            requireAuth={requireAuth}
+            tooltipText="Sign in to practice this exam"
+          >
+            {canAccessPremium ? (
+              <Button
+                variant="default"
+                size="sm"
+                asChild
+                className="w-full bg-gradient-to-r from-mathprimary to-blue-600 hover:from-mathprimary/90 hover:to-blue-600/90"
+              >
+                <Link to={practiceUrl}>Practice Now</Link>
+              </Button>
+            ) : (
+              <Button
+                variant="premium"
+                size="sm"
+                asChild
+                className="w-full"
+              >
+                <Link to="/premium">
+                  <Star className="w-3 h-3 mr-1" />
+                  Upgrade
+                </Link>
+              </Button>
+            )}
+          </AuthWrapper>
+        ) : (
+          <span className="text-xs text-muted-foreground">Coming Soon</span>
+        )}
       </CardFooter>
     </Card>
   );

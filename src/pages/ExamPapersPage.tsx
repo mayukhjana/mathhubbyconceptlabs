@@ -265,6 +265,7 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       practiceUrl={`/exams/${exam.id}`}
       examBoard={exam.board}
       isAttempted={exam.isAttempted || isAttempted}
+      requireAuth={true}
     />
   );
 };

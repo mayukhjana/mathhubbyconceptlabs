@@ -1,5 +1,5 @@
 
-import { Database, BookOpen, Trophy, Zap, BarChart, Clock } from "lucide-react";
+import { Database, BookOpen, Trophy, Zap, BarChart, Clock, Book, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import SubjectProgress from "@/components/SubjectProgress";
@@ -44,12 +44,12 @@ const DashboardPreview = () => {
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 flex flex-col items-center text-center border border-gray-100/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300 backdrop-blur-sm">
-              <Database className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
+              <FileText className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
               <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">5,000+</span>
               <span className="text-xs text-gray-500 dark:text-gray-400">Practice Papers</span>
             </div>
             <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 flex flex-col items-center text-center border border-gray-100/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300 backdrop-blur-sm">
-              <BookOpen className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
+              <Book className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
               <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">150+</span>
               <span className="text-xs text-gray-500 dark:text-gray-400">Math Chapters</span>
             </div>
