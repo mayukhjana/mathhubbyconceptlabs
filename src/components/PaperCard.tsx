@@ -10,7 +10,6 @@ import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
   title: string;
-  description?: string;  // Keep this optional
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
@@ -21,11 +20,12 @@ interface PaperCardProps {
   isAttempted?: boolean;
   requireAuth?: boolean;
   isFullMock?: boolean;
+  allowPaperDownload?: boolean;
+  allowSolutionDownload?: boolean;
 }
 
 const PaperCard = ({
   title,
-  description,  // We'll keep the parameter but won't render it
   downloadUrl,
   solutionUrl,
   practiceUrl,
@@ -36,6 +36,8 @@ const PaperCard = ({
   isAttempted = false,
   requireAuth = true,
   isFullMock = false,
+  allowPaperDownload = true,
+  allowSolutionDownload = true,
 }: PaperCardProps) => {
   // Build badge array
   const badges = [];
@@ -45,6 +47,11 @@ const PaperCard = ({
   if (isAttempted) badges.push({ text: 'Attempted', variant: 'secondary' as const });
 
   const canAccessPremium = !isPremium || userIsPremium;
+  
+  // Helper to determine what buttons to show
+  const shouldShowPaperDownload = downloadUrl && allowPaperDownload;
+  const shouldShowSolutionDownload = solutionUrl && allowSolutionDownload;
+  const shouldShowPractice = practiceUrl;
   
   return (
     <Card className={`overflow-hidden transition border ${
@@ -74,10 +81,9 @@ const PaperCard = ({
         </div>
         
         <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
-        {/* Description line is removed as requested */}
 
         <div className="flex flex-wrap gap-2 mt-4">
-          {downloadUrl && (
+          {shouldShowPaperDownload && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -124,7 +130,7 @@ const PaperCard = ({
             </TooltipProvider>
           )}
 
-          {solutionUrl && (
+          {shouldShowSolutionDownload && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -180,8 +186,8 @@ const PaperCard = ({
         )}
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        {practiceUrl ? (
+      {shouldShowPractice && (
+        <CardFooter className="p-4 pt-0 flex items-center justify-between">
           <AuthWrapper
             requireAuth={requireAuth}
             tooltipText="Sign in to practice this exam"
@@ -209,10 +215,8 @@ const PaperCard = ({
               </Button>
             )}
           </AuthWrapper>
-        ) : (
-          <span className="text-xs text-muted-foreground">Coming Soon</span>
-        )}
-      </CardFooter>
+        </CardFooter>
+      )}
     </Card>
   );
 };

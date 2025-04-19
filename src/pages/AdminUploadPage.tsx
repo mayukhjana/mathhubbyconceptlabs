@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -44,6 +43,8 @@ const AdminUploadPage = () => {
     class: string;
     year: string;
   }[]>([]);
+  const [allowPaperDownload, setAllowPaperDownload] = useState(true);
+  const [allowSolutionDownload, setAllowSolutionDownload] = useState(true);
 
   useEffect(() => {
     const initBuckets = async () => {
@@ -208,7 +209,6 @@ const AdminUploadPage = () => {
     setError(null);
     
     try {
-      // Convert "none" chapter back to null for the database
       const finalChapter = selectedChapter === "none" ? null : selectedChapter;
       
       const examPayload = {
@@ -218,7 +218,9 @@ const AdminUploadPage = () => {
         chapter: finalChapter,
         year: selectedYear,
         duration: examDuration,
-        is_premium: isPremium
+        is_premium: isPremium,
+        allow_paper_download: allowPaperDownload,
+        allow_solution_download: allowSolutionDownload
       };
       
       const insertedExam = await createExam(examPayload);
@@ -355,12 +357,16 @@ const AdminUploadPage = () => {
                         selectedYear={selectedYear}
                         examDuration={examDuration}
                         isPremium={isPremium}
+                        allowPaperDownload={allowPaperDownload}
+                        allowSolutionDownload={allowSolutionDownload}
                         onExamTitleChange={setExamTitle}
                         onClassChange={setSelectedClass}
                         onChapterChange={setSelectedChapter}
                         onYearChange={setSelectedYear}
                         onDurationChange={setExamDuration}
                         onPremiumChange={setIsPremium}
+                        onPaperDownloadChange={setAllowPaperDownload}
+                        onSolutionDownloadChange={setAllowSolutionDownload}
                       />
                     </div>
                     
