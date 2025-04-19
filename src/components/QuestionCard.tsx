@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { Image } from "lucide-react";
 
 interface QuestionCardProps {
   question: {
@@ -33,10 +34,23 @@ const QuestionCard = ({
   skipped = false
 }: QuestionCardProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState(userAnswer || "");
+  const [imageLoading, setImageLoading] = useState(!!question.image_url);
+  const [imageError, setImageError] = useState(false);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
     onAnswer(question.id, answer);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageLoading(false);
+    setImageError(true);
+    console.error("Failed to load question image:", question.image_url);
   };
 
   const isCorrectAnswer = (selected: string, correct: string | string[]): boolean => {
@@ -62,13 +76,32 @@ const QuestionCard = ({
         </CardTitle>
         <CardDescription className="space-y-4">
           <p className="font-bold text-foreground text-base">{question.text}</p>
+          
           {question.image_url && (
             <div className="mt-4">
-              <img 
-                src={question.image_url} 
-                alt="Question" 
-                className="max-w-full h-auto rounded-lg border border-border" 
-              />
+              {imageLoading && (
+                <div className="flex justify-center items-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              )}
+              
+              {imageError ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg p-4">
+                  <Image className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">Image could not be loaded</p>
+                </div>
+              ) : (
+                <img 
+                  src={question.image_url}
+                  alt="Question" 
+                  className={cn(
+                    "max-w-full h-auto rounded-lg border border-border mx-auto",
+                    imageLoading ? "hidden" : "block"
+                  )}
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                />
+              )}
             </div>
           )}
         </CardDescription>
@@ -139,14 +172,5 @@ const QuestionCard = ({
     </Card>
   );
 };
-
-const isCorrectAnswer = (selected: string, correct: string | string[]): boolean => {
-    if (Array.isArray(correct)) {
-      const selectedAnswers = selected.split(',').sort();
-      const correctAnswers = correct.sort();
-      return selectedAnswers.length === correctAnswers.length && selectedAnswers.every((value, index) => value === correctAnswers[index]);
-    }
-    return selected === correct;
-  };
 
 export default QuestionCard;

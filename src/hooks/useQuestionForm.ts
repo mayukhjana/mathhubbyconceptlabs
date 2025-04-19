@@ -45,12 +45,15 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     }
 
     setIsUploading(true);
+    console.log("Starting image upload for file:", file.name);
 
     try {
       // Ensure the questions bucket exists
       await ensureQuestionsBucket();
 
-      const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+      const fileName = `question_${Date.now()}_${file.name.replace(/\s+/g, '-')}`;
+      console.log("Uploading to bucket with filename:", fileName);
+      
       const { data, error } = await supabase.storage
         .from('questions')
         .upload(fileName, file, {
@@ -59,7 +62,10 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
           contentType: file.type
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Storage upload error:", error);
+        throw error;
+      }
       
       const { data: { publicUrl } } = supabase.storage
         .from('questions')
@@ -72,6 +78,7 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     } catch (error: any) {
       console.error('Error uploading image:', error);
       toast.error(`Failed to upload image: ${error.message}`);
+      setImageUrl(undefined); // Clear the image URL on error
     } finally {
       setIsUploading(false);
     }
@@ -94,12 +101,13 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
         
         const { error: createError } = await supabase.storage.createBucket('questions', { 
           public: true,
-          fileSizeLimit: 5 * 1024 * 1024, // 5MB
-          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+          fileSizeLimit: 10 * 1024 * 1024, // 10MB limit
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml']
         });
         
         if (createError) {
           console.error("Error creating questions bucket:", createError);
+          toast.error(`Failed to create storage bucket: ${createError.message}`);
           return false;
         }
         
@@ -107,8 +115,9 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
       }
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error ensuring questions bucket:", error);
+      toast.error(`Storage error: ${error.message}`);
       return false;
     }
   };
