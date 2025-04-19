@@ -13,7 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+// Import remark-math and rehype-katex without type declarations
+// @ts-ignore
 import remarkMath from 'remark-math';
+// @ts-ignore
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
