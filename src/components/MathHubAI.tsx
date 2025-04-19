@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, DownloadIcon, TrashIcon, MessageSquare } from "lucide-react";
+import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, TrashIcon, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +23,15 @@ interface Message {
   content: string;
   created_at: string;
   image?: string;
+}
+
+interface ChatHistoryItem {
+  id: string;
+  user_id: string;
+  question: string;
+  answer: string;
+  created_at: string;
+  has_image?: boolean;
 }
 
 const MathHubAI: React.FC = () => {
@@ -69,7 +78,7 @@ const MathHubAI: React.FC = () => {
       }
 
       if (data) {
-        const formattedMessages: Message[] = data.map(item => ({
+        const formattedMessages: Message[] = data.map((item: ChatHistoryItem) => ({
           id: item.id,
           role: 'user' as const,
           content: item.question,
