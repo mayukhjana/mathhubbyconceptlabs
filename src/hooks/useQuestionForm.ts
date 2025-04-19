@@ -1,17 +1,16 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { QuestionData } from "@/services/exam/types";
+import { Question } from "@/services/exam/types";
 
 interface UseQuestionFormProps {
-  initialData?: QuestionData;
-  onSave: (question: QuestionData) => void;
+  initialData?: Question;
+  onSave: (question: Question) => void;
   index: number;
 }
 
 export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormProps) => {
-  const [formData, setFormData] = useState<Omit<QuestionData, 'id' | 'exam_id'>>({
+  const [formData, setFormData] = useState<Omit<Question, 'id' | 'exam_id'>>({
     question_text: initialData?.question_text || "",
     option_a: initialData?.option_a || "",
     option_b: initialData?.option_b || "",

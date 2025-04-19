@@ -1,11 +1,10 @@
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface CorrectAnswerSelectionProps {
   isMultiCorrect: boolean;
   selectedAnswers: string[];
-  correctAnswer: string;
+  correctAnswer: string | string[];
   index: number;
   onAnswerChange: (option: string) => void;
 }

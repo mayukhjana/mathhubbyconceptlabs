@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,11 +9,11 @@ import QuestionImageUpload from "./question/QuestionImageUpload";
 import QuestionOptions from "./question/QuestionOptions";
 import CorrectAnswerSelection from "./question/CorrectAnswerSelection";
 import { useQuestionForm } from "@/hooks/useQuestionForm";
-import type { QuestionData } from "@/services/exam/types";
+import type { Question } from "@/services/exam/types";
 
 interface QuestionFormProps {
-  initialData?: QuestionData;
-  onSave: (question: QuestionData) => void;
+  initialData?: Question;
+  onSave: (question: Question) => void;
   onCancel: () => void;
   index: number;
 }

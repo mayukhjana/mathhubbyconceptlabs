@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Save, PlusCircle } from "lucide-react";
-import { QuestionData } from "@/components/QuestionForm";
+import { Question } from "@/services/exam/types";
 import { toast } from "sonner";
 import QuestionForm from "@/components/QuestionForm";
 import FileUploadZone from "@/components/admin/FileUploadZone";
@@ -13,12 +12,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface UnifiedExamFormProps {
   uploadedFile: File | null;
   solutionFile: File | null;
-  questions: QuestionData[];
+  questions: Question[];
   isUploading: boolean;
   uploadProgress: number;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSolutionFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onSaveQuestion: (questionData: QuestionData) => void;
+  onSaveQuestion: (questionData: Question) => void;
   onRemoveQuestion: (index: number) => void;
 }
 
@@ -41,7 +40,7 @@ const UnifiedExamForm = ({
     setShowQuestionForm(true);
   };
 
-  const handleSaveQuestion = (questionData: QuestionData) => {
+  const handleSaveQuestion = (questionData: Question) => {
     console.log("Saving question in UnifiedExamForm:", questionData);
     onSaveQuestion(questionData);
     

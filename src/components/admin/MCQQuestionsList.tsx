@@ -1,10 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
-import { QuestionData } from "@/components/QuestionForm";
+import { Question } from "@/services/exam/types";
 
 interface MCQQuestionsListProps {
-  questions: QuestionData[];
+  questions: Question[];
   onEditQuestion: (index: number) => void;
   onRemoveQuestion: (index: number) => void;
 }
