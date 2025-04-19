@@ -39,10 +39,10 @@ const PaperCard = ({
   
   // Build badge array
   const badges = [];
-  if (year) badges.push({ text: year, variant: 'outline' });
-  if (examBoard) badges.push({ text: examBoard, variant: 'default' });
-  if (isPremium) badges.push({ text: 'Premium', variant: 'premium' });
-  if (isAttempted) badges.push({ text: 'Attempted', variant: 'attempted' });
+  if (year) badges.push({ text: year, variant: 'outline' as const });
+  if (examBoard) badges.push({ text: examBoard, variant: 'default' as const });
+  if (isPremium) badges.push({ text: 'Premium', variant: 'secondary' as const });
+  if (isAttempted) badges.push({ text: 'Attempted', variant: 'secondary' as const });
 
   return (
     <Card className={`overflow-hidden transition border ${
@@ -55,25 +55,17 @@ const PaperCard = ({
           {badges.map((badge, index) => (
             <Badge
               key={index}
-              variant={
-                badge.variant === 'premium'
-                  ? 'premium'
-                  : badge.variant === 'attempted'
-                  ? 'success'
-                  : badge.variant === 'outline'
-                  ? 'outline'
-                  : 'default'
-              }
+              variant={badge.variant}
               className={
-                badge.variant === 'premium'
+                badge.text === 'Premium'
                   ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0'
-                  : badge.variant === 'attempted'
+                  : badge.text === 'Attempted'
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0'
                   : ''
               }
             >
-              {badge.variant === 'premium' && <Sparkle className="w-3 h-3 mr-1" />}
-              {badge.variant === 'attempted' && <FileCheck className="w-3 h-3 mr-1" />}
+              {badge.text === 'Premium' && <Sparkle className="w-3 h-3 mr-1" />}
+              {badge.text === 'Attempted' && <FileCheck className="w-3 h-3 mr-1" />}
               {badge.text}
             </Badge>
           ))}
@@ -198,10 +190,10 @@ const PaperCard = ({
               </Button>
             ) : (
               <Button
-                variant="premium"
+                variant="secondary"
                 size="sm"
                 asChild
-                className="w-full"
+                className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
               >
                 <Link to="/premium">
                   <Star className="w-3 h-3 mr-1" />

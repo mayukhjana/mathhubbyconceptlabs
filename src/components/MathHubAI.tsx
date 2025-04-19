@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, ImagePlus, Loader2, ChatIcon, AlertCircle, DownloadIcon, TrashIcon } from "lucide-react";
+import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, DownloadIcon, TrashIcon, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,7 +71,7 @@ const MathHubAI: React.FC = () => {
       if (data) {
         const formattedMessages: Message[] = data.map(item => ({
           id: item.id,
-          role: 'user',
+          role: 'user' as const,
           content: item.question,
           created_at: item.created_at,
           image: item.has_image ? 'image' : undefined
@@ -81,7 +81,7 @@ const MathHubAI: React.FC = () => {
             userMessage,
             {
               id: `assistant-${item.id}`,
-              role: 'assistant',
+              role: 'assistant' as const,
               content: item.answer,
               created_at: item.created_at
             }
@@ -333,7 +333,7 @@ const MathHubAI: React.FC = () => {
                 <ScrollArea className="h-full pr-4">
                   {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                      <ChatIcon className="h-12 w-12 text-muted-foreground/50 mb-2" />
+                      <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-2" />
                       <p className="text-muted-foreground">
                         No conversation history yet. Ask your first math question!
                       </p>
