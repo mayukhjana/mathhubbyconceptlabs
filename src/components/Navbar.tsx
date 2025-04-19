@@ -35,7 +35,10 @@ const Navbar = () => {
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mathprimary to-mathsecondary flex items-center justify-center text-white">
             <GraduationCap size={24} />
           </div>
-          <span className="text-xl font-display font-bold">MathHub</span>
+          <div className="flex flex-col">
+            <span className="text-xl font-display font-bold">MathHub</span>
+            <span className="text-xs text-muted-foreground">By ConceptLabs</span>
+          </div>
         </Link>
         
         <nav className="hidden md:flex items-center space-x-1">

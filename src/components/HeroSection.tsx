@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, ChevronRight } from "lucide-react";
@@ -6,9 +7,19 @@ import DashboardPreview from "@/components/DashboardPreview";
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-background pt-20 pb-20">
-      {/* Background gradients */}
+      {/* Animated Math Symbols Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full bg-gradient-to-br from-mathprimary/20 via-purple-500/10 to-mathsecondary/20 blur-3xl opacity-50"></div>
+        <div className="absolute top-0 w-full h-full opacity-5">
+          <div className="absolute animate-float delay-0 left-[10%] top-[10%]">∫</div>
+          <div className="absolute animate-float delay-200 left-[20%] top-[40%]">π</div>
+          <div className="absolute animate-float delay-400 left-[80%] top-[15%]">∑</div>
+          <div className="absolute animate-float delay-600 left-[65%] top-[35%]">√</div>
+          <div className="absolute animate-float delay-800 left-[35%] top-[65%]">∞</div>
+          <div className="absolute animate-float delay-1000 left-[75%] top-[75%]">θ</div>
+        </div>
+
+        {/* Modern Gradient Effects */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full bg-gradient-to-br from-mathprimary/20 via-purple-500/10 to-mathsecondary/20 blur-3xl opacity-50 animate-pulse"></div>
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-blue-500/20 via-mathprimary/10 to-transparent blur-3xl"></div>
       </div>
 
@@ -24,15 +35,12 @@ const HeroSection = () => {
               Master Mathematics with{' '}
               <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-mathprimary via-blue-600 to-mathsecondary">
                 Precision
-                <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 10" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M0,5 Q50,0 100,5 T200,5" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-                </svg>
               </span>
               <br />and Confidence
             </h1>
             
             <p className="text-lg sm:text-xl text-mathdark/70 dark:text-gray-300 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Comprehensive practice papers, interactive exams, and personalized analytics for ICSE, CBSE, and West Bengal boards to help you achieve academic excellence.
+              Comprehensive practice papers, interactive exams, and AI-powered analytics for ICSE, CBSE, and West Bengal boards.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
@@ -97,7 +105,7 @@ const HeroSection = () => {
           </div>
           
           <div className="w-full lg:w-1/2 perspective-1000">
-            <div className="relative mx-auto max-w-2xl animate-fade-in">
+            <div className="relative mx-auto max-w-2xl animate-fade-in hover:scale-105 transition-transform duration-500">
               <DashboardPreview />
             </div>
           </div>
