@@ -13,7 +13,7 @@ export interface Chapter {
   papers: {
     id: string;
     title: string;
-    description: string;
+    description?: string;
     year: string;
     isPremium: boolean;
     downloadUrl?: string;
@@ -49,7 +49,6 @@ const ChapterAccordion = ({ chapters, userIsPremium = false }: ChapterAccordionP
                   <PaperCard
                     key={paper.id}
                     title={paper.title}
-                    description={paper.description || `${paper.examBoard} ${paper.year}`}
                     year={paper.year}
                     isPremium={paper.isPremium}
                     userIsPremium={userIsPremium}

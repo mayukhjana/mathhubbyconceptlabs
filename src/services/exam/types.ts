@@ -10,6 +10,7 @@ export interface Exam {
   is_premium: boolean;
   allow_paper_download: boolean;
   allow_solution_download: boolean;
+  isAttempted?: boolean; // Add this property to match usage in ExamPapersPage.tsx
   created_at?: string;
   updated_at?: string;
 }

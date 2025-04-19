@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Exam } from "../types";
+import type { Exam, Question } from "../types";
 
 export const createExam = async (examData: Omit<Exam, 'id' | 'created_at' | 'updated_at'>) => {
   try {
@@ -27,7 +27,11 @@ export const createExam = async (examData: Omit<Exam, 'id' | 'created_at' | 'upd
     }
     
     console.log("Created exam:", data);
-    return data as Exam;
+    return {
+      ...data,
+      allow_paper_download: data.allow_paper_download !== undefined ? data.allow_paper_download : true,
+      allow_solution_download: data.allow_solution_download !== undefined ? data.allow_solution_download : true,
+    } as Exam;
   } catch (error) {
     console.error("Exception creating exam:", error);
     throw error;

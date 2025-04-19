@@ -10,6 +10,7 @@ import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
   title: string;
+  description?: string; // Add description prop
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
@@ -26,6 +27,7 @@ interface PaperCardProps {
 
 const PaperCard = ({
   title,
+  description,
   downloadUrl,
   solutionUrl,
   practiceUrl,
@@ -81,6 +83,10 @@ const PaperCard = ({
         </div>
         
         <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
+        
+        {description && (
+          <p className="text-sm text-muted-foreground mb-3">{description}</p>
+        )}
 
         <div className="flex flex-wrap gap-2 mt-4">
           {shouldShowPaperDownload && (
