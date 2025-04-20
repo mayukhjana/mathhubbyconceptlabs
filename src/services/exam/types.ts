@@ -40,8 +40,9 @@ export const ENTRANCE_OPTIONS = [
   'WBJEE', 
   'JEE Main', 
   'JEE Advanced', 
-  'NEET', 
-  'CUET'
+  'SSC CGL',
+  'BITSAT',
+  'Other Exams'
 ];
 
 export const EXAM_TYPES = {

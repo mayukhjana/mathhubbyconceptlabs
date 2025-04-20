@@ -3,8 +3,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PaperCard from "@/components/PaperCard";
 import { 
   fetchEntranceExams, 
@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const ExamPapersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState<Exam[]>([]);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
@@ -86,7 +86,7 @@ const ExamPapersPage = () => {
     };
   }, [user, loadExams]);
   
-  const examBoardTabs = [
+  const examCategories = [
     { id: "all", label: "All Entrance Exams" },
     ...ENTRANCE_OPTIONS.map(board => ({ id: board, label: board }))
   ];
@@ -97,13 +97,13 @@ const ExamPapersPage = () => {
       exam.board.toLowerCase().includes(searchQuery.toLowerCase()) ||
       exam.year.toLowerCase().includes(searchQuery.toLowerCase());
       
-    const matchesTab = activeTab === "all" || exam.board === activeTab;
+    const matchesCategory = activeCategory === "all" || exam.board === activeCategory;
     
-    return matchesSearch && matchesTab;
+    return matchesSearch && matchesCategory;
   });
   
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
+  const handleCategoryChange = (value: string) => {
+    setActiveCategory(value);
   };
   
   const handleRefresh = () => {
@@ -141,6 +141,18 @@ const ExamPapersPage = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Select value={activeCategory} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {examCategories.map(category => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button 
               variant="outline" 
               onClick={handleRefresh}
@@ -150,26 +162,14 @@ const ExamPapersPage = () => {
             </Button>
           </div>
           
-          <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange} className="mb-8">
-            <TabsList className="w-full flex overflow-x-auto">
-              {examBoardTabs.map(tab => (
-                <TabsTrigger key={tab.id} value={tab.id} className="flex-1">
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            
-            {examBoardTabs.map(tab => (
-              <TabsContent key={tab.id} value={tab.id} className="mt-6">
-                <ExamsList 
-                  exams={filteredExams} 
-                  userIsPremium={userIsPremium}
-                  searchQuery={searchQuery}
-                  lastRefresh={lastRefresh}
-                />
-              </TabsContent>
-            ))}
-          </Tabs>
+          <div className="mt-6">
+            <ExamsList 
+              exams={filteredExams} 
+              userIsPremium={userIsPremium}
+              searchQuery={searchQuery}
+              lastRefresh={lastRefresh}
+            />
+          </div>
         </div>
       </main>
       
