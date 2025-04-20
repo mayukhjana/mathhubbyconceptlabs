@@ -37,6 +37,17 @@ const QuestionCard = ({
   const [imageLoading, setImageLoading] = useState(!!question.image_url);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [cacheBustUrl, setCacheBustUrl] = useState<string | undefined>(question.image_url);
+
+  // Initialize the image with cache busting when component mounts
+  useState(() => {
+    if (question.image_url) {
+      const timestamp = new Date().getTime();
+      const newUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}`;
+      setCacheBustUrl(newUrl);
+      console.log("QuestionCard: Setting up image with cache bust URL:", newUrl);
+    }
+  });
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
@@ -44,7 +55,7 @@ const QuestionCard = ({
   };
 
   const handleImageLoad = () => {
-    console.log("Image loaded successfully:", question.image_url);
+    console.log("QuestionCard: Image loaded successfully:", cacheBustUrl);
     setImageLoading(false);
     setImageError(false);
   };
@@ -52,12 +63,16 @@ const QuestionCard = ({
   const handleImageError = () => {
     setImageLoading(false);
     setImageError(true);
-    console.error("Failed to load question image:", question.image_url);
+    console.error("QuestionCard: Failed to load question image:", cacheBustUrl);
     
     // Try to reload with cache buster
-    if (retryCount < 2 && question.image_url) {
+    if (retryCount < 3 && question.image_url) {
       setRetryCount(prev => prev + 1);
-      console.log("Retrying image load, attempt:", retryCount + 1);
+      const timestamp = Date.now();
+      const newUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}_${retryCount}`;
+      console.log("QuestionCard: Retrying image load, attempt:", retryCount + 1, "with URL:", newUrl);
+      setCacheBustUrl(newUrl);
+      setImageLoading(true);
     }
   };
 
@@ -66,13 +81,6 @@ const QuestionCard = ({
       return correct.includes(selected);
     }
     return selected === correct;
-  };
-  
-  // Add cache-busting parameter to image URL
-  const getImageUrl = () => {
-    if (!question.image_url) return "";
-    const timestamp = retryCount > 0 ? Date.now() : "";
-    return `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}_${retryCount}`;
   };
 
   return (
@@ -107,7 +115,7 @@ const QuestionCard = ({
                 </div>
               ) : (
                 <img 
-                  src={getImageUrl()}
+                  src={cacheBustUrl}
                   alt="Question" 
                   className={cn(
                     "max-w-full h-auto rounded-lg border border-border mx-auto",

@@ -25,12 +25,37 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
       
       // Add cache-busting parameter to URL
       const timestamp = new Date().getTime();
-      setCacheBustUrl(`${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}`);
-      console.log("Setting up image with cache bust URL:", `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}`);
+      const newUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}`;
+      setCacheBustUrl(newUrl);
+      console.log("Setting up image with cache bust URL:", newUrl);
+      
+      // Preload the image
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        console.log("Image preloaded successfully:", newUrl);
+        setIsImageLoading(false);
+        setImageError(false);
+      };
+      img.onerror = () => {
+        console.error("Failed to preload image:", newUrl);
+        setIsImageLoading(false);
+        setImageError(true);
+        
+        // Try to reload the image with a new cache-busting query parameter
+        if (retryCount < 2) {
+          setRetryCount(prev => prev + 1);
+          const newTimestamp = new Date().getTime();
+          const retryUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${newTimestamp}_${retryCount + 1}`;
+          console.log("Retrying with cache bust URL:", retryUrl);
+          setCacheBustUrl(retryUrl);
+        }
+      };
+      img.src = newUrl;
     } else {
       setCacheBustUrl(undefined);
     }
-  }, [imageUrl]);
+  }, [imageUrl, retryCount]);
 
   const handleImageLoad = () => {
     setIsImageLoading(false);

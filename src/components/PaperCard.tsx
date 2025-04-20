@@ -21,6 +21,7 @@ interface PaperCardProps {
   isAttempted?: boolean;
   requireAuth?: boolean;
   isFullMock?: boolean;
+  hasMcqQuestions?: boolean;
 }
 
 const PaperCard = ({
@@ -36,6 +37,7 @@ const PaperCard = ({
   isAttempted = false,
   requireAuth = true,
   isFullMock = false,
+  hasMcqQuestions = false
 }: PaperCardProps) => {
   // Build badge array
   const badges = [];
@@ -45,6 +47,7 @@ const PaperCard = ({
   if (isAttempted) badges.push({ text: 'Attempted', variant: 'secondary' as const });
 
   const canAccessPremium = !isPremium || userIsPremium;
+  const canPractice = practiceUrl && hasMcqQuestions;
   
   return (
     <Card className={`overflow-hidden transition border ${
@@ -172,16 +175,23 @@ const PaperCard = ({
           )}
         </div>
         
-        {isFullMock && (
+        {isFullMock && !hasMcqQuestions && (
           <div className="mt-3 text-xs flex items-start gap-1 text-muted-foreground">
             <Info className="w-3 h-3 mt-0.5 shrink-0" />
-            <span>Only MCQ questions can be practiced using our exam management system</span>
+            <span>No MCQ questions available for practice</span>
+          </div>
+        )}
+        
+        {isFullMock && hasMcqQuestions && (
+          <div className="mt-3 text-xs flex items-start gap-1 text-muted-foreground">
+            <Info className="w-3 h-3 mt-0.5 shrink-0" />
+            <span>Practice MCQ questions using our exam management system</span>
           </div>
         )}
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        {practiceUrl ? (
+        {canPractice ? (
           <AuthWrapper
             requireAuth={requireAuth}
             tooltipText="Sign in to practice this exam"
@@ -210,7 +220,9 @@ const PaperCard = ({
             )}
           </AuthWrapper>
         ) : (
-          <span className="text-xs text-muted-foreground">Coming Soon</span>
+          <span className="text-xs text-muted-foreground">
+            {isFullMock && !hasMcqQuestions ? "No MCQ Questions" : "Coming Soon"}
+          </span>
         )}
       </CardFooter>
     </Card>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -74,7 +73,6 @@ const ExamPapersPage = () => {
     
     loadExams();
     
-    // Set up a focus event listener to refresh data when user returns to the tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         loadExams();
@@ -221,6 +219,7 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
   const [paperUrl, setPaperUrl] = useState<string | null>(null);
   const [solutionUrl, setSolutionUrl] = useState<string | null>(null);
   const [isAttempted, setIsAttempted] = useState(false);
+  const [hasMcqQuestions, setHasMcqQuestions] = useState(false);
   const { user } = useAuth();
   
   useEffect(() => {
@@ -249,8 +248,27 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       }
     };
     
+    const checkMcqQuestions = async () => {
+      try {
+        const { data: questions, error } = await supabase
+          .from('questions')
+          .select('id')
+          .eq('exam_id', exam.id)
+          .limit(1);
+        
+        if (error) {
+          console.error("Error checking MCQ questions:", error);
+        } else {
+          setHasMcqQuestions(questions && questions.length > 0);
+        }
+      } catch (error) {
+        console.error("Error checking MCQ questions:", error);
+      }
+    };
+    
     fetchUrls();
     checkAttempted();
+    checkMcqQuestions();
   }, [exam.id, exam.board, user]);
   
   return (
@@ -266,7 +284,8 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       examBoard={exam.board}
       isAttempted={exam.isAttempted || isAttempted}
       requireAuth={true}
-      isFullMock={true} // Added isFullMock flag for entrance exams
+      isFullMock={true}
+      hasMcqQuestions={hasMcqQuestions}
     />
   );
 };
