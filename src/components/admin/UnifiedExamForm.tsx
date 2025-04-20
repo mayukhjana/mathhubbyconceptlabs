@@ -73,12 +73,12 @@ const UnifiedExamForm = ({
         
         <FileUploadZone 
           id="file-upload"
-          label="Exam Paper (PDF)"
+          label="Exam Paper (PDF, Optional)"
           file={uploadedFile}
           onChange={onFileChange}
           acceptFormats=".pdf"
-          description="Upload exam paper in PDF format only"
-          required={true}
+          description="Upload exam paper in PDF format"
+          required={false}
         />
         
         <FileUploadZone 

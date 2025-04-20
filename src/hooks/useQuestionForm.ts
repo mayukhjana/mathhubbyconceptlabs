@@ -47,6 +47,20 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     console.log("Starting image upload for file:", file.name, "type:", file.type);
 
     try {
+      // Ensure the file is an image
+      if (!file.type.startsWith('image/')) {
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
+        if (!['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(fileExt || '')) {
+          throw new Error('Only image files are allowed for question images');
+        }
+      }
+      
+      // Check file size
+      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSizeInBytes) {
+        throw new Error("Image size must be less than 5MB");
+      }
+      
       // Upload using the optimized function
       const publicUrl = await uploadQuestionImage(file);
       

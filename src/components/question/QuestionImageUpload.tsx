@@ -26,6 +26,7 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
       // Add cache-busting parameter to URL
       const timestamp = new Date().getTime();
       setCacheBustUrl(`${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}`);
+      console.log("Setting up image with cache bust URL:", `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}`);
     } else {
       setCacheBustUrl(undefined);
     }
