@@ -3,14 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Download, FileCheck, Lock, Star, Sparkle, Info } from 'lucide-react';
+import { Download, FileCheck, Lock, Star, Sparkle, Info, Trophy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
   title: string;
-  description?: string;  // Keep this optional
+  description?: string;
   downloadUrl?: string;
   solutionUrl?: string;
   practiceUrl?: string;
@@ -22,11 +22,17 @@ interface PaperCardProps {
   requireAuth?: boolean;
   isFullMock?: boolean;
   hasMcqQuestions?: boolean;
+  examResult?: {
+    score: number;
+    totalQuestions: number;
+    obtainedMarks: number;
+    totalMarks: number;
+  };
 }
 
 const PaperCard = ({
   title,
-  description,  // We'll keep the parameter but won't render it
+  description,
   downloadUrl,
   solutionUrl,
   practiceUrl,
@@ -37,7 +43,8 @@ const PaperCard = ({
   isAttempted = false,
   requireAuth = true,
   isFullMock = false,
-  hasMcqQuestions = false
+  hasMcqQuestions = false,
+  examResult
 }: PaperCardProps) => {
   // Build badge array
   const badges = [];
@@ -56,6 +63,7 @@ const PaperCard = ({
         : 'border-gray-200 dark:border-gray-800'
     } hover:shadow-md`}>
       <CardContent className="p-6">
+        {/* Badges section */}
         <div className="flex flex-wrap gap-1 mb-3">
           {badges.map((badge, index) => (
             <Badge
@@ -77,7 +85,26 @@ const PaperCard = ({
         </div>
         
         <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
-        {/* Description line is removed as requested */}
+
+        {/* Add Results Section when exam is attempted */}
+        {isAttempted && examResult && (
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
+              <Trophy className="w-4 h-4" />
+              <span className="font-semibold">Your Results</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Score:</span>
+                <span className="font-medium">{examResult.score}/{examResult.totalQuestions}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Marks:</span>
+                <span className="font-medium">{examResult.obtainedMarks}/{examResult.totalMarks}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2 mt-4">
           {downloadUrl && (

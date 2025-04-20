@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -220,6 +221,12 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
   const [solutionUrl, setSolutionUrl] = useState<string | null>(null);
   const [isAttempted, setIsAttempted] = useState(false);
   const [hasMcqQuestions, setHasMcqQuestions] = useState(false);
+  const [examResult, setExamResult] = useState<{
+    score: number;
+    totalQuestions: number;
+    obtainedMarks: number;
+    totalMarks: number;
+  } | null>(null);
   const { user } = useAuth();
   
   useEffect(() => {
@@ -239,12 +246,20 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       if (user) {
         const { data: results } = await supabase
           .from('user_results')
-          .select('id')
+          .select('*')
           .eq('exam_id', exam.id)
           .eq('user_id', user.id)
           .maybeSingle();
         
-        setIsAttempted(!!results);
+        if (results) {
+          setIsAttempted(true);
+          setExamResult({
+            score: results.score,
+            totalQuestions: results.total_questions,
+            obtainedMarks: results.obtained_marks,
+            totalMarks: results.total_marks
+          });
+        }
       }
     };
     
@@ -286,6 +301,7 @@ const ExamPaperCard = ({ exam, userIsPremium }: { exam: Exam, userIsPremium: boo
       requireAuth={true}
       isFullMock={true}
       hasMcqQuestions={hasMcqQuestions}
+      examResult={examResult || undefined}
     />
   );
 };
