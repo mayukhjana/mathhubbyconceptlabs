@@ -22,7 +22,8 @@ export const ensureStorageBuckets = async () => {
       'jee_mains_solutions', 
       'jee_advanced_papers', 
       'jee_advanced_solutions',
-      'avatars'
+      'avatars',
+      'questions'
     ];
     
     const existingBuckets = new Set(buckets?.map(b => b.name) || []);
@@ -58,8 +59,8 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
       return true;
     }
     
-    // Note: Creating buckets requires admin privileges in Supabase
-    // Regular users will get an error here
+    // Note: Creating buckets using the client SDK will likely fail due to RLS
+    // We'll attempt it, but in production this would typically be done via SQL migrations or edge functions
     try {
       // Define allowed MIME types based on bucket type
       let allowedMimeTypes: string[];
@@ -68,11 +69,14 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
       } else if (bucketName.includes('papers') || bucketName.includes('solutions')) {
         allowedMimeTypes = ['application/pdf'];
+      } else if (bucketName === 'questions') {
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
       } else {
         // Default allowed types
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
       }
       
+      // Try to create the bucket (this may fail due to RLS)
       const { error } = await supabase
         .storage
         .createBucket(bucketName, {
@@ -82,8 +86,25 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
         });
       
       if (error) {
-        // Log but don't throw - this is expected for non-admin users
-        console.error(`Error creating bucket ${bucketName}:`, error);
+        // Log but don't throw - default to using edge function
+        console.error(`Error creating bucket ${bucketName} via client SDK:`, error);
+        
+        // Use the edge function to create bucket with admin privileges
+        if (bucketName === 'questions' || bucketName === 'avatars') {
+          console.log(`Attempting to create ${bucketName} bucket via edge function...`);
+          const { data, error: fnError } = await supabase.functions.invoke('create-avatars-bucket', {
+            body: { bucketName: bucketName }
+          });
+          
+          if (fnError) {
+            console.error(`Edge function error creating bucket ${bucketName}:`, fnError);
+            return false;
+          }
+          
+          console.log(`Edge function response:`, data);
+          return true;
+        }
+        
         return false;
       }
       

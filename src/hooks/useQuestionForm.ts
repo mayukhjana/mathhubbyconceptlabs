@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Question } from "@/services/exam/types";
+import { uploadQuestionImage } from "@/services/exam/storage/operations";
 
 interface UseQuestionFormProps {
   initialData?: Question;
@@ -25,6 +26,7 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     negative_marks: initialData?.negative_marks || 0,
     is_multi_correct: initialData?.is_multi_correct || false,
     order_number: initialData?.order_number || index + 1,
+    image_url: initialData?.image_url
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -39,41 +41,26 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
   );
 
   const handleImageUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error("Please upload an image file");
-      return;
-    }
-
+    if (!file) return;
+    
     setIsUploading(true);
-    console.log("Starting image upload for file:", file.name);
+    console.log("Starting image upload for file:", file.name, "type:", file.type);
 
     try {
-      // Ensure the questions bucket exists
-      await ensureQuestionsBucket();
-
-      const fileName = `question_${Date.now()}_${file.name.replace(/\s+/g, '-')}`;
-      console.log("Uploading to bucket with filename:", fileName);
+      // Upload using the optimized function
+      const publicUrl = await uploadQuestionImage(file);
       
-      const { data, error } = await supabase.storage
-        .from('questions')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true,
-          contentType: file.type
-        });
-      
-      if (error) {
-        console.error("Storage upload error:", error);
-        throw error;
+      if (!publicUrl) {
+        throw new Error("Failed to get public URL for uploaded image");
       }
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('questions')
-        .getPublicUrl(fileName);
       
       console.log("Image uploaded successfully:", publicUrl);
       setImageFile(file);
       setImageUrl(publicUrl);
+      setFormData(prev => ({
+        ...prev,
+        image_url: publicUrl
+      }));
       toast.success("Image uploaded successfully");
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -81,44 +68,6 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
       setImageUrl(undefined); // Clear the image URL on error
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const ensureQuestionsBucket = async () => {
-    try {
-      // Check if bucket exists
-      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-      
-      if (listError) {
-        console.error("Error checking buckets:", listError);
-        return false;
-      }
-      
-      const bucketExists = buckets?.some(b => b.name === 'questions');
-      
-      if (!bucketExists) {
-        console.log("Questions bucket does not exist, creating it...");
-        
-        const { error: createError } = await supabase.storage.createBucket('questions', { 
-          public: true,
-          fileSizeLimit: 10 * 1024 * 1024, // 10MB limit
-          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml']
-        });
-        
-        if (createError) {
-          console.error("Error creating questions bucket:", createError);
-          toast.error(`Failed to create storage bucket: ${createError.message}`);
-          return false;
-        }
-        
-        console.log("Successfully created questions bucket");
-      }
-      
-      return true;
-    } catch (error: any) {
-      console.error("Error ensuring questions bucket:", error);
-      toast.error(`Storage error: ${error.message}`);
-      return false;
     }
   };
 

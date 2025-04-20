@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
 import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
 import { toast } from "sonner";
+import { createSpecificBucket } from "./buckets";
 
 /**
  * Retrieves a signed URL for downloading an exam file
@@ -60,11 +61,8 @@ export const uploadExamFile = async (
     }
     
     // Get the correct content type using our utility
-    const contentType = getContentTypeFromFile(file);
+    const contentType = 'application/pdf';
     console.log(`Setting content type: ${contentType} for file: ${file.name}`);
-    
-    // Convert file to properly typed blob
-    const typedBlob = await fileToTypedBlob(file);
     
     // Set the correct content type in upload options
     const options = {
@@ -76,7 +74,7 @@ export const uploadExamFile = async (
     const { data, error } = await supabase
       .storage
       .from(bucketName)
-      .upload(fileName, typedBlob, options);
+      .upload(fileName, file, options);
     
     if (error) {
       console.error(`Error uploading ${fileType}:`, error);
@@ -98,45 +96,14 @@ export const uploadExamFile = async (
  * Ensures the avatars bucket exists with proper permissions
  */
 export const ensureAvatarsBucket = async (): Promise<boolean> => {
-  try {
-    // Check if bucket exists
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error("Error checking buckets:", listError);
-      return false;
-    }
-    
-    const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
-    
-    if (!avatarBucketExists) {
-      console.log("Avatars bucket does not exist, creating it...");
-      
-      const { error: createError } = await supabase.storage.createBucket('avatars', { 
-        public: true,
-        fileSizeLimit: 10 * 1024 * 1024, // 10MB
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
-      });
-      
-      if (createError) {
-        console.error("Error creating avatars bucket:", createError);
-        return false;
-      }
-      
-      // Set public bucket policy
-      const { error: policyError } = await supabase.storage.from('avatars').createSignedUrl('test.txt', 1);
-      if (policyError && !policyError.message.includes('not found')) {
-        console.error("Policy may not be set correctly:", policyError);
-      }
-      
-      console.log("Successfully created avatars bucket");
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error ensuring avatars bucket:", error);
-    return false;
-  }
+  return await createSpecificBucket('avatars');
+};
+
+/**
+ * Ensures the questions bucket exists with proper permissions
+ */
+export const ensureQuestionsBucket = async (): Promise<boolean> => {
+  return await createSpecificBucket('questions');
 };
 
 /**
@@ -160,14 +127,10 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
     const contentType = getContentTypeFromFile(file);
     console.log(`Using content type: ${contentType}`);
     
-    // Convert file to properly typed blob
-    const typedBlob = await fileToTypedBlob(file);
-    console.log(`Created typed blob with type: ${typedBlob.type}, size: ${typedBlob.size}`);
-    
     // Ensure bucket exists
     await ensureAvatarsBucket();
     
-    // Upload image directly without any processing or parsing that could change the type
+    // Upload image with the correct content type
     const { data, error } = await supabase.storage
       .from('avatars')
       .upload(fileName, file, {
@@ -205,6 +168,56 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
     return publicUrl;
   } catch (error: any) {
     console.error("Avatar upload failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Uploads a question image to storage
+ */
+export const uploadQuestionImage = async (file: File): Promise<string | null> => {
+  try {
+    // Ensure it's an image file
+    if (!file.type.startsWith('image/')) {
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      if (!['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(fileExt || '')) {
+        throw new Error('Only image files are allowed for question images');
+      }
+    }
+    
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
+    const fileName = `question_${uniqueId}.${fileExt}`;
+    
+    // Get proper content type
+    const contentType = getContentTypeFromFile(file);
+    console.log(`Uploading question image with content type: ${contentType}`);
+    
+    // Ensure questions bucket exists
+    await ensureQuestionsBucket();
+    
+    // Upload image with the correct content type
+    const { data, error } = await supabase.storage
+      .from('questions')
+      .upload(fileName, file, {
+        contentType: contentType,
+        upsert: true,
+        cacheControl: '3600'
+      });
+    
+    if (error) {
+      console.error("Error uploading question image:", error);
+      throw error;
+    }
+    
+    // Get public URL
+    const publicUrl = supabase.storage.from('questions').getPublicUrl(fileName).data.publicUrl;
+    console.log("Question image uploaded successfully:", publicUrl);
+    
+    return publicUrl;
+  } catch (error: any) {
+    console.error("Question image upload failed:", error);
     throw error;
   }
 };

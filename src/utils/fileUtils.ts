@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for file handling and content type detection
  */
@@ -43,7 +44,7 @@ export const getContentTypeFromFile = (file: File): string => {
   }
   
   // Last resort fallback
-  return 'application/octet-stream';
+  return file.type || 'application/octet-stream';
 };
 
 /**
@@ -59,7 +60,7 @@ export const isImageFile = (file: File): boolean => {
  */
 export const fileToTypedBlob = async (file: File): Promise<Blob> => {
   const contentType = getContentTypeFromFile(file);
-  console.log(`Converting file to blob with content type: ${contentType}`);
+  console.log(`Converting file to blob with content type: ${contentType}, filename: ${file.name}`);
   
   // Read file as ArrayBuffer
   const arrayBuffer = await file.arrayBuffer();

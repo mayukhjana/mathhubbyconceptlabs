@@ -36,6 +36,7 @@ const QuestionCard = ({
   const [selectedAnswer, setSelectedAnswer] = useState(userAnswer || "");
   const [imageLoading, setImageLoading] = useState(!!question.image_url);
   const [imageError, setImageError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
@@ -43,6 +44,7 @@ const QuestionCard = ({
   };
 
   const handleImageLoad = () => {
+    console.log("Image loaded successfully:", question.image_url);
     setImageLoading(false);
     setImageError(false);
   };
@@ -51,6 +53,12 @@ const QuestionCard = ({
     setImageLoading(false);
     setImageError(true);
     console.error("Failed to load question image:", question.image_url);
+    
+    // Try to reload with cache buster
+    if (retryCount < 2 && question.image_url) {
+      setRetryCount(prev => prev + 1);
+      console.log("Retrying image load, attempt:", retryCount + 1);
+    }
   };
 
   const isCorrectAnswer = (selected: string, correct: string | string[]): boolean => {
@@ -58,6 +66,13 @@ const QuestionCard = ({
       return correct.includes(selected);
     }
     return selected === correct;
+  };
+  
+  // Add cache-busting parameter to image URL
+  const getImageUrl = () => {
+    if (!question.image_url) return "";
+    const timestamp = retryCount > 0 ? Date.now() : "";
+    return `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}_${retryCount}`;
   };
 
   return (
@@ -69,8 +84,8 @@ const QuestionCard = ({
     )}>
       <CardHeader>
         <CardTitle className="flex justify-between items-start">
-          <span className="text-muted-foreground font-normal">Question {questionNumber}</span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground font-normal">Question {questionNumber}</span>
+          <span className="text-xs text-muted-foreground">
             {question.marks} marks {question.negative_marks > 0 && `(-${question.negative_marks} negative)`}
           </span>
         </CardTitle>
@@ -92,7 +107,7 @@ const QuestionCard = ({
                 </div>
               ) : (
                 <img 
-                  src={question.image_url}
+                  src={getImageUrl()}
                   alt="Question" 
                   className={cn(
                     "max-w-full h-auto rounded-lg border border-border mx-auto",
@@ -100,6 +115,7 @@ const QuestionCard = ({
                   )}
                   onLoad={handleImageLoad}
                   onError={handleImageError}
+                  crossOrigin="anonymous"
                 />
               )}
             </div>
@@ -157,7 +173,7 @@ const QuestionCard = ({
         <CardFooter className="justify-between">
           {skipped ? (
             <span className="text-sm text-orange-500">Skipped</span>
-          ) : isCorrectAnswer(userAnswer, question.correctAnswer) ? (
+          ) : isCorrectAnswer(userAnswer || '', question.correctAnswer) ? (
             <span className="text-sm text-green-500">Correct Answer</span>
           ) : (
             <span className="text-sm text-red-500">Incorrect Answer</span>

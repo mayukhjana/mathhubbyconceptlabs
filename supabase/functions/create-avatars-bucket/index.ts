@@ -23,7 +23,19 @@ serve(async (req) => {
       });
     }
 
-    // Create a Supabase client
+    // Get the request body
+    const { bucketName = 'avatars' } = await req.json();
+    
+    // Validate bucketName
+    const allowedBuckets = ['avatars', 'questions'];
+    if (!allowedBuckets.includes(bucketName)) {
+      return new Response(JSON.stringify({ error: 'Invalid bucket name. Only avatars and questions buckets can be created' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Create a Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -34,7 +46,7 @@ serve(async (req) => {
       }
     );
 
-    // Get the user information from the auth token
+    // Check if the user is authenticated
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
@@ -43,7 +55,7 @@ serve(async (req) => {
       });
     }
 
-    // Check if avatars bucket exists
+    // Check if bucket exists
     let { data: buckets, error: listError } = await supabaseClient.storage.listBuckets();
     if (listError) {
       return new Response(JSON.stringify({ error: `Error listing buckets: ${listError.message}` }), { 
@@ -53,30 +65,48 @@ serve(async (req) => {
     }
 
     // Create the bucket if it doesn't exist
-    const avatarsBucket = buckets?.find(b => b.name === 'avatars');
-    if (!avatarsBucket) {
-      const { error: createError } = await supabaseClient.storage.createBucket('avatars', {
+    const existingBucket = buckets?.find(b => b.name === bucketName);
+    if (!existingBucket) {
+      // Set appropriate MIME types based on bucket
+      let allowedMimeTypes: string[];
+      if (bucketName === 'avatars') {
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+      } else if (bucketName === 'questions') {
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
+      } else {
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      }
+
+      const { error: createError } = await supabaseClient.storage.createBucket(bucketName, {
         public: true,
         fileSizeLimit: 10 * 1024 * 1024, // 10MB
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+        allowedMimeTypes: allowedMimeTypes
       });
 
       if (createError) {
-        return new Response(JSON.stringify({ error: `Error creating avatars bucket: ${createError.message}` }), { 
+        return new Response(JSON.stringify({ error: `Error creating ${bucketName} bucket: ${createError.message}` }), { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
+
+      console.log(`Successfully created ${bucketName} bucket`);
+    } else {
+      console.log(`${bucketName} bucket already exists`);
     }
 
-    // Set public access to the bucket
-    // Note: This would normally be done via SQL but we're using the admin API as a workaround
+    // Set public access to the bucket if needed
+    if (existingBucket && !existingBucket.public) {
+      // Note: This would require SQL access which is not available directly in edge functions
+      // For now, we'll just return success and recommend manual configuration
+      console.log(`${bucketName} bucket exists but might not be public`);
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Avatars bucket created/verified successfully',
-        bucketExists: !!avatarsBucket
+        message: `${bucketName} bucket created/verified successfully`,
+        bucketExists: !!existingBucket
       }),
       { 
         status: 200, 
@@ -84,6 +114,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error(`Unexpected error:`, error);
     return new Response(
       JSON.stringify({ error: `Unexpected error: ${error.message}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }}

@@ -3,6 +3,7 @@ import { Image } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { getContentTypeFromFile } from "@/utils/fileUtils";
 
 interface QuestionImageUploadProps {
   imageUrl?: string;
@@ -14,36 +15,70 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [cacheBustUrl, setCacheBustUrl] = useState<string | undefined>(imageUrl);
 
-  // Reset error state when imageUrl changes or component mounts
+  // Reset error state and prepare image when imageUrl changes or component mounts
   useEffect(() => {
     if (imageUrl) {
       setImageError(false);
       setIsImageLoading(true);
+      
+      // Add cache-busting parameter to URL
+      const timestamp = new Date().getTime();
+      setCacheBustUrl(`${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}`);
+    } else {
+      setCacheBustUrl(undefined);
     }
   }, [imageUrl]);
 
   const handleImageLoad = () => {
     setIsImageLoading(false);
     setImageError(false);
-    console.log("Image loaded successfully:", imageUrl);
+    console.log("Image loaded successfully:", cacheBustUrl);
   };
 
   const handleImageError = () => {
     setIsImageLoading(false);
     setImageError(true);
-    console.error("Failed to load image:", imageUrl);
+    console.error("Failed to load image:", cacheBustUrl);
     
     // Try to reload the image with a cache-busting query parameter
     if (retryCount < 2 && imageUrl) {
       setRetryCount(prev => prev + 1);
-      const cacheBustUrl = `${imageUrl}?t=${Date.now()}`;
-      console.log("Retrying with cache bust URL:", cacheBustUrl);
+      const timestamp = new Date().getTime();
+      const newCacheBustUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}_${retryCount}`;
+      console.log("Retrying with cache bust URL:", newCacheBustUrl);
+      setCacheBustUrl(newCacheBustUrl);
+      setIsImageLoading(true);
     }
   };
 
   const handleClick = () => {
     document.getElementById(`question-image-${index}`)?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    const contentType = getContentTypeFromFile(file);
+    if (!contentType.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+    
+    // Check file size
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSizeInBytes) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+    
+    setIsImageLoading(true);
+    setImageError(false);
+    console.log("Selected file:", file.name, file.type, file.size);
+    onImageUpload(file);
   };
 
   return (
@@ -67,12 +102,12 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
             </div>
           ) : (
             <img 
-              src={imageUrl} 
+              src={cacheBustUrl} 
               alt="Question" 
               className={`max-w-full h-auto mx-auto ${isImageLoading ? 'hidden' : ''}`}
               onLoad={handleImageLoad}
               onError={handleImageError}
-              key={retryCount} // Force reload when retryCount changes
+              crossOrigin="anonymous"
             />
           )}
           
@@ -88,15 +123,7 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
         id={`question-image-${index}`}
         type="file"
         accept="image/*"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            setIsImageLoading(true);
-            setImageError(false);
-            console.log("Selected file:", file.name, file.type, file.size);
-            onImageUpload(file);
-          }
-        }}
+        onChange={handleFileChange}
         className="hidden"
       />
     </div>
