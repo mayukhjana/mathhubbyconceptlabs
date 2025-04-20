@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -39,15 +38,37 @@ const QuestionCard = ({
   const [retryCount, setRetryCount] = useState(0);
   const [cacheBustUrl, setCacheBustUrl] = useState<string | undefined>(question.image_url);
 
-  // Initialize the image with cache busting when component mounts
-  useState(() => {
+  useEffect(() => {
     if (question.image_url) {
       const timestamp = new Date().getTime();
       const newUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}`;
       setCacheBustUrl(newUrl);
       console.log("QuestionCard: Setting up image with cache bust URL:", newUrl);
+      
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        console.log("QuestionCard: Image preloaded successfully:", newUrl);
+        setImageLoading(false);
+        setImageError(false);
+      };
+      img.onerror = () => {
+        console.error("QuestionCard: Failed to preload image:", newUrl);
+        setImageLoading(false);
+        setImageError(true);
+        
+        if (retryCount < 3) {
+          setRetryCount(prev => prev + 1);
+          const newTimestamp = new Date().getTime();
+          const retryUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${newTimestamp}_${retryCount}`;
+          console.log("QuestionCard: Retrying image load, attempt:", retryCount + 1, "with URL:", retryUrl);
+          setCacheBustUrl(retryUrl);
+          setImageLoading(true);
+        }
+      };
+      img.src = newUrl;
     }
-  });
+  }, [question.image_url]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
@@ -65,7 +86,6 @@ const QuestionCard = ({
     setImageError(true);
     console.error("QuestionCard: Failed to load question image:", cacheBustUrl);
     
-    // Try to reload with cache buster
     if (retryCount < 3 && question.image_url) {
       setRetryCount(prev => prev + 1);
       const timestamp = Date.now();

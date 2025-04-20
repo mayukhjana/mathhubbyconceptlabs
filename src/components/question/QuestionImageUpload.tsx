@@ -1,5 +1,5 @@
 
-import { Image } from "lucide-react";
+import { Image as LucideImage } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
       console.log("Setting up image with cache bust URL:", newUrl);
       
       // Preload the image
-      const img = new Image();
+      const img = new window.Image(); // Fixed: Use window.Image() constructor properly
       img.crossOrigin = "anonymous";
       img.onload = () => {
         console.log("Image preloaded successfully:", newUrl);
@@ -122,7 +122,7 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
           
           {imageError ? (
             <div className="py-4">
-              <Image className="h-8 w-8 mx-auto mb-2 text-red-500" />
+              <LucideImage className="h-8 w-8 mx-auto mb-2 text-red-500" />
               <p className="text-sm text-red-500">Failed to load image</p>
               <p className="text-xs text-muted-foreground mt-1">Click to upload a new one</p>
             </div>
@@ -141,7 +141,7 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
         </div>
       ) : (
         <div className="py-4">
-          <Image className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+          <LucideImage className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Click to upload an image</p>
         </div>
       )}
