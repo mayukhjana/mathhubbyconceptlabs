@@ -15,7 +15,8 @@ serve(async (req) => {
 
   try {
     // Create a Supabase client with service role key
-    const supabaseClient = createClient(
+    // This is crucial for bypassing RLS policies
+    const supabaseAdminClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
@@ -39,7 +40,7 @@ serve(async (req) => {
     console.log(`Attempting to create/verify bucket: ${bucketName}`);
 
     // Check if bucket exists
-    const { data: buckets, error: listError } = await supabaseClient.storage.listBuckets();
+    const { data: buckets, error: listError } = await supabaseAdminClient.storage.listBuckets();
     if (listError) {
       console.error(`Error listing buckets: ${listError.message}`);
       return new Response(JSON.stringify({ error: `Error listing buckets: ${listError.message}` }), { 
@@ -64,24 +65,29 @@ serve(async (req) => {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
       }
 
-      const { error: createError } = await supabaseClient.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 10 * 1024 * 1024, // 10MB
-        allowedMimeTypes: allowedMimeTypes
-      });
+      try {
+        const { error: createError } = await supabaseAdminClient.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 10 * 1024 * 1024, // 10MB
+          allowedMimeTypes: allowedMimeTypes
+        });
 
-      if (createError) {
-        console.error(`Error creating bucket: ${createError.message}`);
-        return new Response(JSON.stringify({ error: `Error creating ${bucketName} bucket: ${createError.message}` }), { 
+        if (createError) {
+          console.error(`Error creating bucket: ${createError.message}`);
+          return new Response(JSON.stringify({ error: `Error creating ${bucketName} bucket: ${createError.message}` }), { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        console.log(`Successfully created ${bucketName} bucket`);
+      } catch (createErr: any) {
+        console.error(`Exception creating bucket: ${createErr.message}`);
+        return new Response(JSON.stringify({ error: `Exception creating ${bucketName} bucket: ${createErr.message}` }), { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-
-      console.log(`Successfully created ${bucketName} bucket`);
-
-      // Update the bucket policy to make files publicly accessible
-      // This is done automatically with 'public: true' in createBucket
     } else {
       console.log(`${bucketName} bucket already exists`);
     }
@@ -97,7 +103,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Unexpected error:`, error);
     return new Response(
       JSON.stringify({ error: `Unexpected error: ${error.message}` }),

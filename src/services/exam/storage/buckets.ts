@@ -27,7 +27,7 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
     
     // Use the create-avatars-bucket edge function which can create any bucket
     // (despite its name, it's been updated to handle any bucket type)
-    const { error: functionError } = await supabase.functions.invoke('create-avatars-bucket', {
+    const { data, error: functionError } = await supabase.functions.invoke('create-avatars-bucket', {
       body: { bucketName }
     });
     
@@ -36,8 +36,13 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
       return false;
     }
     
-    console.log(`Successfully created ${bucketName} bucket via edge function`);
-    return true;
+    if (data && data.success) {
+      console.log(`Successfully created ${bucketName} bucket via edge function`);
+      return true;
+    } else {
+      console.error(`Failed to create ${bucketName} bucket:`, data?.error || 'Unknown error');
+      return false;
+    }
   } catch (error) {
     console.error(`Error setting up ${bucketName} bucket:`, error);
     return false;
@@ -83,8 +88,10 @@ export const ensureStorageBuckets = async (): Promise<boolean> => {
     
     if (!allBucketsCreated) {
       toast.error('Some storage buckets could not be initialized');
+      console.error('Not all buckets were initialized successfully');
     } else {
       toast.success('Storage buckets initialized successfully');
+      console.log('All buckets initialized successfully');
     }
     
     return allBucketsCreated;

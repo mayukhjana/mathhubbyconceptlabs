@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save } from "lucide-react";
+import { Save, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { createExam, createQuestions, fetchEntranceExams } from "@/services/exam";
 import { uploadExamFile, ensureStorageBuckets } from "@/services/exam/storage";
@@ -16,7 +16,7 @@ import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
 import { Question } from "@/services/exam/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCcw } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
@@ -49,10 +49,15 @@ const AdminUploadPage = () => {
       try {
         console.log("Initializing storage buckets...");
         setError(null);
+        
+        setBucketsReady(false);
+        
         const result = await ensureStorageBuckets();
         setBucketsReady(result);
+        
         if (!result) {
-          setError("Failed to initialize storage buckets. Please try again later.");
+          setError("Failed to initialize storage buckets. Please try again.");
+          console.error("Storage buckets initialization failed");
         } else {
           console.log("Storage buckets initialized successfully");
         }
@@ -175,18 +180,24 @@ const AdminUploadPage = () => {
     toast.info("Retrying storage initialization...");
     try {
       setError(null);
+      
+      toast.loading("Initializing storage...");
+      
       const result = await ensureStorageBuckets();
       setBucketsReady(result);
+      
       if (result) {
         toast.success("Storage buckets initialized successfully");
       } else {
-        setError("Failed to initialize storage buckets. Please try again.");
+        setError("Failed to initialize storage buckets. Please try again or contact support.");
         toast.error("Storage initialization failed again");
       }
     } catch (err: any) {
       console.error("Error reinitializing buckets:", err);
       setError(`Failed to initialize storage buckets: ${err.message}`);
       toast.error(`Storage initialization failed: ${err.message}`);
+    } finally {
+      toast.dismiss();
     }
   };
 
@@ -338,17 +349,17 @@ const AdminUploadPage = () => {
                     {error && (
                       <Alert variant="destructive" className="mb-6">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Error</AlertTitle>
+                        <AlertTitle>Storage Error</AlertTitle>
                         <AlertDescription className="flex flex-col gap-2">
                           <div>{error}</div>
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="w-fit flex gap-2 items-center" 
+                            className="w-fit flex gap-2 items-center mt-2" 
                             onClick={retryBucketInitialization}
                           >
                             <RefreshCcw className="h-4 w-4" />
-                            Retry Initialization
+                            Retry Storage Initialization
                           </Button>
                         </AlertDescription>
                       </Alert>
