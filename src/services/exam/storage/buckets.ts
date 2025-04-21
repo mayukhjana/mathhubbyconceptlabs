@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { STORAGE_BUCKETS } from "./paths";
 
 /**
  * Creates a specific storage bucket with proper configuration
@@ -10,7 +11,13 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
     console.log(`Creating or verifying storage bucket: ${bucketName}`);
     
     // Check if bucket exists first
-    const { data: bucketList } = await supabase.storage.listBuckets();
+    const { data: bucketList, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error("Error listing buckets:", listError);
+      return false;
+    }
+    
     const bucketExists = bucketList?.find(bucket => bucket.name === bucketName);
     
     if (bucketExists) {
@@ -18,25 +25,18 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
       return true;
     }
     
-    // Create bucket with proper permissions
-    const { error } = await supabase.storage.createBucket(bucketName, {
-      public: true, // Make bucket publicly accessible
-      fileSizeLimit: 5 * 1024 * 1024, // 5MB limit
-      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml']
+    // Use the create-avatars-bucket edge function which can create any bucket
+    // (despite its name, it's been updated to handle any bucket type)
+    const { error: functionError } = await supabase.functions.invoke('create-avatars-bucket', {
+      body: { bucketName }
     });
     
-    if (error) {
-      console.error(`Error creating ${bucketName} bucket:`, error);
+    if (functionError) {
+      console.error(`Error creating ${bucketName} bucket via edge function:`, functionError);
       return false;
     }
     
-    console.log(`Successfully created ${bucketName} bucket`);
-    
-    // Instead of using RPC for policy, we'll set up public file access directly
-    // Remove the RPC call that doesn't exist in this project
-    // This will make buckets public by default, which is okay for this use case
-    console.log(`Bucket ${bucketName} is set to public access by default`);
-    
+    console.log(`Successfully created ${bucketName} bucket via edge function`);
     return true;
   } catch (error) {
     console.error(`Error setting up ${bucketName} bucket:`, error);
@@ -49,28 +49,26 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
  */
 export const ensureStorageBuckets = async (): Promise<boolean> => {
   try {
-    // Initialize paper and solution buckets for different boards
+    // Initialize paper and solution buckets
     const paperBucketsPromise = [
-      'jee-papers',
-      'wbjee-papers',
-      'ssc-cgl-papers',
-      'bitsat-papers',
-      'other-papers',
+      STORAGE_BUCKETS.PAPERS.JEE,
+      STORAGE_BUCKETS.PAPERS.WBJEE,
+      STORAGE_BUCKETS.PAPERS.SSC_CGL,
+      STORAGE_BUCKETS.PAPERS.BITSAT,
+      STORAGE_BUCKETS.PAPERS.OTHER,
     ].map(bucketName => createSpecificBucket(bucketName));
     
     const solutionBucketsPromise = [
-      'jee-solutions',
-      'wbjee-solutions',
-      'ssc-cgl-solutions',
-      'bitsat-solutions',
-      'other-solutions',
+      STORAGE_BUCKETS.SOLUTIONS.JEE,
+      STORAGE_BUCKETS.SOLUTIONS.WBJEE,
+      STORAGE_BUCKETS.SOLUTIONS.SSC_CGL,
+      STORAGE_BUCKETS.SOLUTIONS.BITSAT,
+      STORAGE_BUCKETS.SOLUTIONS.OTHER,
     ].map(bucketName => createSpecificBucket(bucketName));
     
-    // Create avatars bucket
-    const avatarsBucketPromise = createSpecificBucket('avatars');
-    
-    // Create questions images bucket
-    const questionsBucketPromise = createSpecificBucket('questions');
+    // Create avatars and questions buckets
+    const avatarsBucketPromise = createSpecificBucket(STORAGE_BUCKETS.AVATARS);
+    const questionsBucketPromise = createSpecificBucket(STORAGE_BUCKETS.QUESTIONS);
     
     // Wait for all buckets to be created
     const results = await Promise.all([
@@ -82,6 +80,12 @@ export const ensureStorageBuckets = async (): Promise<boolean> => {
     
     // Check if all buckets were created successfully
     const allBucketsCreated = results.every(result => result === true);
+    
+    if (!allBucketsCreated) {
+      toast.error('Some storage buckets could not be initialized');
+    } else {
+      toast.success('Storage buckets initialized successfully');
+    }
     
     return allBucketsCreated;
   } catch (error) {

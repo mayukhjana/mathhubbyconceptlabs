@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -17,7 +16,7 @@ import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
 import { Question } from "@/services/exam/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCcw } from "lucide-react";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
@@ -49,6 +48,7 @@ const AdminUploadPage = () => {
     const initBuckets = async () => {
       try {
         console.log("Initializing storage buckets...");
+        setError(null);
         const result = await ensureStorageBuckets();
         setBucketsReady(result);
         if (!result) {
@@ -169,6 +169,25 @@ const AdminUploadPage = () => {
       examDuration > 0 &&
       bucketsReady
     );
+  };
+
+  const retryBucketInitialization = async () => {
+    toast.info("Retrying storage initialization...");
+    try {
+      setError(null);
+      const result = await ensureStorageBuckets();
+      setBucketsReady(result);
+      if (result) {
+        toast.success("Storage buckets initialized successfully");
+      } else {
+        setError("Failed to initialize storage buckets. Please try again.");
+        toast.error("Storage initialization failed again");
+      }
+    } catch (err: any) {
+      console.error("Error reinitializing buckets:", err);
+      setError(`Failed to initialize storage buckets: ${err.message}`);
+      toast.error(`Storage initialization failed: ${err.message}`);
+    }
   };
 
   const handleCreateUnifiedExam = async () => {
@@ -320,11 +339,22 @@ const AdminUploadPage = () => {
                       <Alert variant="destructive" className="mb-6">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Error</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
+                        <AlertDescription className="flex flex-col gap-2">
+                          <div>{error}</div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-fit flex gap-2 items-center" 
+                            onClick={retryBucketInitialization}
+                          >
+                            <RefreshCcw className="h-4 w-4" />
+                            Retry Initialization
+                          </Button>
+                        </AlertDescription>
                       </Alert>
                     )}
                     
-                    {!bucketsReady && (
+                    {!bucketsReady && !error && (
                       <Alert className="mb-6">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Storage Initializing</AlertTitle>

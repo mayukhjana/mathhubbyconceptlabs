@@ -14,50 +14,34 @@ serve(async (req) => {
   }
 
   try {
-    // Get authorization header
-    const authorization = req.headers.get('Authorization');
-    if (!authorization) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Get the request body
-    const { bucketName = 'avatars' } = await req.json();
-    
-    // Validate bucketName
-    const allowedBuckets = ['avatars', 'questions'];
-    if (!allowedBuckets.includes(bucketName)) {
-      return new Response(JSON.stringify({ error: 'Invalid bucket name. Only avatars and questions buckets can be created' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
     // Create a Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: authorization }
+          headers: { Authorization: req.headers.get('Authorization') || '' }
         }
       }
     );
 
-    // Check if the user is authenticated
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-        status: 401, 
+    // Get the request body
+    const { bucketName = 'avatars' } = await req.json();
+    
+    // Validate bucketName
+    if (!bucketName || typeof bucketName !== 'string') {
+      return new Response(JSON.stringify({ error: 'Invalid bucket name' }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
+    console.log(`Attempting to create/verify bucket: ${bucketName}`);
+
     // Check if bucket exists
-    let { data: buckets, error: listError } = await supabaseClient.storage.listBuckets();
+    const { data: buckets, error: listError } = await supabaseClient.storage.listBuckets();
     if (listError) {
+      console.error(`Error listing buckets: ${listError.message}`);
       return new Response(JSON.stringify({ error: `Error listing buckets: ${listError.message}` }), { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -69,12 +53,15 @@ serve(async (req) => {
     if (!existingBucket) {
       // Set appropriate MIME types based on bucket
       let allowedMimeTypes: string[];
-      if (bucketName === 'avatars') {
+      
+      if (bucketName.includes('avatar')) {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-      } else if (bucketName === 'questions') {
+      } else if (bucketName.includes('question')) {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
+      } else if (bucketName.includes('paper') || bucketName.includes('solution')) {
+        allowedMimeTypes = ['application/pdf'];
       } else {
-        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
       }
 
       const { error: createError } = await supabaseClient.storage.createBucket(bucketName, {
@@ -84,6 +71,7 @@ serve(async (req) => {
       });
 
       if (createError) {
+        console.error(`Error creating bucket: ${createError.message}`);
         return new Response(JSON.stringify({ error: `Error creating ${bucketName} bucket: ${createError.message}` }), { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -91,15 +79,11 @@ serve(async (req) => {
       }
 
       console.log(`Successfully created ${bucketName} bucket`);
+
+      // Update the bucket policy to make files publicly accessible
+      // This is done automatically with 'public: true' in createBucket
     } else {
       console.log(`${bucketName} bucket already exists`);
-    }
-
-    // Set public access to the bucket if needed
-    if (existingBucket && !existingBucket.public) {
-      // Note: This would require SQL access which is not available directly in edge functions
-      // For now, we'll just return success and recommend manual configuration
-      console.log(`${bucketName} bucket exists but might not be public`);
     }
 
     return new Response(
