@@ -1,9 +1,10 @@
 
-import { Image as LucideImage } from "lucide-react";
+import { Image as LucideImage, ImageOff, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { Button } from "@/components/ui/button";
 
 interface QuestionImageUploadProps {
   imageUrl?: string;
@@ -25,12 +26,15 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
       
       // Add cache-busting parameter to URL
       const timestamp = new Date().getTime();
-      const newUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}`;
+      const newUrl = imageUrl.includes('?') 
+        ? `${imageUrl}&t=${timestamp}` 
+        : `${imageUrl}?t=${timestamp}`;
+      
       setCacheBustUrl(newUrl);
       console.log("Setting up image with cache bust URL:", newUrl);
       
       // Preload the image
-      const img = new Image(); // Fixed: Use Image constructor correctly
+      const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
         console.log("Image preloaded successfully:", newUrl);
@@ -46,7 +50,10 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
         if (retryCount < 2) {
           setRetryCount(prev => prev + 1);
           const newTimestamp = new Date().getTime();
-          const retryUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${newTimestamp}_${retryCount + 1}`;
+          const retryUrl = imageUrl.includes('?')
+            ? `${imageUrl}&t=${newTimestamp}_retry${retryCount + 1}`
+            : `${imageUrl}?t=${newTimestamp}_retry${retryCount + 1}`;
+          
           console.log("Retrying with cache bust URL:", retryUrl);
           setCacheBustUrl(retryUrl);
         }
@@ -54,6 +61,8 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
       img.src = newUrl;
     } else {
       setCacheBustUrl(undefined);
+      setImageError(false);
+      setIsImageLoading(false);
     }
   }, [imageUrl, retryCount]);
 
@@ -72,7 +81,10 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
     if (retryCount < 2 && imageUrl) {
       setRetryCount(prev => prev + 1);
       const timestamp = new Date().getTime();
-      const newCacheBustUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${timestamp}_${retryCount}`;
+      const newCacheBustUrl = imageUrl.includes('?')
+        ? `${imageUrl}&t=${timestamp}_retry${retryCount + 1}`
+        : `${imageUrl}?t=${timestamp}_retry${retryCount + 1}`;
+      
       console.log("Retrying with cache bust URL:", newCacheBustUrl);
       setCacheBustUrl(newCacheBustUrl);
       setIsImageLoading(true);
@@ -122,7 +134,7 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
           
           {imageError ? (
             <div className="py-4">
-              <LucideImage className="h-8 w-8 mx-auto mb-2 text-red-500" />
+              <ImageOff className="h-8 w-8 mx-auto mb-2 text-red-500" />
               <p className="text-sm text-red-500">Failed to load image</p>
               <p className="text-xs text-muted-foreground mt-1">Click to upload a new one</p>
             </div>
@@ -137,7 +149,18 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
             />
           )}
           
-          <p className="text-sm text-muted-foreground">Click to change image</p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="mt-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick();
+            }}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Change Image
+          </Button>
         </div>
       ) : (
         <div className="py-4">

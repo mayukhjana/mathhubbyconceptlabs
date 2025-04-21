@@ -1,140 +1,97 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /**
- * Ensures all required storage buckets exist in the Supabase project
+ * Creates a specific storage bucket with proper configuration
  */
-export const ensureStorageBuckets = async () => {
+export const createSpecificBucket = async (bucketName: string): Promise<boolean> => {
   try {
-    const { data: buckets, error } = await supabase.storage.listBuckets();
+    console.log(`Creating or verifying storage bucket: ${bucketName}`);
+    
+    // Check if bucket exists first
+    const { data: bucketList } = await supabase.storage.listBuckets();
+    const bucketExists = bucketList?.find(bucket => bucket.name === bucketName);
+    
+    if (bucketExists) {
+      console.log(`Bucket ${bucketName} already exists`);
+      return true;
+    }
+    
+    // Create bucket with proper permissions
+    const { error } = await supabase.storage.createBucket(bucketName, {
+      public: true, // Make bucket publicly accessible
+      fileSizeLimit: 5 * 1024 * 1024, // 5MB limit
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml']
+    });
     
     if (error) {
-      console.error("Error listing buckets:", error);
+      console.error(`Error creating ${bucketName} bucket:`, error);
       return false;
     }
     
-    const requiredBuckets = [
-      'exam_papers', 
-      'solutions', 
-      'wbjee_papers', 
-      'wbjee_solutions', 
-      'jee_mains_papers', 
-      'jee_mains_solutions', 
-      'jee_advanced_papers', 
-      'jee_advanced_solutions',
-      'avatars',
-      'questions'
-    ];
+    console.log(`Successfully created ${bucketName} bucket`);
     
-    const existingBuckets = new Set(buckets?.map(b => b.name) || []);
-    const missingBuckets = requiredBuckets.filter(bucket => !existingBuckets.has(bucket));
+    // Add public policy (RLS) to make uploaded files accessible
+    const { error: policyError } = await supabase.rpc('create_public_bucket_policy', { 
+      bucket_name: bucketName 
+    });
     
-    if (missingBuckets.length > 0) {
-      console.warn(`Missing buckets: ${missingBuckets.join(', ')}`);
-      // Don't try to create buckets automatically - it requires admin permissions
-      // Just log the warning so developers are aware
+    if (policyError) {
+      console.error(`Error creating public policy for ${bucketName}:`, policyError);
+      // We'll still return true since the bucket was created
     }
     
     return true;
   } catch (error) {
-    console.error("Error ensuring storage buckets:", error);
-    return false;
-  }
-};
-
-export const createSpecificBucket = async (bucketName: string): Promise<boolean> => {
-  try {
-    console.log(`Creating bucket: ${bucketName}`);
-    
-    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error("Error checking existing buckets:", listError);
-      return false;
-    }
-    
-    const bucketExists = existingBuckets?.some(b => b.name === bucketName);
-    if (bucketExists) {
-      console.log(`Bucket ${bucketName} already exists, skipping creation`);
-      return true;
-    }
-    
-    // Note: Creating buckets using the client SDK will likely fail due to RLS
-    // We'll attempt it, but in production this would typically be done via SQL migrations or edge functions
-    try {
-      // Define allowed MIME types based on bucket type
-      let allowedMimeTypes: string[];
-      
-      if (bucketName === 'avatars') {
-        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-      } else if (bucketName.includes('papers') || bucketName.includes('solutions')) {
-        allowedMimeTypes = ['application/pdf'];
-      } else if (bucketName === 'questions') {
-        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
-      } else {
-        // Default allowed types
-        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-      }
-      
-      // Try to create the bucket (this may fail due to RLS)
-      const { error } = await supabase
-        .storage
-        .createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 1024 * 1024 * 10, // 10MB
-          allowedMimeTypes: allowedMimeTypes
-        });
-      
-      if (error) {
-        // Log but don't throw - default to using edge function
-        console.error(`Error creating bucket ${bucketName} via client SDK:`, error);
-        
-        // Use the edge function to create bucket with admin privileges
-        if (bucketName === 'questions' || bucketName === 'avatars') {
-          console.log(`Attempting to create ${bucketName} bucket via edge function...`);
-          const { data, error: fnError } = await supabase.functions.invoke('create-avatars-bucket', {
-            body: { bucketName: bucketName }
-          });
-          
-          if (fnError) {
-            console.error(`Edge function error creating bucket ${bucketName}:`, fnError);
-            return false;
-          }
-          
-          console.log(`Edge function response:`, data);
-          return true;
-        }
-        
-        return false;
-      }
-      
-      console.log(`Successfully created bucket: ${bucketName}`);
-      return true;
-    } catch (createError) {
-      console.error(`Error creating bucket ${bucketName}:`, createError);
-      return false;
-    }
-  } catch (error) {
-    console.error(`Error creating bucket ${bucketName}:`, error);
+    console.error(`Error setting up ${bucketName} bucket:`, error);
     return false;
   }
 };
 
 /**
- * Gets a list of files in a specific bucket
+ * Ensures that all required storage buckets exist
  */
-export const listBucketFiles = async (bucketName: string) => {
+export const ensureStorageBuckets = async (): Promise<boolean> => {
   try {
-    const { data, error } = await supabase.storage.from(bucketName).list();
+    // Initialize paper and solution buckets for different boards
+    const paperBucketsPromise = [
+      'jee-papers',
+      'wbjee-papers',
+      'ssc-cgl-papers',
+      'bitsat-papers',
+      'other-papers',
+    ].map(bucketName => createSpecificBucket(bucketName));
     
-    if (error) {
-      console.error(`Error listing files in bucket ${bucketName}:`, error);
-      return [];
-    }
+    const solutionBucketsPromise = [
+      'jee-solutions',
+      'wbjee-solutions',
+      'ssc-cgl-solutions',
+      'bitsat-solutions',
+      'other-solutions',
+    ].map(bucketName => createSpecificBucket(bucketName));
     
-    return data || [];
+    // Create avatars bucket
+    const avatarsBucketPromise = createSpecificBucket('avatars');
+    
+    // Create questions images bucket
+    const questionsBucketPromise = createSpecificBucket('questions');
+    
+    // Wait for all buckets to be created
+    const results = await Promise.all([
+      ...paperBucketsPromise,
+      ...solutionBucketsPromise,
+      avatarsBucketPromise,
+      questionsBucketPromise
+    ]);
+    
+    // Check if all buckets were created successfully
+    const allBucketsCreated = results.every(result => result === true);
+    
+    return allBucketsCreated;
   } catch (error) {
-    console.error(`Error listing files in bucket ${bucketName}:`, error);
-    return [];
+    console.error('Error ensuring storage buckets:', error);
+    toast.error('Failed to initialize storage buckets');
+    return false;
   }
 };

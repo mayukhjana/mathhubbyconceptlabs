@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
 import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
 import { toast } from "sonner";
-import { createSpecificBucket } from "./buckets";
+import { createSpecificBucket, ensureStorageBuckets } from "./buckets";
 
 /**
  * Retrieves a signed URL for downloading an exam file
@@ -147,8 +147,7 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
     console.log("Upload successful:", data);
     
     // Get public URL with timestamp to prevent caching
-    const timestamp = new Date().getTime();
-    const publicUrl = `${supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl}?t=${timestamp}`;
+    const publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
     
     // Update profile
     const { error: updateError } = await supabase
@@ -200,7 +199,7 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
     // Upload image with the correct content type
     const { data, error } = await supabase.storage
       .from('questions')
-      .upload(fileName, file, {
+      .upload(fileName, await file.arrayBuffer(), {
         contentType: contentType,
         upsert: true,
         cacheControl: '3600'
@@ -211,13 +210,17 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
       throw error;
     }
     
-    // Get public URL
-    const publicUrl = supabase.storage.from('questions').getPublicUrl(fileName).data.publicUrl;
-    console.log("Question image uploaded successfully:", publicUrl);
+    // Get public URL with timestamp for cache busting
+    const timestamp = new Date().getTime();
+    const publicUrl = `${supabase.storage.from('questions').getPublicUrl(fileName).data.publicUrl}?t=${timestamp}`;
     
+    console.log("Question image uploaded successfully:", publicUrl);
     return publicUrl;
   } catch (error: any) {
     console.error("Question image upload failed:", error);
     throw error;
   }
 };
+
+// Export the main storage initialization function
+export { ensureStorageBuckets };

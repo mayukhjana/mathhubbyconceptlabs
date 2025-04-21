@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { Image } from "lucide-react";
+import { Image, ImageOff, Loader } from "lucide-react";
 
 interface QuestionCardProps {
   question: {
@@ -40,12 +41,18 @@ const QuestionCard = ({
 
   useEffect(() => {
     if (question.image_url) {
+      setImageError(false);
+      setImageLoading(true);
+      
       const timestamp = new Date().getTime();
-      const newUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}`;
+      const newUrl = question.image_url.includes('?') 
+        ? `${question.image_url}&t=${timestamp}` 
+        : `${question.image_url}?t=${timestamp}`;
+      
       setCacheBustUrl(newUrl);
       console.log("QuestionCard: Setting up image with cache bust URL:", newUrl);
       
-      const img = new window.Image();
+      const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
         console.log("QuestionCard: Image preloaded successfully:", newUrl);
@@ -60,15 +67,21 @@ const QuestionCard = ({
         if (retryCount < 3) {
           setRetryCount(prev => prev + 1);
           const newTimestamp = new Date().getTime();
-          const retryUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${newTimestamp}_${retryCount}`;
+          const retryUrl = question.image_url.includes('?') 
+            ? `${question.image_url}&t=${newTimestamp}_retry${retryCount}` 
+            : `${question.image_url}?t=${newTimestamp}_retry${retryCount}`;
+          
           console.log("QuestionCard: Retrying image load, attempt:", retryCount + 1, "with URL:", retryUrl);
           setCacheBustUrl(retryUrl);
           setImageLoading(true);
         }
       };
       img.src = newUrl;
+    } else {
+      setCacheBustUrl(undefined);
+      setImageLoading(false);
     }
-  }, [question.image_url]);
+  }, [question.image_url, retryCount]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
@@ -89,7 +102,10 @@ const QuestionCard = ({
     if (retryCount < 3 && question.image_url) {
       setRetryCount(prev => prev + 1);
       const timestamp = Date.now();
-      const newUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}_${retryCount}`;
+      const newUrl = question.image_url.includes('?') 
+        ? `${question.image_url}&t=${timestamp}_retry${retryCount}` 
+        : `${question.image_url}?t=${timestamp}_retry${retryCount}`;
+      
       console.log("QuestionCard: Retrying image load, attempt:", retryCount + 1, "with URL:", newUrl);
       setCacheBustUrl(newUrl);
       setImageLoading(true);
@@ -124,13 +140,13 @@ const QuestionCard = ({
             <div className="mt-4">
               {imageLoading && (
                 <div className="flex justify-center items-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <Loader className="h-8 w-8 text-primary animate-spin" />
                 </div>
               )}
               
               {imageError ? (
-                <div className="flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg p-4">
-                  <Image className="h-8 w-8 text-gray-400 mb-2" />
+                <div className="flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                  <ImageOff className="h-8 w-8 text-gray-400 mb-2" />
                   <p className="text-sm text-gray-500">Image could not be loaded</p>
                 </div>
               ) : (
