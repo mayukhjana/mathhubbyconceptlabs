@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { Image, ImageOff, Loader } from "lucide-react";
+import { Image as LucideImage, ImageOff, Loader } from "lucide-react";
 
 interface QuestionCardProps {
   question: {
@@ -52,7 +52,8 @@ const QuestionCard = ({
       setCacheBustUrl(newUrl);
       console.log("QuestionCard: Setting up image with cache bust URL:", newUrl);
       
-      const img = new Image();
+      // Fix: Don't use `new Image()` with no arguments - create a proper HTML image element
+      const img = new Image(); // This creates an HTMLImageElement
       img.crossOrigin = "anonymous";
       img.onload = () => {
         console.log("QuestionCard: Image preloaded successfully:", newUrl);
