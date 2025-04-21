@@ -99,25 +99,8 @@ export const ExamResults = ({
           {questions.map((question, index) => (
             <QuestionCard
               key={question.id}
-              question={{
-                id: question.id,
-                text: question.question_text,
-                options: [
-                  { id: "a", text: question.option_a },
-                  { id: "b", text: question.option_b },
-                  { id: "c", text: question.option_c },
-                  { id: "d", text: question.option_d }
-                ],
-                correctAnswer: question.correct_answer,
-                marks: question.marks,
-                negative_marks: question.negative_marks,
-                is_multi_correct: question.is_multi_correct
-              }}
-              onAnswer={() => {}}
-              userAnswer={userAnswers[question.id]}
-              showResult={true}
-              questionNumber={index + 1}
-              skipped={!userAnswers[question.id]}
+              question={question}
+              index={index}
             />
           ))}
         </div>

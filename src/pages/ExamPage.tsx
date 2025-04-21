@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,7 +75,6 @@ const ExamPage = () => {
           return;
         }
         
-        // Check if exam was already attempted
         if (user) {
           const wasAttempted = await checkExamAttempted(user.id, examId);
           if (wasAttempted) {
@@ -358,25 +356,8 @@ const ExamPage = () => {
               </div>
               
               <QuestionCard
-                question={{
-                  id: currentQuestion.id,
-                  text: currentQuestion.question_text,
-                  options: [
-                    { id: "a", text: currentQuestion.option_a },
-                    { id: "b", text: currentQuestion.option_b },
-                    { id: "c", text: currentQuestion.option_c },
-                    { id: "d", text: currentQuestion.option_d }
-                  ],
-                  correctAnswer: currentQuestion.correct_answer,
-                  marks: currentQuestion.marks,
-                  negative_marks: currentQuestion.negative_marks,
-                  is_multi_correct: currentQuestion.is_multi_correct,
-                  image_url: currentQuestion.image_url
-                }}
-                onAnswer={handleAnswer}
-                userAnswer={userAnswers[currentQuestion.id]}
-                questionNumber={currentQuestionIndex + 1}
-                key={currentQuestion.id}
+                question={currentQuestion}
+                index={currentQuestionIndex}
               />
               
               <div className="flex justify-between mt-6">
