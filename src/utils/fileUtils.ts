@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for file handling and content type detection
  */
@@ -8,16 +7,20 @@
  * based on its extension or type property
  */
 export const getContentTypeFromFile = (file: File): string => {
-  // First check the native type if it seems valid
+  // First check for PDF files by extension (most reliable way)
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  if (extension === 'pdf') {
+    return 'application/pdf';
+  }
+  
+  // Then check the native type if it seems valid
   if (file.type && 
       file.type !== 'application/octet-stream' && 
       file.type !== 'application/json') {
     return file.type;
   }
   
-  // Otherwise, determine by extension
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  
+  // Otherwise, determine by extension for other file types
   // Map of common file extensions to MIME types
   const contentTypeMap: Record<string, string> = {
     // Images
@@ -30,7 +33,7 @@ export const getContentTypeFromFile = (file: File): string => {
     'bmp': 'image/bmp',
     
     // Documents
-    'pdf': 'application/pdf',
+    'pdf': 'application/pdf', // Added again for redundancy
     'doc': 'application/msword',
     'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'xls': 'application/vnd.ms-excel',
@@ -56,9 +59,23 @@ export const isImageFile = (file: File): boolean => {
 };
 
 /**
+ * Checks if a file is a PDF based on its extension
+ */
+export const isPdfFile = (file: File): boolean => {
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  return extension === 'pdf';
+};
+
+/**
  * Converts a File object to a Blob with the correct content type
  */
 export const fileToTypedBlob = async (file: File): Promise<Blob> => {
+  // For PDFs, always use application/pdf content type
+  if (isPdfFile(file)) {
+    const arrayBuffer = await file.arrayBuffer();
+    return new Blob([arrayBuffer], { type: 'application/pdf' });
+  }
+  
   const contentType = getContentTypeFromFile(file);
   console.log(`Converting file to blob with content type: ${contentType}, filename: ${file.name}`);
   

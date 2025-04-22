@@ -77,11 +77,12 @@ serve(async (req) => {
       } else if (bucketName.includes('question')) {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
       } else if (bucketName.includes('paper') || bucketName.includes('solution')) {
-        // Make sure to allow application/pdf MIME type for paper and solution buckets
-        allowedMimeTypes = ['application/pdf', 'application/octet-stream'];
+        // Make sure to allow both application/pdf and application/octet-stream MIME types for PDFs
+        allowedMimeTypes = ['application/pdf', 'application/octet-stream', 'application/json'];
+        console.log(`Setting MIME types for PDF bucket ${bucketName}:`, allowedMimeTypes);
       } else {
         // Default allowed types
-        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf', 'application/octet-stream'];
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf', 'application/octet-stream', 'application/json'];
       }
 
       try {

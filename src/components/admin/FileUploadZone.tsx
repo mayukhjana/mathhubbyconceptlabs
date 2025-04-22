@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { File, Upload } from "lucide-react";
 import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { useEffect, useState } from "react";
 
 interface FileUploadZoneProps {
   id: string;
@@ -23,6 +24,21 @@ const FileUploadZone = ({
   acceptFormats = ".pdf",
   required = false
 }: FileUploadZoneProps) => {
+  const [fileDetails, setFileDetails] = useState<{size: string, type: string} | null>(null);
+
+  useEffect(() => {
+    if (file) {
+      // Log file details when a file is selected
+      const size = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+      const type = file.type || "Unknown type";
+      setFileDetails({ size, type });
+      
+      console.log(`File selected: ${file.name}, Size: ${size}, Type: ${file.type}, Extension: ${file.name.split('.').pop()?.toLowerCase()}`);
+    } else {
+      setFileDetails(null);
+    }
+  }, [file]);
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -33,11 +49,19 @@ const FileUploadZone = ({
     e.stopPropagation();
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFile = e.dataTransfer.files[0];
+      const extension = droppedFile.name.split('.').pop()?.toLowerCase();
+      
+      // Strict check for PDF file
+      if (acceptFormats === ".pdf" && extension !== 'pdf') {
+        alert("Please upload a PDF document");
+        return;
+      }
+      
       // Create a synthetic event to pass to the onChange handler
-      const fileList = e.dataTransfer.files;
       const syntheticEvent = {
         target: {
-          files: fileList
+          files: e.dataTransfer.files
         }
       } as unknown as React.ChangeEvent<HTMLInputElement>;
       
@@ -106,11 +130,16 @@ const FileUploadZone = ({
         onClick={() => document.getElementById(id)?.click()}
       >
         {file ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-2">
             <File size={24} className="text-mathprimary" />
-            <div className="flex flex-col">
-              <span>{file.name}</span>
+            <div className="flex flex-col text-center">
+              <span className="font-medium">{file.name}</span>
               <span className="text-xs text-muted-foreground">{getFileTypeDisplay()}</span>
+              {fileDetails && (
+                <span className="text-xs text-muted-foreground">
+                  {fileDetails.size} - {fileDetails.type}
+                </span>
+              )}
             </div>
           </div>
         ) : (
@@ -119,6 +148,11 @@ const FileUploadZone = ({
             <p className="text-sm text-muted-foreground">
               {description || "Drag and drop your file here, or click to select"}
             </p>
+            {acceptFormats && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Accepted format: {acceptFormats}
+              </p>
+            )}
           </div>
         )}
         <Input 
