@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, RefreshCcw } from "lucide-react";
+import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { createExam, createQuestions, fetchEntranceExams } from "@/services/exam";
 import { uploadExamFile, ensureStorageBuckets } from "@/services/exam/storage";
@@ -14,9 +14,8 @@ import RecentUploads from "@/components/admin/RecentUploads";
 import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
 import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
-import { Question } from "@/services/exam/types";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import UploadProgress from "@/components/admin/UploadProgress";
+import StorageStatus from "@/components/admin/StorageStatus";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
@@ -346,34 +345,11 @@ const AdminUploadPage = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {error && (
-                      <Alert variant="destructive" className="mb-6">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Storage Error</AlertTitle>
-                        <AlertDescription className="flex flex-col gap-2">
-                          <div>{error}</div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-fit flex gap-2 items-center mt-2" 
-                            onClick={retryBucketInitialization}
-                          >
-                            <RefreshCcw className="h-4 w-4" />
-                            Retry Storage Initialization
-                          </Button>
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    
-                    {!bucketsReady && !error && (
-                      <Alert className="mb-6">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Storage Initializing</AlertTitle>
-                        <AlertDescription>
-                          The storage system is initializing. Please wait a moment before uploading files.
-                        </AlertDescription>
-                      </Alert>
-                    )}
+                    <StorageStatus 
+                      error={error}
+                      bucketsReady={bucketsReady}
+                      onRetry={retryBucketInitialization}
+                    />
                     
                     <div className="space-y-4">
                       <h3 className="font-medium">Exam Details</h3>
@@ -411,6 +387,11 @@ const AdminUploadPage = () => {
                       onSolutionFileChange={handleSolutionFileChange}
                       onSaveQuestion={handleSaveQuestion}
                       onRemoveQuestion={handleRemoveQuestion}
+                    />
+                    
+                    <UploadProgress 
+                      isUploading={isUploading}
+                      uploadProgress={uploadProgress}
                     />
                   </CardContent>
                   <CardFooter>
