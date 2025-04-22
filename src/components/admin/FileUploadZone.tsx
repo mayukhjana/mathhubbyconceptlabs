@@ -49,12 +49,14 @@ const FileUploadZone = ({
   const getFileTypeDisplay = () => {
     if (!file) return "";
     
-    // Use our content type helper to get a more accurate content type
-    const contentType = getContentTypeFromFile(file);
+    // For PDFs, we'll just return "PDF Document" directly
     const extension = file.name.split(".").pop()?.toLowerCase();
+    if (extension === "pdf") return "PDF Document";
+    
+    // For other files, use our content type helper
+    const contentType = getContentTypeFromFile(file);
     
     switch (extension) {
-      case "pdf": return "PDF Document";
       case "png": return "PNG Image";
       case "jpg":
       case "jpeg": return "JPEG Image";
@@ -84,8 +86,7 @@ const FileUploadZone = ({
       }
       
       // Log the file details for debugging purposes
-      const contentType = getContentTypeFromFile(selectedFile);
-      console.log(`Selected file: ${selectedFile.name}, type: ${contentType}, native type: ${selectedFile.type}`);
+      console.log(`Selected file: ${selectedFile.name}, type: ${selectedFile.type}, size: ${selectedFile.size} bytes`);
       
       // Pass the file directly without modifying it
       onChange(event);

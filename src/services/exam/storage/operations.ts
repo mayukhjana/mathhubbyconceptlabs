@@ -60,9 +60,17 @@ export const uploadExamFile = async (
       throw error;
     }
     
-    // Get the correct content type using our utility
+    // Force the correct content type for PDFs instead of relying on detection
     const contentType = 'application/pdf';
-    console.log(`Setting content type: ${contentType} for file: ${file.name}`);
+    console.log(`Setting fixed content type: ${contentType} for PDF file: ${file.name}`);
+    
+    // Create a new blob with the correct content type if needed
+    let fileToUpload: File | Blob = file;
+    if (file.type !== contentType) {
+      console.log(`Converting file from ${file.type} to ${contentType}`);
+      const arrayBuffer = await file.arrayBuffer();
+      fileToUpload = new Blob([arrayBuffer], { type: contentType });
+    }
     
     // Set the correct content type in upload options
     const options = {
@@ -74,7 +82,7 @@ export const uploadExamFile = async (
     const { data, error } = await supabase
       .storage
       .from(bucketName)
-      .upload(fileName, file, options);
+      .upload(fileName, fileToUpload, options);
     
     if (error) {
       console.error(`Error uploading ${fileType}:`, error);

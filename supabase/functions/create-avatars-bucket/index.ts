@@ -77,8 +77,10 @@ serve(async (req) => {
       } else if (bucketName.includes('question')) {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
       } else if (bucketName.includes('paper') || bucketName.includes('solution')) {
+        // Make sure to allow application/pdf MIME type for paper and solution buckets
         allowedMimeTypes = ['application/pdf'];
       } else {
+        // Default allowed types
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
       }
 
