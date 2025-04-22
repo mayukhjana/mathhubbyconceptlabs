@@ -14,14 +14,31 @@ serve(async (req) => {
   }
 
   try {
-    // Create a Supabase client with service role key
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error: Missing environment variables' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Create a Supabase client with the service role key
     // This is crucial for bypassing RLS policies
-    const supabaseAdminClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      supabaseServiceKey,
       {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization') || '' }
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
         }
       }
     );
@@ -40,7 +57,7 @@ serve(async (req) => {
     console.log(`Attempting to create/verify bucket: ${bucketName}`);
 
     // Check if bucket exists
-    const { data: buckets, error: listError } = await supabaseAdminClient.storage.listBuckets();
+    const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
     if (listError) {
       console.error(`Error listing buckets: ${listError.message}`);
       return new Response(JSON.stringify({ error: `Error listing buckets: ${listError.message}` }), { 
@@ -66,7 +83,8 @@ serve(async (req) => {
       }
 
       try {
-        const { error: createError } = await supabaseAdminClient.storage.createBucket(bucketName, {
+        // Using service role key to bypass RLS policies
+        const { data, error: createError } = await supabaseAdmin.storage.createBucket(bucketName, {
           public: true,
           fileSizeLimit: 10 * 1024 * 1024, // 10MB
           allowedMimeTypes: allowedMimeTypes

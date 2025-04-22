@@ -6,7 +6,7 @@ import { STORAGE_BUCKETS } from "./paths";
 /**
  * Creates a specific storage bucket with proper configuration
  */
-export const createSpecificBucket = async (bucketName: string): Promise<boolean> => {
+export const createSpecificBucket = async (bucketName: string, retryCount = 0): Promise<boolean> => {
   try {
     console.log(`Creating or verifying storage bucket: ${bucketName}`);
     
@@ -33,6 +33,14 @@ export const createSpecificBucket = async (bucketName: string): Promise<boolean>
     
     if (functionError) {
       console.error(`Error creating ${bucketName} bucket via edge function:`, functionError);
+      
+      // Retry logic (max 2 retries)
+      if (retryCount < 2) {
+        console.log(`Retrying bucket creation for ${bucketName} (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+        return createSpecificBucket(bucketName, retryCount + 1);
+      }
+      
       return false;
     }
     
