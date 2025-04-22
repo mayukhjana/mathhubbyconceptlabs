@@ -78,10 +78,10 @@ serve(async (req) => {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
       } else if (bucketName.includes('paper') || bucketName.includes('solution')) {
         // Make sure to allow application/pdf MIME type for paper and solution buckets
-        allowedMimeTypes = ['application/pdf'];
+        allowedMimeTypes = ['application/pdf', 'application/octet-stream'];
       } else {
         // Default allowed types
-        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf', 'application/octet-stream'];
       }
 
       try {
@@ -100,7 +100,7 @@ serve(async (req) => {
           });
         }
 
-        console.log(`Successfully created ${bucketName} bucket`);
+        console.log(`Successfully created ${bucketName} bucket with MIME types:`, allowedMimeTypes);
       } catch (createErr: any) {
         console.error(`Exception creating bucket: ${createErr.message}`);
         return new Response(JSON.stringify({ error: `Exception creating ${bucketName} bucket: ${createErr.message}` }), { 

@@ -49,7 +49,7 @@ const FileUploadZone = ({
   const getFileTypeDisplay = () => {
     if (!file) return "";
     
-    // For PDFs, we'll just return "PDF Document" directly
+    // Always identify PDFs by extension rather than MIME type
     const extension = file.name.split(".").pop()?.toLowerCase();
     if (extension === "pdf") return "PDF Document";
     
@@ -86,7 +86,7 @@ const FileUploadZone = ({
       }
       
       // Log the file details for debugging purposes
-      console.log(`Selected file: ${selectedFile.name}, type: ${selectedFile.type}, size: ${selectedFile.size} bytes`);
+      console.log(`Selected file: ${selectedFile.name}, type: ${selectedFile.type}, size: ${selectedFile.size} bytes, extension: ${selectedFile.name.split(".").pop()?.toLowerCase()}`);
       
       // Pass the file directly without modifying it
       onChange(event);

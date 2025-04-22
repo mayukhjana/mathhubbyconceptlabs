@@ -64,13 +64,10 @@ export const uploadExamFile = async (
     const contentType = 'application/pdf';
     console.log(`Setting fixed content type: ${contentType} for PDF file: ${file.name}`);
     
-    // Create a new blob with the correct content type if needed
-    let fileToUpload: File | Blob = file;
-    if (file.type !== contentType) {
-      console.log(`Converting file from ${file.type} to ${contentType}`);
-      const arrayBuffer = await file.arrayBuffer();
-      fileToUpload = new Blob([arrayBuffer], { type: contentType });
-    }
+    // Always create a new blob with the correct content type to fix MIME type issues
+    console.log(`Converting file from ${file.type} to ${contentType}`);
+    const arrayBuffer = await file.arrayBuffer();
+    const fileToUpload = new Blob([arrayBuffer], { type: contentType });
     
     // Set the correct content type in upload options
     const options = {
@@ -78,6 +75,9 @@ export const uploadExamFile = async (
       upsert: true,
       contentType: contentType
     };
+    
+    // Ensure the bucket exists before uploading
+    await createSpecificBucket(bucketName, 0);
     
     const { data, error } = await supabase
       .storage

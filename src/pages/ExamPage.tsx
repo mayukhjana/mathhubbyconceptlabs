@@ -358,6 +358,7 @@ const ExamPage = () => {
               <QuestionCard
                 question={currentQuestion}
                 index={currentQuestionIndex}
+                showAnswer={false}
               />
               
               <div className="flex justify-between mt-6">

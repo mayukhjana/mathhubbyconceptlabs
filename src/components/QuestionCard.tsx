@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Question } from "@/services/exam/types";
 import { Image as LucideImage, ImageOff, Loader } from "lucide-react";
@@ -5,9 +6,10 @@ import { Image as LucideImage, ImageOff, Loader } from "lucide-react";
 interface QuestionCardProps {
   question: Question;
   index: number;
+  showAnswer?: boolean;
 }
 
-const QuestionCard = ({ question, index }: QuestionCardProps) => {
+const QuestionCard = ({ question, index, showAnswer = false }: QuestionCardProps) => {
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -85,9 +87,12 @@ const QuestionCard = ({ question, index }: QuestionCardProps) => {
         <li>{question.option_d}</li>
       </ul>
 
-      <p className="mt-2">
-        <strong>Correct Answer:</strong> {question.correct_answer}
-      </p>
+      {/* Only show correct answer if showAnswer is true */}
+      {showAnswer && (
+        <p className="mt-2">
+          <strong>Correct Answer:</strong> {question.correct_answer}
+        </p>
+      )}
     </div>
   );
 };

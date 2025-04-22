@@ -1,126 +1,135 @@
 
-import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Clock, Award, BookOpen, CheckCircle, XCircle } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Question } from "@/services/exam/types";
 import QuestionCard from "@/components/QuestionCard";
-import type { Question } from "@/services/exam/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 interface ExamResultsProps {
   score: number;
   timeTaken: number;
-  totalObtainedMarks: number;
-  totalPossibleMarks: number;
   questions: Question[];
   userAnswers: Record<string, string>;
+  totalObtainedMarks: number;
+  totalPossibleMarks: number;
   resultSaved: boolean;
   formatTime: (seconds: number) => string;
 }
 
-export const ExamResults = ({
+export function ExamResults({
   score,
   timeTaken,
-  totalObtainedMarks,
-  totalPossibleMarks,
   questions,
   userAnswers,
+  totalObtainedMarks,
+  totalPossibleMarks,
   resultSaved,
-  formatTime,
-}: ExamResultsProps) => {
-  const attemptedCount = Object.keys(userAnswers).length;
-  const unattemptedCount = questions.length - attemptedCount;
-
-  const getCorrectAnswerText = (correctAnswer: string | string[]): string => {
-    if (Array.isArray(correctAnswer)) {
-      return correctAnswer.join(', ');
+  formatTime
+}: ExamResultsProps) {
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (resultSaved) {
+      toast.success("Result saved successfully!");
+    } else if (user) {
+      toast.warning("Result couldn't be saved. You can still see your score.");
     }
-    return correctAnswer.includes(',') ? correctAnswer : correctAnswer;
+  }, [resultSaved, user]);
+
+  const getCorrectQuestions = () => {
+    return questions.filter((q) => {
+      const userAnswer = userAnswers[q.id];
+      if (!userAnswer) return false;
+      
+      return q.is_multi_correct 
+        ? userAnswer === q.correct_answer.toString() 
+        : userAnswer === q.correct_answer.toString();
+    }).length;
   };
 
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
-      <div className="max-w-md mx-auto">
-        <div className="w-24 h-24 bg-mathprimary/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Trophy className="w-12 h-12 text-mathprimary dark:text-blue-400" />
-        </div>
-        
-        <h1 className="text-2xl font-bold mb-2">Exam Completed!</h1>
-        
-        <div className="bg-mathlight dark:bg-gray-700 rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-medium mb-4">Your Results</h2>
-          
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-600 dark:text-gray-300">Total Marks:</span>
-            <span className="font-medium">{totalObtainedMarks} / {totalPossibleMarks}</span>
-          </div>
-          
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-600 dark:text-gray-300">Correct Answers:</span>
-            <span className="font-medium">
-              {questions.filter(q => 
-                userAnswers[q.id] && (
-                  q.is_multi_correct 
-                    ? Array.isArray(q.correct_answer)
-                      ? q.correct_answer.join(',') === userAnswers[q.id]
-                      : q.correct_answer === userAnswers[q.id]
-                    : userAnswers[q.id] === q.correct_answer
-                )
-              ).length} / {attemptedCount} attempted
-            </span>
-          </div>
-          
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-600 dark:text-gray-300">Questions Attempted:</span>
-            <span className="font-medium">
-              {attemptedCount} / {questions.length}
-              {unattemptedCount > 0 && ` (${unattemptedCount} skipped)`}
-            </span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-300">Time Taken:</span>
-            <span className="font-medium">{formatTime(timeTaken)}</span>
-          </div>
+  const correctQuestions = getCorrectQuestions();
+  const incorrectQuestions = questions.length - correctQuestions;
 
-          {resultSaved !== undefined && (
-            <div className="mt-3 pt-3 border-t">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 dark:text-gray-300">Results Saved:</span>
-                <span className={`font-medium ${resultSaved ? "text-green-500" : "text-red-500"}`}>
-                  {resultSaved ? "Yes" : "No"}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+  return (
+    <div className="space-y-8">
+      <div className="text-center space-y-3">
+        <h1 className="text-3xl font-bold">Exam Complete!</h1>
+        <p className="text-muted-foreground">
+          Here's a summary of your performance
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4 text-center flex flex-col items-center">
+          <Award className="h-8 w-8 text-mathprimary mb-2" />
+          <p className="text-lg font-bold">{score}%</p>
+          <p className="text-muted-foreground">Score</p>
+        </Card>
         
-        <h3 className="text-lg font-medium mb-4">Review Your Answers</h3>
+        <Card className="p-4 text-center flex flex-col items-center">
+          <Clock className="h-8 w-8 text-mathprimary mb-2" />
+          <p className="text-lg font-bold">{formatTime(timeTaken)}</p>
+          <p className="text-muted-foreground">Time Taken</p>
+        </Card>
         
-        <div className="space-y-4 max-h-96 overflow-y-auto mb-8">
-          {questions.map((question, index) => (
-            <QuestionCard
-              key={question.id}
-              question={question}
-              index={index}
+        <Card className="p-4 text-center flex flex-col items-center">
+          <BookOpen className="h-8 w-8 text-mathprimary mb-2" />
+          <p className="text-lg font-bold">{totalObtainedMarks}/{totalPossibleMarks}</p>
+          <p className="text-muted-foreground">Total Marks</p>
+        </Card>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4 text-center flex flex-col items-center">
+          <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
+          <p className="text-lg font-bold">{correctQuestions}</p>
+          <p className="text-muted-foreground">Correct Answers</p>
+        </Card>
+        
+        <Card className="p-4 text-center flex flex-col items-center">
+          <XCircle className="h-8 w-8 text-red-500 mb-2" />
+          <p className="text-lg font-bold">{incorrectQuestions}</p>
+          <p className="text-muted-foreground">Incorrect Answers</p>
+        </Card>
+      </div>
+      
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold">Question Review</h2>
+        {questions.map((q, index) => (
+          <div key={q.id} className="mb-6">
+            <QuestionCard 
+              question={q} 
+              index={index} 
+              showAnswer={true} // Show answers in results page
             />
-          ))}
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="outline" className="gap-2" asChild>
-            <Link to="/results">
-              <BarChart3 size={16} />
-              View All Results
-            </Link>
-          </Button>
-          
-          <Button className="gap-2" asChild>
-            <Link to="/exams">
-              <ArrowRight size={16} />
-              More Exams
-            </Link>
-          </Button>
-        </div>
+            <div className="mt-2 flex items-center space-x-2">
+              <p className="text-sm">
+                <span className="font-semibold">Your answer:</span> {userAnswers[q.id] || "Not answered"}
+              </p>
+              {userAnswers[q.id] && (
+                userAnswers[q.id] === q.correct_answer.toString() ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-500" />
+                )
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="flex justify-center space-x-4 pt-4">
+        <Button asChild variant="outline">
+          <Link to="/exams">Back to Exams</Link>
+        </Button>
+        <Button asChild>
+          <Link to="/results">View All Results</Link>
+        </Button>
       </div>
     </div>
   );
-};
+}
