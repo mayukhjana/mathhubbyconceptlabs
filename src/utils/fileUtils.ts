@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for file handling and content type detection
  */
@@ -13,6 +14,18 @@ export const getContentTypeFromFile = (file: File): string => {
     return 'application/pdf';
   }
   
+  // For images, determine by extension for maximum reliability
+  switch (extension) {
+    case 'png': return 'image/png';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'gif': return 'image/gif';
+    case 'webp': return 'image/webp';
+    case 'svg': return 'image/svg+xml';
+    case 'bmp': return 'image/bmp';
+    default: break;
+  }
+  
   // Then check the native type if it seems valid
   if (file.type && 
       file.type !== 'application/octet-stream' && 
@@ -20,7 +33,6 @@ export const getContentTypeFromFile = (file: File): string => {
     return file.type;
   }
   
-  // Otherwise, determine by extension for other file types
   // Map of common file extensions to MIME types
   const contentTypeMap: Record<string, string> = {
     // Images
@@ -76,7 +88,21 @@ export const fileToTypedBlob = async (file: File): Promise<Blob> => {
     return new Blob([arrayBuffer], { type: 'application/pdf' });
   }
   
-  const contentType = getContentTypeFromFile(file);
+  // For images, use extension-based detection
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  let contentType = file.type;
+  
+  // Override content type for common image formats to avoid MIME type issues
+  switch (extension) {
+    case 'png': contentType = 'image/png'; break;
+    case 'jpg':
+    case 'jpeg': contentType = 'image/jpeg'; break;
+    case 'gif': contentType = 'image/gif'; break;
+    case 'webp': contentType = 'image/webp'; break;
+    case 'svg': contentType = 'image/svg+xml'; break;
+    default: contentType = getContentTypeFromFile(file); break;
+  }
+  
   console.log(`Converting file to blob with content type: ${contentType}, filename: ${file.name}`);
   
   // Read file as ArrayBuffer

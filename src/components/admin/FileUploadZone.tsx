@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { File, Upload } from "lucide-react";
-import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { getContentTypeFromFile, isPdfFile } from "@/utils/fileUtils";
 import { useEffect, useState } from "react";
 
 interface FileUploadZoneProps {
@@ -30,10 +30,11 @@ const FileUploadZone = ({
     if (file) {
       // Log file details when a file is selected
       const size = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
-      const type = file.type || "Unknown type";
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      const type = isPdfFile(file) ? "application/pdf" : (file.type || "Unknown type");
       setFileDetails({ size, type });
       
-      console.log(`File selected: ${file.name}, Size: ${size}, Type: ${file.type}, Extension: ${file.name.split('.').pop()?.toLowerCase()}`);
+      console.log(`File selected: ${file.name}, Size: ${size}, Type: ${type}, Extension: ${extension}`);
     } else {
       setFileDetails(null);
     }
@@ -78,8 +79,6 @@ const FileUploadZone = ({
     if (extension === "pdf") return "PDF Document";
     
     // For other files, use our content type helper
-    const contentType = getContentTypeFromFile(file);
-    
     switch (extension) {
       case "png": return "PNG Image";
       case "jpg":
@@ -87,7 +86,7 @@ const FileUploadZone = ({
       case "gif": return "GIF Image";
       case "webp": return "WebP Image";
       case "svg": return "SVG Image";
-      default: return contentType || "Unknown type";
+      default: return getContentTypeFromFile(file) || "Unknown type";
     }
   };
 
@@ -110,7 +109,8 @@ const FileUploadZone = ({
       }
       
       // Log the file details for debugging purposes
-      console.log(`Selected file: ${selectedFile.name}, type: ${selectedFile.type}, size: ${selectedFile.size} bytes, extension: ${selectedFile.name.split(".").pop()?.toLowerCase()}`);
+      const extension = selectedFile.name.split(".").pop()?.toLowerCase();
+      console.log(`Selected file: ${selectedFile.name}, type: ${selectedFile.type}, size: ${selectedFile.size} bytes, extension: ${extension}`);
       
       // Pass the file directly without modifying it
       onChange(event);

@@ -25,8 +25,20 @@ export const createSpecificBucket = async (bucketName: string, retryCount = 0): 
       return true;
     }
     
-    // Use the create-avatars-bucket edge function which can create any bucket
-    // (despite its name, it's been updated to handle any bucket type)
+    // Try direct bucket creation first
+    const { data: directData, error: directError } = await supabase.storage.createBucket(bucketName, {
+      public: true, // Make buckets public by default for this app
+      fileSizeLimit: 5 * 1024 * 1024, // 5MB limit
+    });
+    
+    if (!directError) {
+      console.log(`Successfully created ${bucketName} bucket directly:`, directData);
+      return true;
+    }
+    
+    console.log(`Direct bucket creation failed, trying edge function: ${directError.message}`);
+    
+    // Fall back to edge function if direct creation fails
     const { data, error: functionError } = await supabase.functions.invoke('create-avatars-bucket', {
       body: { bucketName }
     });
@@ -62,6 +74,8 @@ export const createSpecificBucket = async (bucketName: string, retryCount = 0): 
  */
 export const ensureStorageBuckets = async (): Promise<boolean> => {
   try {
+    console.log("Ensuring all storage buckets exist...");
+    
     // Initialize paper and solution buckets
     const paperBucketsPromise = [
       STORAGE_BUCKETS.PAPERS.JEE,
@@ -69,6 +83,9 @@ export const ensureStorageBuckets = async (): Promise<boolean> => {
       STORAGE_BUCKETS.PAPERS.SSC_CGL,
       STORAGE_BUCKETS.PAPERS.BITSAT,
       STORAGE_BUCKETS.PAPERS.OTHER,
+      STORAGE_BUCKETS.PAPERS.MAHARASHTRA,
+      STORAGE_BUCKETS.PAPERS.KARNATAKA,
+      STORAGE_BUCKETS.PAPERS.TAMILNADU,
     ].map(bucketName => createSpecificBucket(bucketName));
     
     const solutionBucketsPromise = [
@@ -77,6 +94,9 @@ export const ensureStorageBuckets = async (): Promise<boolean> => {
       STORAGE_BUCKETS.SOLUTIONS.SSC_CGL,
       STORAGE_BUCKETS.SOLUTIONS.BITSAT,
       STORAGE_BUCKETS.SOLUTIONS.OTHER,
+      STORAGE_BUCKETS.SOLUTIONS.MAHARASHTRA,
+      STORAGE_BUCKETS.SOLUTIONS.KARNATAKA,
+      STORAGE_BUCKETS.SOLUTIONS.TAMILNADU,
     ].map(bucketName => createSpecificBucket(bucketName));
     
     // Create avatars and questions buckets

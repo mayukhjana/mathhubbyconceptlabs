@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
 import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
@@ -61,14 +62,17 @@ export const uploadExamFile = async (
     
     // Force the correct content type for PDFs
     const contentType = 'application/pdf';
-    console.log(`Setting fixed content type: ${contentType} for PDF file: ${file.name}`);
+    console.log(`Setting fixed content type: ${contentType} for PDF file: ${file.name}, original type: ${file.type}`);
     
     // Create a new blob with the correct content type to fix MIME type issues
     const arrayBuffer = await file.arrayBuffer();
     const fileToUpload = new Blob([arrayBuffer], { type: contentType });
     
     // Ensure the bucket exists before uploading
-    await createSpecificBucket(bucketName, 0);
+    const bucketCreated = await createSpecificBucket(bucketName);
+    if (!bucketCreated) {
+      throw new Error(`Failed to create or verify bucket: ${bucketName}`);
+    }
     
     // Set the correct content type in upload options
     const options = {
@@ -198,14 +202,40 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
     const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
     const fileName = `question_${uniqueId}.${fileExt}`;
     
-    // Get proper content type
-    const contentType = getContentTypeFromFile(file);
-    console.log(`Uploading question image with content type: ${contentType}`);
+    // Get proper content type based on extension
+    let contentType;
+    
+    // Force content type based on extension to avoid MIME type issues
+    switch (fileExt) {
+      case 'jpg':
+      case 'jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case 'png':
+        contentType = 'image/png';
+        break;
+      case 'gif':
+        contentType = 'image/gif';
+        break;
+      case 'webp':
+        contentType = 'image/webp';
+        break;
+      case 'svg':
+        contentType = 'image/svg+xml';
+        break;
+      default:
+        contentType = file.type || 'image/jpeg';
+    }
+    
+    console.log(`Uploading question image with content type: ${contentType}, extension: ${fileExt}`);
     
     // Ensure questions bucket exists
-    await ensureQuestionsBucket();
+    const bucketCreated = await ensureQuestionsBucket();
+    if (!bucketCreated) {
+      throw new Error('Failed to create or verify questions bucket');
+    }
     
-    // Convert file to proper Blob to avoid JSON MIME type issues
+    // Convert file to proper Blob with the correct MIME type
     const arrayBuffer = await file.arrayBuffer();
     const fileToUpload = new Blob([arrayBuffer], { type: contentType });
     

@@ -1,8 +1,7 @@
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCcw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw } from "lucide-react";
 
 interface StorageStatusProps {
   error: string | null;
@@ -38,6 +37,27 @@ const StorageStatus = ({ error, bucketsReady, onRetry }: StorageStatusProps) => 
           >
             <RefreshCcw className="h-4 w-4" />
             Retry Storage Initialization
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (bucketsReady) {
+    return (
+      <Alert className="mb-6 bg-green-50 text-green-800 border-green-200">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Storage Ready</AlertTitle>
+        <AlertDescription className="flex flex-col gap-2">
+          <div>Storage buckets are initialized and ready for file uploads.</div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-fit flex gap-2 items-center mt-2 text-green-700 border-green-300" 
+            onClick={onRetry}
+          >
+            <RefreshCcw className="h-4 w-4" />
+            Reinitialize Buckets
           </Button>
         </AlertDescription>
       </Alert>
