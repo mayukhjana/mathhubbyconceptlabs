@@ -29,8 +29,8 @@ const QuestionCard = ({ question, index, showAnswer = false }: QuestionCardProps
       setCacheBustUrl(newUrl);
       console.log("QuestionCard: Setting up image with cache bust URL:", newUrl);
 
-      // Fix: Make sure 'Image' refers to DOM global, not lucide icon
-      const img = new window.Image();
+      // Preload the image
+      const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
         console.log("QuestionCard: Image preloaded successfully:", newUrl);
@@ -42,15 +42,46 @@ const QuestionCard = ({ question, index, showAnswer = false }: QuestionCardProps
         setIsImageLoading(false);
         setImageError(true);
 
-        // Retry logic (if needed)
+        // Retry logic with exponential backoff
+        if (retryCount < 3) {
+          const timeout = Math.pow(2, retryCount) * 1000;
+          setTimeout(() => {
+            setRetryCount(prevCount => prevCount + 1);
+          }, timeout);
+        }
       };
       img.src = newUrl;
+
+      return () => {
+        // Clean up to prevent memory leaks
+        img.onload = null;
+        img.onerror = null;
+      };
     } else {
       setCacheBustUrl(undefined);
       setImageError(false);
       setIsImageLoading(false);
     }
   }, [question.image_url, retryCount]);
+
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setIsImageLoading(false);
+    setImageError(true);
+    
+    if (retryCount < 3 && question.image_url) {
+      // Try one more immediate retry with a new timestamp
+      const timestamp = new Date().getTime();
+      const retryUrl = question.image_url.includes('?')
+        ? `${question.image_url}&t=${timestamp}_retry${retryCount}`
+        : `${question.image_url}?t=${timestamp}_retry${retryCount}`;
+      setCacheBustUrl(retryUrl);
+    }
+  };
 
   return (
     <div className="border rounded-md p-4 mb-4">
@@ -75,6 +106,9 @@ const QuestionCard = ({ question, index, showAnswer = false }: QuestionCardProps
               src={cacheBustUrl}
               alt={`Question ${index + 1}`}
               className={`max-w-full h-auto mx-auto ${isImageLoading ? 'hidden' : ''}`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              crossOrigin="anonymous"
             />
           )}
         </div>
@@ -90,7 +124,10 @@ const QuestionCard = ({ question, index, showAnswer = false }: QuestionCardProps
       {/* Only show correct answer if showAnswer is true */}
       {showAnswer && (
         <p className="mt-2">
-          <strong>Correct Answer:</strong> {question.correct_answer}
+          <strong>Correct Answer:</strong>{" "}
+          {Array.isArray(question.correct_answer)
+            ? question.correct_answer.join(", ")
+            : question.correct_answer}
         </p>
       )}
     </div>

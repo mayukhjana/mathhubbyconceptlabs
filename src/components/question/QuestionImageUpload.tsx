@@ -33,7 +33,7 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
       setCacheBustUrl(newUrl);
       console.log("Setting up image with cache bust URL:", newUrl);
       
-      // Preload the image - Fix: Create proper HTMLImageElement
+      // Preload the image
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
@@ -59,6 +59,12 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
         }
       };
       img.src = newUrl;
+      
+      return () => {
+        // Clean up to prevent memory leaks
+        img.onload = null;
+        img.onerror = null;
+      };
     } else {
       setCacheBustUrl(undefined);
       setImageError(false);

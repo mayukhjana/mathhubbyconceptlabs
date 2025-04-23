@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
 import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
@@ -65,7 +64,6 @@ export const uploadExamFile = async (
     console.log(`Setting fixed content type: ${contentType} for PDF file: ${file.name}`);
     
     // Create a new blob with the correct content type to fix MIME type issues
-    console.log(`Converting file from ${file.type} to ${contentType}`);
     const arrayBuffer = await file.arrayBuffer();
     const fileToUpload = new Blob([arrayBuffer], { type: contentType });
     
@@ -208,19 +206,13 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
     await ensureQuestionsBucket();
     
     // Convert file to proper Blob to avoid JSON MIME type issues
-    let fileData;
-    if (file.type === 'application/json') {
-      // If the file is being incorrectly identified as JSON, force the correct image type
-      const arrayBuffer = await file.arrayBuffer();
-      fileData = new Blob([arrayBuffer], { type: contentType });
-    } else {
-      fileData = file;
-    }
+    const arrayBuffer = await file.arrayBuffer();
+    const fileToUpload = new Blob([arrayBuffer], { type: contentType });
     
     // Upload image with the correct content type
     const { data, error } = await supabase.storage
       .from('questions')
-      .upload(fileName, fileData, {
+      .upload(fileName, fileToUpload, {
         contentType: contentType,
         upsert: true,
         cacheControl: '3600'
