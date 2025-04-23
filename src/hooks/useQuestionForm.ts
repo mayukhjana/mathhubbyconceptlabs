@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Question } from "@/services/exam/types";
 import { uploadQuestionImage } from "@/services/exam/storage/operations";
@@ -12,8 +11,8 @@ interface UseQuestionFormProps {
 }
 
 export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormProps) => {
-  // Define a temporary type for formData that doesn't require id and exam_id
-  type QuestionFormData = Omit<Question, 'id' | 'exam_id'>;
+  // Define a temporary type for formData that doesn't require id
+  type QuestionFormData = Omit<Question, 'id'> & { id?: string };
   
   const [formData, setFormData] = useState<QuestionFormData>({
     question_text: initialData?.question_text || "",
@@ -26,7 +25,8 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     negative_marks: initialData?.negative_marks || 0,
     is_multi_correct: initialData?.is_multi_correct || false,
     order_number: initialData?.order_number || index + 1,
-    image_url: initialData?.image_url
+    image_url: initialData?.image_url,
+    exam_id: initialData?.exam_id || ""
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);

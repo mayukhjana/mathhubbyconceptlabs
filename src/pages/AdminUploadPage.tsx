@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -16,7 +17,7 @@ import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
 import UploadProgress from "@/components/admin/UploadProgress";
 import StorageStatus from "@/components/admin/StorageStatus";
-import type { Question } from "@/types";
+import { Question } from "@/services/exam/types";  // Import from services instead of types
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
@@ -285,14 +286,21 @@ const AdminUploadPage = () => {
       if (questions.length > 0) {
         console.log("Questions before adding exam_id:", questions);
         
+        // Make sure we convert our Question objects to the format expected by createQuestions
         const questionsWithExamId = questions.map(question => {
-          let processedQuestion = { ...question, exam_id: insertedExam.id };
-          
-          if (processedQuestion.is_multi_correct && Array.isArray(processedQuestion.correct_answer)) {
-            console.log("Processing multi-correct question:", processedQuestion);
-          }
-          
-          return processedQuestion;
+          return {
+            exam_id: insertedExam.id,
+            question_text: question.question_text,
+            option_a: question.option_a,
+            option_b: question.option_b,
+            option_c: question.option_c,
+            option_d: question.option_d,
+            correct_answer: question.correct_answer,
+            order_number: question.order_number,
+            marks: question.marks || 1,
+            negative_marks: question.negative_marks || 0,
+            is_multi_correct: question.is_multi_correct || false
+          };
         });
         
         console.log("Questions to be inserted:", questionsWithExamId);
