@@ -207,10 +207,20 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
     // Ensure questions bucket exists
     await ensureQuestionsBucket();
     
+    // Convert file to proper Blob to avoid JSON MIME type issues
+    let fileData;
+    if (file.type === 'application/json') {
+      // If the file is being incorrectly identified as JSON, force the correct image type
+      const arrayBuffer = await file.arrayBuffer();
+      fileData = new Blob([arrayBuffer], { type: contentType });
+    } else {
+      fileData = file;
+    }
+    
     // Upload image with the correct content type
     const { data, error } = await supabase.storage
       .from('questions')
-      .upload(fileName, await file.arrayBuffer(), {
+      .upload(fileName, fileData, {
         contentType: contentType,
         upsert: true,
         cacheControl: '3600'
