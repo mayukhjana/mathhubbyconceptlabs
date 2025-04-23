@@ -16,6 +16,7 @@ import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
 import UploadProgress from "@/components/admin/UploadProgress";
 import StorageStatus from "@/components/admin/StorageStatus";
+import type { Question } from "@/types";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
