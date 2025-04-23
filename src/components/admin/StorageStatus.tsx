@@ -30,7 +30,7 @@ const StorageStatus = ({ error, bucketsReady, onRetry }: StorageStatusProps) => 
     
     if (isContentTypeError) {
       return (
-        <Alert variant="warning" className="mb-6">
+        <Alert variant="default" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Content Type Warning</AlertTitle>
           <AlertDescription className="flex flex-col gap-2">
@@ -97,3 +97,4 @@ const StorageStatus = ({ error, bucketsReady, onRetry }: StorageStatusProps) => 
 };
 
 export default StorageStatus;
+
