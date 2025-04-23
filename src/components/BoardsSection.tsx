@@ -19,21 +19,6 @@ const BoardsSection = () => {
       name: "West Bengal",
       description: "All West Bengal board math papers sorted by year and chapter.",
       link: "/boards/west-bengal",
-    },
-    {
-      name: "Maharashtra",
-      description: "Complete set of Maharashtra board math papers with detailed solutions.",
-      link: "/boards/maharashtra",
-    },
-    {
-      name: "Karnataka",
-      description: "Karnataka board math papers organized by chapters and years.",
-      link: "/boards/karnataka",
-    },
-    {
-      name: "Tamil Nadu",
-      description: "Comprehensive collection of Tamil Nadu board papers with solutions.",
-      link: "/boards/tamil-nadu",
     }
   ];
 
@@ -57,10 +42,7 @@ const BoardsSection = () => {
               <div className={`h-48 bg-gradient-to-br ${
                 index === 0 ? "from-mathprimary to-mathsecondary dark:from-blue-600 dark:to-purple-700" :
                 index === 1 ? "from-mathsecondary to-mathprimary dark:from-purple-700 dark:to-blue-600" :
-                index === 2 ? "from-mathdark via-mathprimary to-mathsecondary dark:from-gray-700 dark:via-blue-600 dark:to-purple-700" :
-                index === 3 ? "from-blue-400 to-blue-600 dark:from-blue-800 dark:to-blue-600" :
-                index === 4 ? "from-purple-400 to-purple-600 dark:from-purple-800 dark:to-purple-600" :
-                "from-green-400 to-green-600 dark:from-green-800 dark:to-green-600"
+                "from-mathdark via-mathprimary to-mathsecondary dark:from-gray-700 dark:via-blue-600 dark:to-purple-700"
               } flex items-center justify-center relative`}>
                 <h3 className="text-3xl font-bold text-white">{board.name}</h3>
               </div>

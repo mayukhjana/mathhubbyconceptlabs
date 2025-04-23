@@ -15,9 +15,9 @@ import RecentUploads from "@/components/admin/RecentUploads";
 import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
 import UploadInstructions from "@/components/admin/UploadInstructions";
 import UnifiedExamForm from "@/components/admin/UnifiedExamForm";
-import UploadProgress from "@/components/admin/UploadProgress";
-import StorageStatus from "@/components/admin/StorageStatus";
-import { Question } from "@/services/exam/types";  // Import from services instead of types
+import { Question } from "@/services/exam/types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const AdminUploadPage = () => {
   const { user } = useAuth();
@@ -49,16 +49,10 @@ const AdminUploadPage = () => {
     const initBuckets = async () => {
       try {
         console.log("Initializing storage buckets...");
-        setError(null);
-        
-        setBucketsReady(false);
-        
         const result = await ensureStorageBuckets();
         setBucketsReady(result);
-        
         if (!result) {
-          setError("Failed to initialize storage buckets. Please try again.");
-          console.error("Storage buckets initialization failed");
+          setError("Failed to initialize storage buckets. Please try again later.");
         } else {
           console.log("Storage buckets initialized successfully");
         }
@@ -177,31 +171,6 @@ const AdminUploadPage = () => {
     );
   };
 
-  const retryBucketInitialization = async () => {
-    toast.info("Retrying storage initialization...");
-    try {
-      setError(null);
-      
-      toast.loading("Initializing storage...");
-      
-      const result = await ensureStorageBuckets();
-      setBucketsReady(result);
-      
-      if (result) {
-        toast.success("Storage buckets initialized successfully");
-      } else {
-        setError("Failed to initialize storage buckets. Please try again or contact support.");
-        toast.error("Storage initialization failed again");
-      }
-    } catch (err: any) {
-      console.error("Error reinitializing buckets:", err);
-      setError(`Failed to initialize storage buckets: ${err.message}`);
-      toast.error(`Storage initialization failed: ${err.message}`);
-    } finally {
-      toast.dismiss();
-    }
-  };
-
   const handleCreateUnifiedExam = async () => {
     if (!user) {
       toast.error("You must be logged in to create an exam");
@@ -286,21 +255,14 @@ const AdminUploadPage = () => {
       if (questions.length > 0) {
         console.log("Questions before adding exam_id:", questions);
         
-        // Make sure we convert our Question objects to the format expected by createQuestions
         const questionsWithExamId = questions.map(question => {
-          return {
-            exam_id: insertedExam.id,
-            question_text: question.question_text,
-            option_a: question.option_a,
-            option_b: question.option_b,
-            option_c: question.option_c,
-            option_d: question.option_d,
-            correct_answer: question.correct_answer,
-            order_number: question.order_number,
-            marks: question.marks || 1,
-            negative_marks: question.negative_marks || 0,
-            is_multi_correct: question.is_multi_correct || false
-          };
+          let processedQuestion = { ...question, exam_id: insertedExam.id };
+          
+          if (processedQuestion.is_multi_correct && Array.isArray(processedQuestion.correct_answer)) {
+            console.log("Processing multi-correct question:", processedQuestion);
+          }
+          
+          return processedQuestion;
         });
         
         console.log("Questions to be inserted:", questionsWithExamId);
@@ -354,11 +316,23 @@ const AdminUploadPage = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <StorageStatus 
-                      error={error}
-                      bucketsReady={bucketsReady}
-                      onRetry={retryBucketInitialization}
-                    />
+                    {error && (
+                      <Alert variant="destructive" className="mb-6">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    {!bucketsReady && (
+                      <Alert className="mb-6">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Storage Initializing</AlertTitle>
+                        <AlertDescription>
+                          The storage system is initializing. Please wait a moment before uploading files.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                     
                     <div className="space-y-4">
                       <h3 className="font-medium">Exam Details</h3>
@@ -396,11 +370,6 @@ const AdminUploadPage = () => {
                       onSolutionFileChange={handleSolutionFileChange}
                       onSaveQuestion={handleSaveQuestion}
                       onRemoveQuestion={handleRemoveQuestion}
-                    />
-                    
-                    <UploadProgress 
-                      isUploading={isUploading}
-                      uploadProgress={uploadProgress}
                     />
                   </CardContent>
                   <CardFooter>

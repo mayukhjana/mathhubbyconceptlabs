@@ -14,52 +14,50 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-      return new Response(
-        JSON.stringify({ 
-          error: 'Server configuration error: Missing environment variables' 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    // Get authorization header
+    const authorization = req.headers.get('Authorization');
+    if (!authorization) {
+      return new Response(JSON.stringify({ error: 'Missing authorization header' }), { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-
-    // Create a Supabase client with the service role key
-    // This is crucial for bypassing RLS policies
-    const supabaseAdmin = createClient(
-      supabaseUrl,
-      supabaseServiceKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
 
     // Get the request body
     const { bucketName = 'avatars' } = await req.json();
     
     // Validate bucketName
-    if (!bucketName || typeof bucketName !== 'string') {
-      return new Response(JSON.stringify({ error: 'Invalid bucket name' }), {
+    const allowedBuckets = ['avatars', 'questions'];
+    if (!allowedBuckets.includes(bucketName)) {
+      return new Response(JSON.stringify({ error: 'Invalid bucket name. Only avatars and questions buckets can be created' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log(`Attempting to create/verify bucket: ${bucketName}`);
+    // Create a Supabase client with service role key
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authorization }
+        }
+      }
+    );
+
+    // Check if the user is authenticated
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Check if bucket exists
-    const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
+    let { data: buckets, error: listError } = await supabaseClient.storage.listBuckets();
     if (listError) {
-      console.error(`Error listing buckets: ${listError.message}`);
       return new Response(JSON.stringify({ error: `Error listing buckets: ${listError.message}` }), { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -71,46 +69,37 @@ serve(async (req) => {
     if (!existingBucket) {
       // Set appropriate MIME types based on bucket
       let allowedMimeTypes: string[];
-      
-      if (bucketName.includes('avatar')) {
+      if (bucketName === 'avatars') {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-      } else if (bucketName.includes('question')) {
+      } else if (bucketName === 'questions') {
         allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
-      } else if (bucketName.includes('paper') || bucketName.includes('solution')) {
-        // Make sure to allow both application/pdf and application/octet-stream MIME types for PDFs
-        allowedMimeTypes = ['application/pdf', 'application/octet-stream', 'application/json'];
-        console.log(`Setting MIME types for PDF bucket ${bucketName}:`, allowedMimeTypes);
       } else {
-        // Default allowed types
-        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf', 'application/octet-stream', 'application/json'];
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg'];
       }
 
-      try {
-        // Using service role key to bypass RLS policies
-        const { data, error: createError } = await supabaseAdmin.storage.createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 10 * 1024 * 1024, // 10MB
-          allowedMimeTypes: allowedMimeTypes
-        });
+      const { error: createError } = await supabaseClient.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 10 * 1024 * 1024, // 10MB
+        allowedMimeTypes: allowedMimeTypes
+      });
 
-        if (createError) {
-          console.error(`Error creating bucket: ${createError.message}`);
-          return new Response(JSON.stringify({ error: `Error creating ${bucketName} bucket: ${createError.message}` }), { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-
-        console.log(`Successfully created ${bucketName} bucket with MIME types:`, allowedMimeTypes);
-      } catch (createErr: any) {
-        console.error(`Exception creating bucket: ${createErr.message}`);
-        return new Response(JSON.stringify({ error: `Exception creating ${bucketName} bucket: ${createErr.message}` }), { 
+      if (createError) {
+        return new Response(JSON.stringify({ error: `Error creating ${bucketName} bucket: ${createError.message}` }), { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
+
+      console.log(`Successfully created ${bucketName} bucket`);
     } else {
       console.log(`${bucketName} bucket already exists`);
+    }
+
+    // Set public access to the bucket if needed
+    if (existingBucket && !existingBucket.public) {
+      // Note: This would require SQL access which is not available directly in edge functions
+      // For now, we'll just return success and recommend manual configuration
+      console.log(`${bucketName} bucket exists but might not be public`);
     }
 
     return new Response(
@@ -124,7 +113,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error(`Unexpected error:`, error);
     return new Response(
       JSON.stringify({ error: `Unexpected error: ${error.message}` }),

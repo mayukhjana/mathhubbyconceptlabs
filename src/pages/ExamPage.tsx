@@ -76,6 +76,7 @@ const ExamPage = () => {
           return;
         }
         
+        // Check if exam was already attempted
         if (user) {
           const wasAttempted = await checkExamAttempted(user.id, examId);
           if (wasAttempted) {
@@ -139,8 +140,6 @@ const ExamPage = () => {
   };
   
   const handleAnswer = (questionId: string, selectedOption: string) => {
-    console.log("Answer selected:", questionId, selectedOption);
-    
     setUserAnswers(prev => ({
       ...prev,
       [questionId]: selectedOption
@@ -330,7 +329,7 @@ const ExamPage = () => {
   }
   
   const currentQuestion = exam.questions[currentQuestionIndex];
-  const answeredCount = attemptedQuestions.size;
+  const answeredCount = Object.keys(userAnswers).length;
   const progress = (answeredCount / exam.questions.length) * 100;
   
   return (
@@ -359,21 +358,53 @@ const ExamPage = () => {
               </div>
               
               <QuestionCard
-                question={currentQuestion}
-                index={currentQuestionIndex}
-                showAnswer={false}
-                onSelectAnswer={handleAnswer}
-                selectedAnswer={userAnswers[currentQuestion.id]}
+                question={{
+                  id: currentQuestion.id,
+                  text: currentQuestion.question_text,
+                  options: [
+                    { id: "a", text: currentQuestion.option_a },
+                    { id: "b", text: currentQuestion.option_b },
+                    { id: "c", text: currentQuestion.option_c },
+                    { id: "d", text: currentQuestion.option_d }
+                  ],
+                  correctAnswer: currentQuestion.correct_answer,
+                  marks: currentQuestion.marks,
+                  negative_marks: currentQuestion.negative_marks,
+                  is_multi_correct: currentQuestion.is_multi_correct,
+                  image_url: currentQuestion.image_url
+                }}
+                onAnswer={handleAnswer}
+                userAnswer={userAnswers[currentQuestion.id]}
+                questionNumber={currentQuestionIndex + 1}
+                key={currentQuestion.id}
               />
               
-              {/* Use the ExamNavigation component to always show submit button */}
-              <ExamNavigation
-                currentQuestionIndex={currentQuestionIndex}
-                totalQuestions={exam.questions.length}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-                onSubmit={handleSubmit}
-              />
+              <div className="flex justify-between mt-6">
+                <Button 
+                  onClick={handlePrevious} 
+                  variant="outline" 
+                  disabled={currentQuestionIndex === 0}
+                >
+                  Previous
+                </Button>
+                
+                <div className="space-x-2">
+                  <Button
+                    onClick={skipQuestion}
+                    variant="secondary"
+                  >
+                    Skip Question
+                  </Button>
+                  
+                  {currentQuestionIndex < exam.questions.length - 1 ? (
+                    <Button onClick={handleNext}>Next</Button>
+                  ) : (
+                    <Button onClick={handleSubmit} variant="default" className="bg-mathprimary">
+                      Submit Exam
+                    </Button>
+                  )}
+                </div>
+              </div>
             </>
           ) : (
             <ExamResults
@@ -385,8 +416,6 @@ const ExamPage = () => {
               userAnswers={userAnswers}
               resultSaved={resultSaved}
               formatTime={formatTime}
-              examId={examId}
-              board={exam.board}
             />
           )}
         </div>

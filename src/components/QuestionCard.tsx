@@ -1,251 +1,219 @@
-
 import { useState, useEffect } from "react";
-import { Question } from "@/services/exam/types";
-import { Image as LucideImage, ImageOff, Loader } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
+import { Image } from "lucide-react";
 
 interface QuestionCardProps {
-  question: Question;
-  index: number;
-  showAnswer?: boolean;
-  onSelectAnswer?: (questionId: string, selectedOption: string) => void;
-  selectedAnswer?: string | string[];
+  question: {
+    id: string;
+    text: string;
+    options: { id: string; text: string }[];
+    correctAnswer: string | string[];
+    marks: number;
+    negative_marks: number;
+    is_multi_correct: boolean;
+    image_url?: string;
+  };
+  onAnswer: (id: string, answer: string) => void;
+  userAnswer?: string;
+  showResult?: boolean;
+  questionNumber: number;
+  skipped?: boolean;
 }
 
-const QuestionCard = ({ 
-  question, 
-  index, 
-  showAnswer = false,
-  onSelectAnswer,
-  selectedAnswer
+const QuestionCard = ({
+  question,
+  onAnswer,
+  userAnswer,
+  showResult = false,
+  questionNumber,
+  skipped = false
 }: QuestionCardProps) => {
-  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState(userAnswer || "");
+  const [imageLoading, setImageLoading] = useState(!!question.image_url);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [cacheBustUrl, setCacheBustUrl] = useState<string | undefined>(question.image_url);
-  const isMultiCorrect = question.is_multi_correct || false;
-  
-  // Track selected checkboxes for multi-correct questions
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  
-  // Initialize selected options from the passed selectedAnswer prop
-  useEffect(() => {
-    if (isMultiCorrect && selectedAnswer) {
-      if (Array.isArray(selectedAnswer)) {
-        setSelectedOptions(selectedAnswer);
-      } else if (typeof selectedAnswer === 'string') {
-        setSelectedOptions(selectedAnswer.split(',').filter(Boolean));
-      }
-    }
-  }, [selectedAnswer, isMultiCorrect]);
 
   useEffect(() => {
     if (question.image_url) {
-      setImageError(false);
-      setIsImageLoading(true);
-
-      // Add cache-busting parameter to URL
       const timestamp = new Date().getTime();
-      const newUrl = question.image_url.includes('?')
-        ? `${question.image_url}&t=${timestamp}`
-        : `${question.image_url}?t=${timestamp}`;
-
+      const newUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}`;
       setCacheBustUrl(newUrl);
       console.log("QuestionCard: Setting up image with cache bust URL:", newUrl);
-
-      // Preload the image
-      const img = new Image();
+      
+      const img = new window.Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
         console.log("QuestionCard: Image preloaded successfully:", newUrl);
-        setIsImageLoading(false);
+        setImageLoading(false);
         setImageError(false);
       };
       img.onerror = () => {
         console.error("QuestionCard: Failed to preload image:", newUrl);
-        setIsImageLoading(false);
+        setImageLoading(false);
         setImageError(true);
-
-        // Retry logic with exponential backoff
+        
         if (retryCount < 3) {
-          const timeout = Math.pow(2, retryCount) * 1000;
-          setTimeout(() => {
-            setRetryCount(prevCount => prevCount + 1);
-          }, timeout);
+          setRetryCount(prev => prev + 1);
+          const newTimestamp = new Date().getTime();
+          const retryUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${newTimestamp}_${retryCount}`;
+          console.log("QuestionCard: Retrying image load, attempt:", retryCount + 1, "with URL:", retryUrl);
+          setCacheBustUrl(retryUrl);
+          setImageLoading(true);
         }
       };
       img.src = newUrl;
-
-      return () => {
-        // Clean up to prevent memory leaks
-        img.onload = null;
-        img.onerror = null;
-      };
-    } else {
-      setCacheBustUrl(undefined);
-      setImageError(false);
-      setIsImageLoading(false);
     }
-  }, [question.image_url, retryCount]);
+  }, [question.image_url]);
+
+  const handleAnswerChange = (answer: string) => {
+    setSelectedAnswer(answer);
+    onAnswer(question.id, answer);
+  };
 
   const handleImageLoad = () => {
-    setIsImageLoading(false);
+    console.log("QuestionCard: Image loaded successfully:", cacheBustUrl);
+    setImageLoading(false);
     setImageError(false);
   };
 
   const handleImageError = () => {
-    setIsImageLoading(false);
+    setImageLoading(false);
     setImageError(true);
+    console.error("QuestionCard: Failed to load question image:", cacheBustUrl);
     
     if (retryCount < 3 && question.image_url) {
-      // Try one more immediate retry with a new timestamp
-      const timestamp = new Date().getTime();
-      const retryUrl = question.image_url.includes('?')
-        ? `${question.image_url}&t=${timestamp}_retry${retryCount}`
-        : `${question.image_url}?t=${timestamp}_retry${retryCount}`;
-      setCacheBustUrl(retryUrl);
+      setRetryCount(prev => prev + 1);
+      const timestamp = Date.now();
+      const newUrl = `${question.image_url}${question.image_url.includes('?') ? '&' : '?'}t=${timestamp}_${retryCount}`;
+      console.log("QuestionCard: Retrying image load, attempt:", retryCount + 1, "with URL:", newUrl);
+      setCacheBustUrl(newUrl);
+      setImageLoading(true);
     }
   };
 
-  const handleOptionSelect = (option: string) => {
-    if (!onSelectAnswer) return;
-    
-    if (isMultiCorrect) {
-      let newSelectedOptions: string[];
-      
-      // If already selected, remove it; otherwise add it
-      if (selectedOptions.includes(option)) {
-        newSelectedOptions = selectedOptions.filter(opt => opt !== option);
-      } else {
-        newSelectedOptions = [...selectedOptions, option];
-      }
-      
-      setSelectedOptions(newSelectedOptions);
-      
-      // Join selected options with comma for multi-select questions
-      onSelectAnswer(question.id, newSelectedOptions.sort().join(','));
-    } else {
-      // For single select questions, just pass the option
-      onSelectAnswer(question.id, option);
+  const isCorrectAnswer = (selected: string, correct: string | string[]): boolean => {
+    if (Array.isArray(correct)) {
+      return correct.includes(selected);
     }
-  };
-
-  const isOptionSelected = (option: string) => {
-    if (isMultiCorrect) {
-      return selectedOptions.includes(option);
-    }
-    
-    return selectedAnswer === option;
+    return selected === correct;
   };
 
   return (
-    <div className="border rounded-md p-4 mb-4">
-      <h3 className="text-lg font-semibold mb-2">Question {index + 1}</h3>
-      <p className="mb-2">{question.question_text}</p>
-
-      {question.image_url ? (
-        <div className="mb-4">
-          {isImageLoading && (
-            <div className="flex justify-center items-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <Card className={cn(
+      "transition-colors",
+      showResult && userAnswer ? (
+        isCorrectAnswer(userAnswer, question.correctAnswer) ? "border-green-500" : "border-red-500"
+      ) : ""
+    )}>
+      <CardHeader>
+        <CardTitle className="flex justify-between items-start">
+          <span className="text-sm text-muted-foreground font-normal">Question {questionNumber}</span>
+          <span className="text-xs text-muted-foreground">
+            {question.marks} marks {question.negative_marks > 0 && `(-${question.negative_marks} negative)`}
+          </span>
+        </CardTitle>
+        <CardDescription className="space-y-4">
+          <p className="font-bold text-foreground text-base">{question.text}</p>
+          
+          {question.image_url && (
+            <div className="mt-4">
+              {imageLoading && (
+                <div className="flex justify-center items-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              )}
+              
+              {imageError ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg p-4">
+                  <Image className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">Image could not be loaded</p>
+                </div>
+              ) : (
+                <img 
+                  src={cacheBustUrl}
+                  alt="Question" 
+                  className={cn(
+                    "max-w-full h-auto rounded-lg border border-border mx-auto",
+                    imageLoading ? "hidden" : "block"
+                  )}
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  crossOrigin="anonymous"
+                />
+              )}
             </div>
           )}
-
-          {imageError ? (
-            <div className="py-4">
-              <ImageOff className="h-8 w-8 mx-auto mb-2 text-red-500" />
-              <p className="text-sm text-red-500">Failed to load image</p>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {question.is_multi_correct ? (
+          <div className="space-y-2">
+            {question.options.map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`question-${question.id}-option-${option.id}`}
+                  checked={userAnswer ? userAnswer.split(',').includes(option.id) : false}
+                  onCheckedChange={(checked) => {
+                    let updatedAnswers: string[];
+                    if (userAnswer) {
+                      updatedAnswers = userAnswer.split(',');
+                    } else {
+                      updatedAnswers = [];
+                    }
+        
+                    if (checked) {
+                      updatedAnswers.push(option.id);
+                    } else {
+                      updatedAnswers = updatedAnswers.filter((ans) => ans !== option.id);
+                    }
+        
+                    handleAnswerChange(updatedAnswers.sort().join(','));
+                  }}
+                />
+                <Label
+                  htmlFor={`question-${question.id}-option-${option.id}`}
+                  className="cursor-pointer"
+                >
+                  {option.text}
+                </Label>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <RadioGroup defaultValue={userAnswer} onValueChange={handleAnswerChange}>
+            <div className="grid gap-2">
+              {question.options.map((option) => (
+                <div key={option.id} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option.id} id={option.id} />
+                  <Label htmlFor={option.id}>{option.text}</Label>
+                </div>
+              ))}
             </div>
+          </RadioGroup>
+        )}
+      </CardContent>
+      {showResult && (
+        <CardFooter className="justify-between">
+          {skipped ? (
+            <span className="text-sm text-orange-500">Skipped</span>
+          ) : isCorrectAnswer(userAnswer || '', question.correctAnswer) ? (
+            <span className="text-sm text-green-500">Correct Answer</span>
           ) : (
-            <img
-              src={cacheBustUrl}
-              alt={`Question ${index + 1}`}
-              className={`max-w-full h-auto mx-auto ${isImageLoading ? 'hidden' : ''}`}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-              crossOrigin="anonymous"
-            />
+            <span className="text-sm text-red-500">Incorrect Answer</span>
           )}
-        </div>
-      ) : null}
-
-      {isMultiCorrect ? (
-        <div className="space-y-3 mt-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id={`option-a-${question.id}`} 
-              checked={isOptionSelected('a')}
-              onCheckedChange={() => handleOptionSelect('a')}
-              disabled={showAnswer}
-            />
-            <Label htmlFor={`option-a-${question.id}`} className="cursor-pointer">{question.option_a}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id={`option-b-${question.id}`} 
-              checked={isOptionSelected('b')}
-              onCheckedChange={() => handleOptionSelect('b')}
-              disabled={showAnswer}
-            />
-            <Label htmlFor={`option-b-${question.id}`} className="cursor-pointer">{question.option_b}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id={`option-c-${question.id}`} 
-              checked={isOptionSelected('c')}
-              onCheckedChange={() => handleOptionSelect('c')}
-              disabled={showAnswer}
-            />
-            <Label htmlFor={`option-c-${question.id}`} className="cursor-pointer">{question.option_c}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id={`option-d-${question.id}`} 
-              checked={isOptionSelected('d')}
-              onCheckedChange={() => handleOptionSelect('d')}
-              disabled={showAnswer}
-            />
-            <Label htmlFor={`option-d-${question.id}`} className="cursor-pointer">{question.option_d}</Label>
-          </div>
-        </div>
-      ) : (
-        <RadioGroup 
-          value={selectedAnswer as string}
-          onValueChange={(value) => onSelectAnswer && onSelectAnswer(question.id, value)}
-          disabled={showAnswer} 
-          className="space-y-3 mt-4"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="a" id={`option-a-${question.id}`} />
-            <Label htmlFor={`option-a-${question.id}`} className="cursor-pointer">{question.option_a}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="b" id={`option-b-${question.id}`} />
-            <Label htmlFor={`option-b-${question.id}`} className="cursor-pointer">{question.option_b}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="c" id={`option-c-${question.id}`} />
-            <Label htmlFor={`option-c-${question.id}`} className="cursor-pointer">{question.option_c}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="d" id={`option-d-${question.id}`} />
-            <Label htmlFor={`option-d-${question.id}`} className="cursor-pointer">{question.option_d}</Label>
-          </div>
-        </RadioGroup>
+          {showResult && (
+            <span className="text-sm text-muted-foreground">
+              Correct Answer: {Array.isArray(question.correctAnswer) ? question.correctAnswer.join(', ') : question.correctAnswer}
+            </span>
+          )}
+        </CardFooter>
       )}
-
-      {/* Only show correct answer if showAnswer is true */}
-      {showAnswer && (
-        <p className="mt-4 text-green-600 font-medium">
-          <strong>Correct Answer:</strong>{" "}
-          {Array.isArray(question.correct_answer)
-            ? question.correct_answer.map(opt => opt.toUpperCase()).join(", ")
-            : question.correct_answer.toUpperCase()}
-        </p>
-      )}
-    </div>
+    </Card>
   );
 };
 

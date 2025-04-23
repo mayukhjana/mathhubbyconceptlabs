@@ -8,29 +8,15 @@
  * based on its extension or type property
  */
 export const getContentTypeFromFile = (file: File): string => {
-  // First check for PDF files by extension (most reliable way)
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  if (extension === 'pdf') {
-    return 'application/pdf';
-  }
-  
-  // For images, determine by extension for maximum reliability
-  switch (extension) {
-    case 'png': return 'image/png';
-    case 'jpg':
-    case 'jpeg': return 'image/jpeg';
-    case 'gif': return 'image/gif';
-    case 'webp': return 'image/webp';
-    case 'svg': return 'image/svg+xml';
-    case 'bmp': return 'image/bmp';
-    case 'json': return 'application/json'; // Add support for JSON files
-    default: break;
-  }
-  
-  // Use the native type if available
-  if (file.type) {
+  // First check the native type if it seems valid
+  if (file.type && 
+      file.type !== 'application/octet-stream' && 
+      file.type !== 'application/json') {
     return file.type;
   }
+  
+  // Otherwise, determine by extension
+  const extension = file.name.split('.').pop()?.toLowerCase();
   
   // Map of common file extensions to MIME types
   const contentTypeMap: Record<string, string> = {
@@ -50,7 +36,6 @@ export const getContentTypeFromFile = (file: File): string => {
     'xls': 'application/vnd.ms-excel',
     'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'txt': 'text/plain',
-    'json': 'application/json',
   };
   
   // Try to get the content type from the extension map
@@ -58,7 +43,7 @@ export const getContentTypeFromFile = (file: File): string => {
     return contentTypeMap[extension];
   }
   
-  // Last resort fallback - accept application/json as valid
+  // Last resort fallback
   return file.type || 'application/octet-stream';
 };
 
@@ -71,47 +56,10 @@ export const isImageFile = (file: File): boolean => {
 };
 
 /**
- * Checks if a file is a PDF based on its extension
- */
-export const isPdfFile = (file: File): boolean => {
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  return extension === 'pdf';
-};
-
-/**
  * Converts a File object to a Blob with the correct content type
  */
 export const fileToTypedBlob = async (file: File): Promise<Blob> => {
-  // For PDFs, always use application/pdf content type
-  if (isPdfFile(file)) {
-    const arrayBuffer = await file.arrayBuffer();
-    return new Blob([arrayBuffer], { type: 'application/pdf' });
-  }
-  
-  // For images, use the image content type
-  if (isImageFile(file)) {
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    let contentType = 'image/jpeg'; // default
-    
-    // Map extensions to correct image types
-    switch (extension) {
-      case 'png': contentType = 'image/png'; break;
-      case 'jpg':
-      case 'jpeg': contentType = 'image/jpeg'; break;
-      case 'gif': contentType = 'image/gif'; break;
-      case 'webp': contentType = 'image/webp'; break;
-      case 'svg': contentType = 'image/svg+xml'; break;
-      case 'bmp': contentType = 'image/bmp'; break;
-      default: contentType = file.type || 'image/jpeg'; break;
-    }
-    
-    const arrayBuffer = await file.arrayBuffer();
-    return new Blob([arrayBuffer], { type: contentType });
-  }
-  
-  // Get content type based on file extension or type
   const contentType = getContentTypeFromFile(file);
-  
   console.log(`Converting file to blob with content type: ${contentType}, filename: ${file.name}`);
   
   // Read file as ArrayBuffer

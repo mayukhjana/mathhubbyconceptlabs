@@ -3,60 +3,22 @@
  * Utility functions for determining storage paths and bucket names
  */
 
-// List of all bucket names used in the application
-export const STORAGE_BUCKETS = {
-  PAPERS: {
-    JEE: 'jee-papers',
-    WBJEE: 'wbjee-papers',
-    SSC_CGL: 'ssc-cgl-papers',
-    BITSAT: 'bitsat-papers',
-    OTHER: 'other-papers',
-    MAHARASHTRA: 'maharashtra-papers',
-    KARNATAKA: 'karnataka-papers',
-    TAMILNADU: 'tamilnadu-papers',
-  },
-  SOLUTIONS: {
-    JEE: 'jee-solutions',
-    WBJEE: 'wbjee-solutions',
-    SSC_CGL: 'ssc-cgl-solutions',
-    BITSAT: 'bitsat-solutions',
-    OTHER: 'other-solutions',
-    MAHARASHTRA: 'maharashtra-solutions',
-    KARNATAKA: 'karnataka-solutions',
-    TAMILNADU: 'tamilnadu-solutions',
-  },
-  AVATARS: 'avatars',
-  QUESTIONS: 'questions'
-};
-
 /**
  * Gets the correct bucket name based on exam board and file type
  */
 export const getBucketName = (board: string, fileType: 'paper' | 'solution'): string => {
   const boardLower = board.toLowerCase().replace(/\s+/g, '_');
   
-  // Map board names to bucket names
-  let bucketPrefix = '';
+  const bucketMap: Record<string, { paper: string; solution: string }> = {
+    'wbjee': { paper: 'wbjee_papers', solution: 'wbjee_solutions' },
+    'jee_mains': { paper: 'jee_mains_papers', solution: 'jee_mains_solutions' },
+    'jee_advanced': { paper: 'jee_advanced_papers', solution: 'jee_advanced_solutions' }
+  };
   
-  if (boardLower.includes('jee') && !boardLower.includes('wbjee')) {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.JEE : STORAGE_BUCKETS.SOLUTIONS.JEE;
-  } else if (boardLower.includes('wbjee')) {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.WBJEE : STORAGE_BUCKETS.SOLUTIONS.WBJEE;
-  } else if (boardLower.includes('ssc') || boardLower.includes('cgl')) {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.SSC_CGL : STORAGE_BUCKETS.SOLUTIONS.SSC_CGL;
-  } else if (boardLower.includes('bitsat')) {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.BITSAT : STORAGE_BUCKETS.SOLUTIONS.BITSAT;
-  } else if (boardLower.includes('maharashtra')) {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.MAHARASHTRA : STORAGE_BUCKETS.SOLUTIONS.MAHARASHTRA;
-  } else if (boardLower.includes('karnataka')) {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.KARNATAKA : STORAGE_BUCKETS.SOLUTIONS.KARNATAKA;
-  } else if (boardLower.includes('tamil') || boardLower.includes('nadu')) {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.TAMILNADU : STORAGE_BUCKETS.SOLUTIONS.TAMILNADU;
-  } else {
-    bucketPrefix = fileType === 'paper' ? STORAGE_BUCKETS.PAPERS.OTHER : STORAGE_BUCKETS.SOLUTIONS.OTHER;
-  }
-  
-  return bucketPrefix;
+  const mappedBucket = bucketMap[boardLower];
+  return mappedBucket 
+    ? mappedBucket[fileType] 
+    : (fileType === 'paper' ? 'exam_papers' : 'solutions');
 };
 
 /**

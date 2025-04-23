@@ -32,8 +32,8 @@ export const BOARD_OPTIONS = [
   'ICSE',
   'West Bengal Board',
   'Maharashtra Board',
-  'Karnataka Board',
-  'Tamil Nadu Board'
+  'Tamil Nadu Board',
+  'Karnataka Board'
 ];
 
 export const ENTRANCE_OPTIONS = [

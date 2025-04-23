@@ -106,7 +106,7 @@ const PaperCard = ({
           </div>
         )}
 
-        <div className={`flex flex-wrap gap-2 ${isAttempted ? "mt-4" : "mt-4"}`}>
+        <div className="flex flex-wrap gap-2 mt-4">
           {downloadUrl && (
             <TooltipProvider>
               <Tooltip>

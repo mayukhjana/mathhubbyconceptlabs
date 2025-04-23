@@ -27,7 +27,6 @@ const AvatarImage = React.forwardRef<
     ref={ref}
     className={cn("aspect-square h-full w-full object-cover", className)}
     {...props}
-    crossOrigin="anonymous"
     onError={(e) => {
       console.warn("Avatar image failed to load:", props.src);
       e.currentTarget.style.display = 'none';

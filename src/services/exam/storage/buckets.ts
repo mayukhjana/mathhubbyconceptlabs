@@ -1,131 +1,140 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { STORAGE_BUCKETS } from "./paths";
 
 /**
- * Creates a specific storage bucket with proper configuration
+ * Ensures all required storage buckets exist in the Supabase project
  */
-export const createSpecificBucket = async (bucketName: string, retryCount = 0): Promise<boolean> => {
+export const ensureStorageBuckets = async () => {
   try {
-    console.log(`Creating or verifying storage bucket: ${bucketName}`);
+    const { data: buckets, error } = await supabase.storage.listBuckets();
     
-    // Check if bucket exists first
-    const { data: bucketList, error: listError } = await supabase.storage.listBuckets();
+    if (error) {
+      console.error("Error listing buckets:", error);
+      return false;
+    }
+    
+    const requiredBuckets = [
+      'exam_papers', 
+      'solutions', 
+      'wbjee_papers', 
+      'wbjee_solutions', 
+      'jee_mains_papers', 
+      'jee_mains_solutions', 
+      'jee_advanced_papers', 
+      'jee_advanced_solutions',
+      'avatars',
+      'questions'
+    ];
+    
+    const existingBuckets = new Set(buckets?.map(b => b.name) || []);
+    const missingBuckets = requiredBuckets.filter(bucket => !existingBuckets.has(bucket));
+    
+    if (missingBuckets.length > 0) {
+      console.warn(`Missing buckets: ${missingBuckets.join(', ')}`);
+      // Don't try to create buckets automatically - it requires admin permissions
+      // Just log the warning so developers are aware
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error ensuring storage buckets:", error);
+    return false;
+  }
+};
+
+export const createSpecificBucket = async (bucketName: string): Promise<boolean> => {
+  try {
+    console.log(`Creating bucket: ${bucketName}`);
+    
+    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
     
     if (listError) {
-      console.error("Error listing buckets:", listError);
+      console.error("Error checking existing buckets:", listError);
       return false;
     }
     
-    const bucketExists = bucketList?.find(bucket => bucket.name === bucketName);
-    
+    const bucketExists = existingBuckets?.some(b => b.name === bucketName);
     if (bucketExists) {
-      console.log(`Bucket ${bucketName} already exists`);
+      console.log(`Bucket ${bucketName} already exists, skipping creation`);
       return true;
     }
     
-    // Try direct bucket creation first
-    const { data: directData, error: directError } = await supabase.storage.createBucket(bucketName, {
-      public: true, // Make buckets public by default for this app
-      fileSizeLimit: 5 * 1024 * 1024, // 5MB limit
-    });
-    
-    if (!directError) {
-      console.log(`Successfully created ${bucketName} bucket directly:`, directData);
-      return true;
-    }
-    
-    console.log(`Direct bucket creation failed, trying edge function: ${directError.message}`);
-    
-    // Fall back to edge function if direct creation fails
-    const { data, error: functionError } = await supabase.functions.invoke('create-avatars-bucket', {
-      body: { bucketName }
-    });
-    
-    if (functionError) {
-      console.error(`Error creating ${bucketName} bucket via edge function:`, functionError);
+    // Note: Creating buckets using the client SDK will likely fail due to RLS
+    // We'll attempt it, but in production this would typically be done via SQL migrations or edge functions
+    try {
+      // Define allowed MIME types based on bucket type
+      let allowedMimeTypes: string[];
       
-      // Retry logic (max 2 retries)
-      if (retryCount < 2) {
-        console.log(`Retrying bucket creation for ${bucketName} (attempt ${retryCount + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-        return createSpecificBucket(bucketName, retryCount + 1);
+      if (bucketName === 'avatars') {
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+      } else if (bucketName.includes('papers') || bucketName.includes('solutions')) {
+        allowedMimeTypes = ['application/pdf'];
+      } else if (bucketName === 'questions') {
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
+      } else {
+        // Default allowed types
+        allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
       }
       
-      return false;
-    }
-    
-    if (data && data.success) {
-      console.log(`Successfully created ${bucketName} bucket via edge function`);
+      // Try to create the bucket (this may fail due to RLS)
+      const { error } = await supabase
+        .storage
+        .createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 1024 * 1024 * 10, // 10MB
+          allowedMimeTypes: allowedMimeTypes
+        });
+      
+      if (error) {
+        // Log but don't throw - default to using edge function
+        console.error(`Error creating bucket ${bucketName} via client SDK:`, error);
+        
+        // Use the edge function to create bucket with admin privileges
+        if (bucketName === 'questions' || bucketName === 'avatars') {
+          console.log(`Attempting to create ${bucketName} bucket via edge function...`);
+          const { data, error: fnError } = await supabase.functions.invoke('create-avatars-bucket', {
+            body: { bucketName: bucketName }
+          });
+          
+          if (fnError) {
+            console.error(`Edge function error creating bucket ${bucketName}:`, fnError);
+            return false;
+          }
+          
+          console.log(`Edge function response:`, data);
+          return true;
+        }
+        
+        return false;
+      }
+      
+      console.log(`Successfully created bucket: ${bucketName}`);
       return true;
-    } else {
-      console.error(`Failed to create ${bucketName} bucket:`, data?.error || 'Unknown error');
+    } catch (createError) {
+      console.error(`Error creating bucket ${bucketName}:`, createError);
       return false;
     }
   } catch (error) {
-    console.error(`Error setting up ${bucketName} bucket:`, error);
+    console.error(`Error creating bucket ${bucketName}:`, error);
     return false;
   }
 };
 
 /**
- * Ensures that all required storage buckets exist
+ * Gets a list of files in a specific bucket
  */
-export const ensureStorageBuckets = async (): Promise<boolean> => {
+export const listBucketFiles = async (bucketName: string) => {
   try {
-    console.log("Ensuring all storage buckets exist...");
+    const { data, error } = await supabase.storage.from(bucketName).list();
     
-    // Initialize paper and solution buckets
-    const paperBucketsPromise = [
-      STORAGE_BUCKETS.PAPERS.JEE,
-      STORAGE_BUCKETS.PAPERS.WBJEE,
-      STORAGE_BUCKETS.PAPERS.SSC_CGL,
-      STORAGE_BUCKETS.PAPERS.BITSAT,
-      STORAGE_BUCKETS.PAPERS.OTHER,
-      STORAGE_BUCKETS.PAPERS.MAHARASHTRA,
-      STORAGE_BUCKETS.PAPERS.KARNATAKA,
-      STORAGE_BUCKETS.PAPERS.TAMILNADU,
-    ].map(bucketName => createSpecificBucket(bucketName));
-    
-    const solutionBucketsPromise = [
-      STORAGE_BUCKETS.SOLUTIONS.JEE,
-      STORAGE_BUCKETS.SOLUTIONS.WBJEE,
-      STORAGE_BUCKETS.SOLUTIONS.SSC_CGL,
-      STORAGE_BUCKETS.SOLUTIONS.BITSAT,
-      STORAGE_BUCKETS.SOLUTIONS.OTHER,
-      STORAGE_BUCKETS.SOLUTIONS.MAHARASHTRA,
-      STORAGE_BUCKETS.SOLUTIONS.KARNATAKA,
-      STORAGE_BUCKETS.SOLUTIONS.TAMILNADU,
-    ].map(bucketName => createSpecificBucket(bucketName));
-    
-    // Create avatars and questions buckets
-    const avatarsBucketPromise = createSpecificBucket(STORAGE_BUCKETS.AVATARS);
-    const questionsBucketPromise = createSpecificBucket(STORAGE_BUCKETS.QUESTIONS);
-    
-    // Wait for all buckets to be created
-    const results = await Promise.all([
-      ...paperBucketsPromise,
-      ...solutionBucketsPromise,
-      avatarsBucketPromise,
-      questionsBucketPromise
-    ]);
-    
-    // Check if all buckets were created successfully
-    const allBucketsCreated = results.every(result => result === true);
-    
-    if (!allBucketsCreated) {
-      toast.error('Some storage buckets could not be initialized');
-      console.error('Not all buckets were initialized successfully');
-    } else {
-      toast.success('Storage buckets initialized successfully');
-      console.log('All buckets initialized successfully');
+    if (error) {
+      console.error(`Error listing files in bucket ${bucketName}:`, error);
+      return [];
     }
     
-    return allBucketsCreated;
+    return data || [];
   } catch (error) {
-    console.error('Error ensuring storage buckets:', error);
-    toast.error('Failed to initialize storage buckets');
-    return false;
+    console.error(`Error listing files in bucket ${bucketName}:`, error);
+    return [];
   }
 };
