@@ -1,13 +1,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Clock, Award, BookOpen, CheckCircle, XCircle } from "lucide-react";
+import { Clock, Award, BookOpen, CheckCircle, XCircle, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Question } from "@/services/exam/types";
 import QuestionCard from "@/components/QuestionCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { getFileDownloadUrl } from "@/services/exam/storage";
 
 interface ExamResultsProps {
   score: number;
@@ -18,6 +19,8 @@ interface ExamResultsProps {
   totalPossibleMarks: number;
   resultSaved: boolean;
   formatTime: (seconds: number) => string;
+  examId: string | undefined;
+  board: string;
 }
 
 export function ExamResults({
@@ -28,9 +31,13 @@ export function ExamResults({
   totalObtainedMarks,
   totalPossibleMarks,
   resultSaved,
-  formatTime
+  formatTime,
+  examId,
+  board
 }: ExamResultsProps) {
   const { user } = useAuth();
+  const [solutionUrl, setSolutionUrl] = useState<string | null>(null);
+  const [loadingSolution, setLoadingSolution] = useState(false);
   
   useEffect(() => {
     if (resultSaved) {
@@ -38,7 +45,23 @@ export function ExamResults({
     } else if (user) {
       toast.warning("Result couldn't be saved. You can still see your score.");
     }
-  }, [resultSaved, user]);
+
+    // Try to get solution URL
+    const fetchSolutionUrl = async () => {
+      if (!examId) return;
+      try {
+        setLoadingSolution(true);
+        const url = await getFileDownloadUrl(examId, 'solution', board);
+        setSolutionUrl(url);
+        setLoadingSolution(false);
+      } catch (error) {
+        console.error("Error fetching solution URL:", error);
+        setLoadingSolution(false);
+      }
+    };
+
+    fetchSolutionUrl();
+  }, [resultSaved, user, examId, board]);
 
   const getCorrectQuestions = () => {
     return questions.filter((q) => {
@@ -53,6 +76,15 @@ export function ExamResults({
 
   const correctQuestions = getCorrectQuestions();
   const incorrectQuestions = questions.length - correctQuestions;
+
+  const handleDownloadSolution = () => {
+    if (!solutionUrl) {
+      toast.error("Solution file not available for this exam");
+      return;
+    }
+
+    window.open(solutionUrl, '_blank');
+  };
 
   return (
     <div className="space-y-8">
@@ -126,6 +158,18 @@ export function ExamResults({
         <Button asChild variant="outline">
           <Link to="/exams">Back to Exams</Link>
         </Button>
+        
+        {solutionUrl && (
+          <Button 
+            variant="secondary" 
+            onClick={handleDownloadSolution}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Download Solution
+          </Button>
+        )}
+        
         <Button asChild>
           <Link to="/results">View All Results</Link>
         </Button>

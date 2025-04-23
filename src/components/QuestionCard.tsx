@@ -10,7 +10,7 @@ interface QuestionCardProps {
   question: Question;
   index: number;
   showAnswer?: boolean;
-  onSelectAnswer?: (selectedOption: string) => void;
+  onSelectAnswer?: (questionId: string, selectedOption: string) => void;
   selectedAnswer?: string | string[];
 }
 
@@ -26,6 +26,20 @@ const QuestionCard = ({
   const [retryCount, setRetryCount] = useState(0);
   const [cacheBustUrl, setCacheBustUrl] = useState<string | undefined>(question.image_url);
   const isMultiCorrect = question.is_multi_correct || false;
+  
+  // Track selected checkboxes for multi-correct questions
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  
+  // Initialize selected options from the passed selectedAnswer prop
+  useEffect(() => {
+    if (isMultiCorrect && selectedAnswer) {
+      if (Array.isArray(selectedAnswer)) {
+        setSelectedOptions(selectedAnswer);
+      } else if (typeof selectedAnswer === 'string') {
+        setSelectedOptions(selectedAnswer.split(',').filter(Boolean));
+      }
+    }
+  }, [selectedAnswer, isMultiCorrect]);
 
   useEffect(() => {
     if (question.image_url) {
@@ -96,16 +110,31 @@ const QuestionCard = ({
   };
 
   const handleOptionSelect = (option: string) => {
-    if (onSelectAnswer) {
-      onSelectAnswer(option);
+    if (!onSelectAnswer) return;
+    
+    if (isMultiCorrect) {
+      let newSelectedOptions: string[];
+      
+      // If already selected, remove it; otherwise add it
+      if (selectedOptions.includes(option)) {
+        newSelectedOptions = selectedOptions.filter(opt => opt !== option);
+      } else {
+        newSelectedOptions = [...selectedOptions, option];
+      }
+      
+      setSelectedOptions(newSelectedOptions);
+      
+      // Join selected options with comma for multi-select questions
+      onSelectAnswer(question.id, newSelectedOptions.sort().join(','));
+    } else {
+      // For single select questions, just pass the option
+      onSelectAnswer(question.id, option);
     }
   };
 
   const isOptionSelected = (option: string) => {
-    if (!selectedAnswer) return false;
-    
-    if (Array.isArray(selectedAnswer)) {
-      return selectedAnswer.includes(option);
+    if (isMultiCorrect) {
+      return selectedOptions.includes(option);
     }
     
     return selectedAnswer === option;
@@ -146,63 +175,63 @@ const QuestionCard = ({
         <div className="space-y-3 mt-4">
           <div className="flex items-center space-x-2">
             <Checkbox 
-              id={`option-a-${index}`} 
+              id={`option-a-${question.id}`} 
               checked={isOptionSelected('a')}
               onCheckedChange={() => handleOptionSelect('a')}
               disabled={showAnswer}
             />
-            <Label htmlFor={`option-a-${index}`} className="cursor-pointer">{question.option_a}</Label>
+            <Label htmlFor={`option-a-${question.id}`} className="cursor-pointer">{question.option_a}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox 
-              id={`option-b-${index}`} 
+              id={`option-b-${question.id}`} 
               checked={isOptionSelected('b')}
               onCheckedChange={() => handleOptionSelect('b')}
               disabled={showAnswer}
             />
-            <Label htmlFor={`option-b-${index}`} className="cursor-pointer">{question.option_b}</Label>
+            <Label htmlFor={`option-b-${question.id}`} className="cursor-pointer">{question.option_b}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox 
-              id={`option-c-${index}`} 
+              id={`option-c-${question.id}`} 
               checked={isOptionSelected('c')}
               onCheckedChange={() => handleOptionSelect('c')}
               disabled={showAnswer}
             />
-            <Label htmlFor={`option-c-${index}`} className="cursor-pointer">{question.option_c}</Label>
+            <Label htmlFor={`option-c-${question.id}`} className="cursor-pointer">{question.option_c}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox 
-              id={`option-d-${index}`} 
+              id={`option-d-${question.id}`} 
               checked={isOptionSelected('d')}
               onCheckedChange={() => handleOptionSelect('d')}
               disabled={showAnswer}
             />
-            <Label htmlFor={`option-d-${index}`} className="cursor-pointer">{question.option_d}</Label>
+            <Label htmlFor={`option-d-${question.id}`} className="cursor-pointer">{question.option_d}</Label>
           </div>
         </div>
       ) : (
         <RadioGroup 
           value={selectedAnswer as string}
-          onValueChange={handleOptionSelect}
+          onValueChange={(value) => onSelectAnswer && onSelectAnswer(question.id, value)}
           disabled={showAnswer} 
           className="space-y-3 mt-4"
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="a" id={`option-a-${index}`} />
-            <Label htmlFor={`option-a-${index}`} className="cursor-pointer">{question.option_a}</Label>
+            <RadioGroupItem value="a" id={`option-a-${question.id}`} />
+            <Label htmlFor={`option-a-${question.id}`} className="cursor-pointer">{question.option_a}</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="b" id={`option-b-${index}`} />
-            <Label htmlFor={`option-b-${index}`} className="cursor-pointer">{question.option_b}</Label>
+            <RadioGroupItem value="b" id={`option-b-${question.id}`} />
+            <Label htmlFor={`option-b-${question.id}`} className="cursor-pointer">{question.option_b}</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="c" id={`option-c-${index}`} />
-            <Label htmlFor={`option-c-${index}`} className="cursor-pointer">{question.option_c}</Label>
+            <RadioGroupItem value="c" id={`option-c-${question.id}`} />
+            <Label htmlFor={`option-c-${question.id}`} className="cursor-pointer">{question.option_c}</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="d" id={`option-d-${index}`} />
-            <Label htmlFor={`option-d-${index}`} className="cursor-pointer">{question.option_d}</Label>
+            <RadioGroupItem value="d" id={`option-d-${question.id}`} />
+            <Label htmlFor={`option-d-${question.id}`} className="cursor-pointer">{question.option_d}</Label>
           </div>
         </RadioGroup>
       )}

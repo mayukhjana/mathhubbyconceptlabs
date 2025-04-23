@@ -23,6 +23,7 @@ export const getContentTypeFromFile = (file: File): string => {
     case 'webp': return 'image/webp';
     case 'svg': return 'image/svg+xml';
     case 'bmp': return 'image/bmp';
+    case 'json': return 'application/json'; // Add support for JSON files
     default: break;
   }
   
@@ -85,6 +86,27 @@ export const fileToTypedBlob = async (file: File): Promise<Blob> => {
   if (isPdfFile(file)) {
     const arrayBuffer = await file.arrayBuffer();
     return new Blob([arrayBuffer], { type: 'application/pdf' });
+  }
+  
+  // For images, use the image content type
+  if (isImageFile(file)) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    let contentType = 'image/jpeg'; // default
+    
+    // Map extensions to correct image types
+    switch (extension) {
+      case 'png': contentType = 'image/png'; break;
+      case 'jpg':
+      case 'jpeg': contentType = 'image/jpeg'; break;
+      case 'gif': contentType = 'image/gif'; break;
+      case 'webp': contentType = 'image/webp'; break;
+      case 'svg': contentType = 'image/svg+xml'; break;
+      case 'bmp': contentType = 'image/bmp'; break;
+      default: contentType = file.type || 'image/jpeg'; break;
+    }
+    
+    const arrayBuffer = await file.arrayBuffer();
+    return new Blob([arrayBuffer], { type: contentType });
   }
   
   // Get content type based on file extension or type

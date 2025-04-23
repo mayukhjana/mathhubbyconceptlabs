@@ -52,17 +52,23 @@ export const uploadExamFile = async (
     
     console.log(`Uploading ${fileType} to bucket: ${bucketName}, file: ${fileName}`);
     
-    // Verify file is a PDF
+    // Verify file is a PDF or JSON
     const extension = file.name.split('.').pop()?.toLowerCase();
-    if (extension !== 'pdf') {
-      const error = new Error(`Only PDF files are accepted for ${fileType}s`);
+    const isSupportedFormat = ['pdf', 'json'].includes(extension || '');
+    
+    if (!isSupportedFormat) {
+      const error = new Error(`Only PDF and JSON files are accepted for ${fileType}s`);
       toast.error(`Upload failed: ${error.message}`);
       throw error;
     }
     
-    // Force the correct content type for PDFs
-    const contentType = 'application/pdf';
-    console.log(`Setting fixed content type: ${contentType} for PDF file: ${file.name}, original type: ${file.type}`);
+    // Determine content type based on extension
+    let contentType = 'application/pdf';
+    if (extension === 'json') {
+      contentType = 'application/json';
+    }
+    
+    console.log(`Setting content type: ${contentType} for file: ${file.name}, original type: ${file.type}`);
     
     // Create a new blob with the correct content type to fix MIME type issues
     const arrayBuffer = await file.arrayBuffer();
@@ -136,7 +142,7 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
       throw new Error('Only image files are allowed for avatars');
     }
     
-    // Get proper content type based on extension
+    // Force an image content type based on extension
     let contentType;
     switch (fileExt) {
       case 'png': contentType = 'image/png'; break;
@@ -145,7 +151,7 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
       case 'gif': contentType = 'image/gif'; break;
       case 'webp': contentType = 'image/webp'; break;
       case 'svg': contentType = 'image/svg+xml'; break;
-      default: contentType = file.type || 'image/jpeg'; break;
+      default: contentType = 'image/jpeg'; break;
     }
     
     console.log(`Using content type: ${contentType} for avatar upload`);
@@ -174,7 +180,8 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
     console.log("Upload successful:", data);
     
     // Get public URL with timestamp to prevent caching
-    const publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+    const timestamp = new Date().getTime();
+    const publicUrl = `${supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl}?t=${timestamp}`;
     
     // Update profile
     const { error: updateError } = await supabase
@@ -208,7 +215,7 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
     const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
     const fileName = `question_${uniqueId}.${fileExt}`;
     
-    // Get proper content type based on extension
+    // Force image content type based on extension
     let contentType;
     switch (fileExt) {
       case 'jpg':
@@ -217,7 +224,7 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
       case 'gif': contentType = 'image/gif'; break;
       case 'webp': contentType = 'image/webp'; break;
       case 'svg': contentType = 'image/svg+xml'; break;
-      default: contentType = file.type; break;
+      default: contentType = 'image/jpeg'; break;
     }
     
     console.log(`Uploading question image with content type: ${contentType}, extension: ${fileExt}`);

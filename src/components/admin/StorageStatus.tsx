@@ -97,4 +97,3 @@ const StorageStatus = ({ error, bucketsReady, onRetry }: StorageStatusProps) => 
 };
 
 export default StorageStatus;
-

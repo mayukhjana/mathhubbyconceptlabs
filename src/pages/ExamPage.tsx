@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,6 +139,8 @@ const ExamPage = () => {
   };
   
   const handleAnswer = (questionId: string, selectedOption: string) => {
+    console.log("Answer selected:", questionId, selectedOption);
+    
     setUserAnswers(prev => ({
       ...prev,
       [questionId]: selectedOption
@@ -327,7 +330,7 @@ const ExamPage = () => {
   }
   
   const currentQuestion = exam.questions[currentQuestionIndex];
-  const answeredCount = Object.keys(userAnswers).length;
+  const answeredCount = attemptedQuestions.size;
   const progress = (answeredCount / exam.questions.length) * 100;
   
   return (
@@ -359,34 +362,18 @@ const ExamPage = () => {
                 question={currentQuestion}
                 index={currentQuestionIndex}
                 showAnswer={false}
+                onSelectAnswer={handleAnswer}
+                selectedAnswer={userAnswers[currentQuestion.id]}
               />
               
-              <div className="flex justify-between mt-6">
-                <Button 
-                  onClick={handlePrevious} 
-                  variant="outline" 
-                  disabled={currentQuestionIndex === 0}
-                >
-                  Previous
-                </Button>
-                
-                <div className="space-x-2">
-                  <Button
-                    onClick={skipQuestion}
-                    variant="secondary"
-                  >
-                    Skip Question
-                  </Button>
-                  
-                  {currentQuestionIndex < exam.questions.length - 1 ? (
-                    <Button onClick={handleNext}>Next</Button>
-                  ) : (
-                    <Button onClick={handleSubmit} variant="default" className="bg-mathprimary">
-                      Submit Exam
-                    </Button>
-                  )}
-                </div>
-              </div>
+              {/* Use the ExamNavigation component to always show submit button */}
+              <ExamNavigation
+                currentQuestionIndex={currentQuestionIndex}
+                totalQuestions={exam.questions.length}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onSubmit={handleSubmit}
+              />
             </>
           ) : (
             <ExamResults
@@ -398,6 +385,8 @@ const ExamPage = () => {
               userAnswers={userAnswers}
               resultSaved={resultSaved}
               formatTime={formatTime}
+              examId={examId}
+              board={exam.board}
             />
           )}
         </div>
