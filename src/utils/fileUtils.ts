@@ -26,10 +26,8 @@ export const getContentTypeFromFile = (file: File): string => {
     default: break;
   }
   
-  // Then check the native type if it seems valid
-  if (file.type && 
-      file.type !== 'application/octet-stream' && 
-      file.type !== 'application/json') {
+  // Use the native type if available
+  if (file.type) {
     return file.type;
   }
   
@@ -45,12 +43,13 @@ export const getContentTypeFromFile = (file: File): string => {
     'bmp': 'image/bmp',
     
     // Documents
-    'pdf': 'application/pdf', // Added again for redundancy
+    'pdf': 'application/pdf',
     'doc': 'application/msword',
     'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'xls': 'application/vnd.ms-excel',
     'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'txt': 'text/plain',
+    'json': 'application/json',
   };
   
   // Try to get the content type from the extension map
@@ -58,7 +57,7 @@ export const getContentTypeFromFile = (file: File): string => {
     return contentTypeMap[extension];
   }
   
-  // Last resort fallback
+  // Last resort fallback - accept application/json as valid
   return file.type || 'application/octet-stream';
 };
 
@@ -88,20 +87,8 @@ export const fileToTypedBlob = async (file: File): Promise<Blob> => {
     return new Blob([arrayBuffer], { type: 'application/pdf' });
   }
   
-  // For images, use extension-based detection
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  let contentType = file.type;
-  
-  // Override content type for common image formats to avoid MIME type issues
-  switch (extension) {
-    case 'png': contentType = 'image/png'; break;
-    case 'jpg':
-    case 'jpeg': contentType = 'image/jpeg'; break;
-    case 'gif': contentType = 'image/gif'; break;
-    case 'webp': contentType = 'image/webp'; break;
-    case 'svg': contentType = 'image/svg+xml'; break;
-    default: contentType = getContentTypeFromFile(file); break;
-  }
+  // Get content type based on file extension or type
+  const contentType = getContentTypeFromFile(file);
   
   console.log(`Converting file to blob with content type: ${contentType}, filename: ${file.name}`);
   

@@ -136,17 +136,31 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
       throw new Error('Only image files are allowed for avatars');
     }
     
-    // Get proper content type
-    const contentType = getContentTypeFromFile(file);
-    console.log(`Using content type: ${contentType}`);
+    // Get proper content type based on extension
+    let contentType;
+    switch (fileExt) {
+      case 'png': contentType = 'image/png'; break;
+      case 'jpg':
+      case 'jpeg': contentType = 'image/jpeg'; break;
+      case 'gif': contentType = 'image/gif'; break;
+      case 'webp': contentType = 'image/webp'; break;
+      case 'svg': contentType = 'image/svg+xml'; break;
+      default: contentType = file.type || 'image/jpeg'; break;
+    }
+    
+    console.log(`Using content type: ${contentType} for avatar upload`);
     
     // Ensure bucket exists
     await ensureAvatarsBucket();
     
+    // Convert file to proper Blob with the correct MIME type
+    const arrayBuffer = await file.arrayBuffer();
+    const fileToUpload = new Blob([arrayBuffer], { type: contentType });
+    
     // Upload image with the correct content type
     const { data, error } = await supabase.storage
       .from('avatars')
-      .upload(fileName, file, {
+      .upload(fileName, fileToUpload, {
         contentType: contentType,
         upsert: true,
         cacheControl: '3600'
@@ -189,14 +203,6 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
  */
 export const uploadQuestionImage = async (file: File): Promise<string | null> => {
   try {
-    // Ensure it's an image file
-    if (!file.type.startsWith('image/')) {
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
-      if (!['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(fileExt || '')) {
-        throw new Error('Only image files are allowed for question images');
-      }
-    }
-    
     // Generate unique filename
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
     const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
@@ -204,27 +210,14 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
     
     // Get proper content type based on extension
     let contentType;
-    
-    // Force content type based on extension to avoid MIME type issues
     switch (fileExt) {
       case 'jpg':
-      case 'jpeg':
-        contentType = 'image/jpeg';
-        break;
-      case 'png':
-        contentType = 'image/png';
-        break;
-      case 'gif':
-        contentType = 'image/gif';
-        break;
-      case 'webp':
-        contentType = 'image/webp';
-        break;
-      case 'svg':
-        contentType = 'image/svg+xml';
-        break;
-      default:
-        contentType = file.type || 'image/jpeg';
+      case 'jpeg': contentType = 'image/jpeg'; break;
+      case 'png': contentType = 'image/png'; break;
+      case 'gif': contentType = 'image/gif'; break;
+      case 'webp': contentType = 'image/webp'; break;
+      case 'svg': contentType = 'image/svg+xml'; break;
+      default: contentType = file.type; break;
     }
     
     console.log(`Uploading question image with content type: ${contentType}, extension: ${fileExt}`);

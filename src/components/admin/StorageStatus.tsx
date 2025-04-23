@@ -23,6 +23,35 @@ const StorageStatus = ({ error, bucketsReady, onRetry }: StorageStatusProps) => 
   }
 
   if (error) {
+    // Check for the specific MIME type error
+    const isContentTypeError = error.includes("application/json is not supported") || 
+                              error.includes("mime type") ||
+                              error.includes("MIME type");
+    
+    if (isContentTypeError) {
+      return (
+        <Alert variant="warning" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Content Type Warning</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <div>
+              There appears to be a MIME type issue. The system will try to automatically correct
+              file types during upload. You can continue with your upload.
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-fit flex gap-2 items-center mt-2" 
+              onClick={onRetry}
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Retry Storage Initialization
+            </Button>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
     return (
       <Alert variant="destructive" className="mb-6">
         <AlertCircle className="h-4 w-4" />
