@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,25 +11,32 @@ import { Toggle } from "@/components/ui/toggle";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const {
-    isAuthenticated
-  } = useAuth();
-  const {
-    theme,
-    setTheme
-  } = useTheme();
+  const navigate = useNavigate();
+  const { isAuthenticated, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+  
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
+  
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+  
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    closeMenu();
+    navigate('/');
+  };
+  
   return (
     <header className="sticky top-0 w-full bg-background/95 backdrop-blur-sm border-b z-40">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -176,13 +184,7 @@ const Navbar = () => {
             
             <div className="pt-6 flex flex-col space-y-4">
               {isAuthenticated ? (
-                <Button variant="destructive" className="w-full" onClick={() => {
-                  const {
-                    signOut
-                  } = useAuth();
-                  signOut();
-                  closeMenu();
-                }}>
+                <Button variant="destructive" className="w-full" onClick={handleSignOut}>
                   Sign Out
                 </Button>
               ) : (

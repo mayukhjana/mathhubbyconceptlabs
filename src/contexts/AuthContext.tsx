@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,36 +55,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    // Set up the auth listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
         
+        // Use setTimeout to avoid deadlocks with the Supabase client
         if (currentSession?.user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('user_type')
-            .eq('id', currentSession.user.id)
-            .single();
-            
-          if (data?.user_type === 'tutor') {
-            window.location.href = '/tutor';
-          }
+          setTimeout(async () => {
+            const { data } = await supabase
+              .from('profiles')
+              .select('user_type')
+              .eq('id', currentSession.user.id)
+              .single();
+              
+            if (data?.user_type === 'tutor') {
+              window.location.href = '/tutor';
+            }
+          }, 0);
         }
       }
     );
 
+    // Then check for an existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setIsLoading(false);
       
-      setTimeout(() => {
-        if (currentSession?.user) {
+      // Use setTimeout to check premium status
+      if (currentSession?.user) {
+        setTimeout(() => {
           refreshPremiumStatus();
-        }
-      }, 0);
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
