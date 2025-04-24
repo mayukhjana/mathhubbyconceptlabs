@@ -137,7 +137,7 @@ const PricingCard = ({
               )}
             </Button>
             
-            {!isPremium && type !== "free" && (
+            {!isPremium && (
               <PhonePeButton 
                 subscriptionType={type}
                 planPeriod={isActive}

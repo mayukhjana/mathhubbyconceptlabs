@@ -65,7 +65,9 @@ function App() {
               <Route path="*" element={<NotFound />} />
 
               {/* Protected routes */}
-              <Route element={<AuthGuard />}>
+              <Route element={<AuthGuard>
+                <></>
+              </AuthGuard>}>
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/results" element={<ResultsPage />} />
                 <Route path="/mathhub-ai" element={<MathHubAIPage />} />
