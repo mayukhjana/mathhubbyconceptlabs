@@ -85,7 +85,6 @@ export type Database = {
           full_name: string | null
           id: string
           updated_at: string
-          user_type: Database["public"]["Enums"]["user_type"] | null
           username: string | null
         }
         Insert: {
@@ -94,7 +93,6 @@ export type Database = {
           full_name?: string | null
           id: string
           updated_at?: string
-          user_type?: Database["public"]["Enums"]["user_type"] | null
           username?: string | null
         }
         Update: {
@@ -103,7 +101,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
-          user_type?: Database["public"]["Enums"]["user_type"] | null
           username?: string | null
         }
         Relationships: []
@@ -189,42 +186,6 @@ export type Database = {
           message?: string
           status?: string
           subject?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tutor_applications: {
-        Row: {
-          created_at: string | null
-          education: string
-          experience: string | null
-          full_name: string
-          id: string
-          status: string | null
-          subjects: string[]
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          education: string
-          experience?: string | null
-          full_name: string
-          id?: string
-          status?: string | null
-          subjects: string[]
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          education?: string
-          experience?: string | null
-          full_name?: string
-          id?: string
-          status?: string | null
-          subjects?: string[]
           updated_at?: string | null
           user_id?: string
         }
@@ -376,7 +337,6 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      user_type: "student" | "tutor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -493,7 +453,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      user_type: ["student", "tutor"],
     },
   },
 } as const

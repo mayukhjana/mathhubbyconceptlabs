@@ -31,7 +31,6 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import StudyMaterialsPage from "./pages/StudyMaterialsPage";
 import PracticeSetsPage from "./pages/PracticeSetsPage";
 import VideoTutorialsPage from "./pages/VideoTutorialsPage";
-import TutorHomePage from "./pages/TutorHomePage";
 
 const queryClient = new QueryClient();
 
@@ -104,11 +103,6 @@ const App = () => (
                   <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                   <Route path="/refund-policy" element={<RefundPolicy />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/tutor" element={
-                    <AuthGuard>
-                      <TutorHomePage />
-                    </AuthGuard>
-                  } />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
