@@ -1,4 +1,5 @@
 
+import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
@@ -8,7 +9,7 @@ import PremiumSection from "@/components/PremiumSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
 
-const Index = () => {
+const Index: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -27,4 +28,3 @@ const Index = () => {
 };
 
 export default Index;
-
