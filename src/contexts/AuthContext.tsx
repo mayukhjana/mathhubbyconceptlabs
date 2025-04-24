@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, metadata?: { full_name?: string; username?: string }) => Promise<{ error: any | null }>;
+  signUp: (email: string, password: string, metadata?: { full_name?: string; username?: string, user_type?: 'student' | 'tutor' }) => Promise<{ error: any | null }>;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
@@ -55,33 +54,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
         
-        // Check premium status after auth state changes
-        setTimeout(() => {
-          if (currentSession?.user) {
-            refreshPremiumStatus();
-          } else {
-            setIsPremium(false);
-            setPremiumExpiresAt(null);
-            localStorage.setItem("userIsPremium", "false");
+        if (currentSession?.user) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('user_type')
+            .eq('id', currentSession.user.id)
+            .single();
+            
+          if (data?.user_type === 'tutor') {
+            window.location.href = '/tutor';
           }
-        }, 0);
+        }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setIsLoading(false);
       
-      // Check premium status for existing session
       setTimeout(() => {
         if (currentSession?.user) {
           refreshPremiumStatus();
@@ -95,7 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (
     email: string,
     password: string,
-    metadata?: { full_name?: string; username?: string }
+    metadata?: { full_name?: string; username?: string, user_type?: 'student' | 'tutor' }
   ) => {
     try {
       const { error } = await supabase.auth.signUp({

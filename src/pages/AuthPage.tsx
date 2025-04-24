@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +16,6 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Form states
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
@@ -25,8 +23,8 @@ const AuthPage = () => {
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
+  const [userType, setUserType] = useState<'student' | 'tutor'>('student');
 
-  // If already authenticated, redirect to home
   if (isAuthenticated) {
     navigate('/');
     return null;
@@ -64,7 +62,8 @@ const AuthPage = () => {
     try {
       const { error } = await signUp(registerEmail, registerPassword, {
         full_name: fullName,
-        username: username
+        username: username,
+        user_type: userType
       });
       
       if (error) {
@@ -142,6 +141,27 @@ const AuthPage = () => {
                 
                 <TabsContent value="register">
                   <form onSubmit={handleRegister} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Join as</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Button
+                          type="button"
+                          variant={userType === 'student' ? 'default' : 'outline'}
+                          onClick={() => setUserType('student')}
+                          className="w-full"
+                        >
+                          Student
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={userType === 'tutor' ? 'default' : 'outline'}
+                          onClick={() => setUserType('tutor')}
+                          className="w-full"
+                        >
+                          Tutor
+                        </Button>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="fullName">Full Name</Label>
                       <Input 

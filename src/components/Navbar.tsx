@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit } from "lucide-react";
+import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
 import { useTheme } from "@/components/ThemeProvider";
@@ -29,7 +29,8 @@ const Navbar = () => {
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
-  return <header className="sticky top-0 w-full bg-background/95 backdrop-blur-sm border-b z-40">
+  return (
+    <header className="sticky top-0 w-full bg-background/95 backdrop-blur-sm border-b z-40">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mathprimary to-mathsecondary flex items-center justify-center text-white">
@@ -91,17 +92,27 @@ const Navbar = () => {
             {theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
           </Toggle>
 
-          {isAuthenticated ? <UserProfileMenu /> : <>
+          {isAuthenticated ? (
+            <UserProfileMenu />
+          ) : (
+            <>
               <Button variant="outline" className="flex items-center gap-2" asChild>
                 <Link to="/auth">
                   <LogIn size={18} />
                   <span>Sign In</span>
                 </Link>
               </Button>
-              <Button asChild>
+              <Button variant="default" className="flex items-center gap-2" asChild>
                 <Link to="/auth?tab=register">Get Started</Link>
               </Button>
-            </>}
+              <Button variant="secondary" className="flex items-center gap-2" asChild>
+                <Link to="/auth?tab=register&type=tutor">
+                  <UserPlus size={18} />
+                  <span>Become a Tutor</span>
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
         
         <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMenu}>
@@ -109,8 +120,8 @@ const Navbar = () => {
         </Button>
       </div>
       
-      {/* Mobile menu */}
-      {isMenuOpen && <div className="fixed inset-0 top-16 z-50 bg-background h-[calc(100vh-4rem)]">
+      {isMenuOpen && (
+        <div className="fixed inset-0 top-16 z-50 bg-background h-[calc(100vh-4rem)]">
           <div className="container mx-auto px-4 py-8 flex flex-col space-y-6">
             <Link to="/" onClick={closeMenu}>
               <Button variant={isActive("/") ? "default" : "ghost"} className="w-full justify-start text-lg">
@@ -164,26 +175,35 @@ const Navbar = () => {
             </div>
             
             <div className="pt-6 flex flex-col space-y-4">
-              {isAuthenticated ? <Button variant="destructive" className="w-full" onClick={() => {
-            const {
-              signOut
-            } = useAuth();
-            signOut();
-            closeMenu();
-          }}>
+              {isAuthenticated ? (
+                <Button variant="destructive" className="w-full" onClick={() => {
+                  const {
+                    signOut
+                  } = useAuth();
+                  signOut();
+                  closeMenu();
+                }}>
                   Sign Out
-                </Button> : <>
+                </Button>
+              ) : (
+                <>
                   <Button variant="outline" className="w-full" asChild>
                     <Link to="/auth" onClick={closeMenu}>Sign In</Link>
                   </Button>
                   <Button className="w-full" asChild>
                     <Link to="/auth?tab=register" onClick={closeMenu}>Get Started</Link>
                   </Button>
-                </>}
+                  <Button variant="secondary" className="w-full" asChild>
+                    <Link to="/auth?tab=register&type=tutor" onClick={closeMenu}>Become a Tutor</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
-        </div>}
-    </header>;
+        </div>
+      )}
+    </header>
+  );
 };
 
 export default Navbar;
