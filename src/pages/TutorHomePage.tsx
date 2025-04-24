@@ -34,13 +34,13 @@ const TutorHomePage = () => {
     try {
       const { error } = await supabase
         .from('tutor_applications')
-        .insert({
+        .insert([{  // Changed from object to array of objects
           user_id: user.id,
           full_name: formData.get('fullName'),
           education: formData.get('education'),
           experience: formData.get('experience'),
           subjects: selectedSubjects
-        });
+        }]);
 
       if (error) throw error;
 
