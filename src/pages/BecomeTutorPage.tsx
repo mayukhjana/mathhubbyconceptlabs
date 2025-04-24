@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,13 +35,13 @@ const BecomeTutorPage = () => {
       // First submit the tutor application
       const { error: applicationError } = await supabase
         .from('tutor_applications')
-        .insert([{
+        .insert({
           user_id: user.id,
           full_name: String(formData.get('fullName')),
           education: String(formData.get('education')),
           experience: formData.get('experience') ? String(formData.get('experience')) : null,
           subjects: selectedSubjects
-        }]);
+        });
 
       if (applicationError) throw applicationError;
 

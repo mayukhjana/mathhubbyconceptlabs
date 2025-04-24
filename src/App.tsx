@@ -29,7 +29,7 @@ import BecomeTutorPage from './pages/BecomeTutorPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './components/ThemeProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import AuthGuard from './components/AuthGuard';
+import { AuthGuard } from './components/AuthGuard';
 import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import './App.css';
@@ -74,7 +74,7 @@ function App() {
               </Route>
 
               {/* Admin routes */}
-              <Route element={<AuthWrapper allowedRoles={["admin"]} />}>
+              <Route element={<AuthWrapper children={undefined} requireAuth={true} tooltipText="Admin access required" />}>
                 <Route path="/admin" element={<AdminUploadPage />} />
                 <Route path="/admin/exam" element={<AdminExamUploadPage />} />
                 <Route path="/admin/question" element={<AdminQuestionUploadPage />} />
