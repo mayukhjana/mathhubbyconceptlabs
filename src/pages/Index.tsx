@@ -19,8 +19,12 @@ const Index = () => {
       <TestimonialsSection />
       <FAQSection />
       <Footer />
+      <div className="fixed bottom-4 right-4 z-50">
+        <elevenlabs-convai agent-id="edFvSxL1bJBXJMNu2u0K"></elevenlabs-convai>
+      </div>
     </div>
   );
 };
 
 export default Index;
+
