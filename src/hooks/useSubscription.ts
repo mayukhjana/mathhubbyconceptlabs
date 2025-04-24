@@ -8,13 +8,12 @@ import { toast } from "sonner";
 export const useSubscription = () => {
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({ 
-    starter: false, 
-    pro: false,
-    plus: false
+    monthly: false, 
+    annual: false 
   });
   const navigate = useNavigate();
 
-  const handleSubscribe = async (subscriptionType: "starter" | "pro" | "plus") => {
+  const handleSubscribe = async (subscriptionType: "monthly" | "annual") => {
     if (!isAuthenticated) {
       toast.error("Please sign in to subscribe");
       navigate("/auth");

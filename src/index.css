@@ -57,7 +57,7 @@
     @apply bg-background text-foreground;
   }
 
-  /* Fix for text colors in dark mode and borders */
+  /* Fix for text colors in dark mode */
   .dark .text-gray-900 {
     @apply text-gray-100;
   }
@@ -75,7 +75,7 @@
   }
   
   .dark .border-gray-200 {
-    @apply border-gray-700/30;
+    @apply border-gray-700;
   }
   
   .dark .bg-white {
@@ -88,21 +88,6 @@
   
   .dark .bg-mathlight {
     @apply bg-mathprimary/20;
-  }
-
-  /* Mobile optimizations */
-  @media (max-width: 768px) {
-    .container {
-      @apply px-4;
-    }
-    
-    .border {
-      @apply border-opacity-10 dark:border-opacity-20;
-    }
-    
-    .shadow-sm {
-      @apply shadow-none;
-    }
   }
 }
 

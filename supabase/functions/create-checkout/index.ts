@@ -42,21 +42,10 @@ serve(async (req) => {
     // Get subscription type from request body
     const { subscriptionType } = await req.json();
     
-    // Get the appropriate price ID based on subscription type
-    let priceId;
-    switch(subscriptionType) {
-      case "starter":
-        priceId = Deno.env.get("STRIPE_STARTER_MONTHLY_PRICE_ID");
-        break;
-      case "pro":
-        priceId = Deno.env.get("STRIPE_PRO_MONTHLY_PRICE_ID");
-        break;
-      case "plus":
-        priceId = Deno.env.get("STRIPE_PLUS_MONTHLY_PRICE_ID");
-        break;
-      default:
-        priceId = Deno.env.get("STRIPE_PRO_MONTHLY_PRICE_ID"); // Default to Pro
-    }
+    // Default to monthly if not specified
+    const priceId = subscriptionType === "annual" 
+      ? Deno.env.get("STRIPE_ANNUAL_PRICE_ID") 
+      : Deno.env.get("STRIPE_MONTHLY_PRICE_ID");
 
     // Create a subscription session
     const session = await stripe.checkout.sessions.create({

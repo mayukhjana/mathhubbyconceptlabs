@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, UserPlus, LogOut } from "lucide-react";
+import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
 import { useTheme } from "@/components/ThemeProvider";
@@ -12,7 +12,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, signOut, user } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   
   const toggleMenu = () => {
@@ -32,13 +32,9 @@ const Navbar = () => {
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      closeMenu();
-      navigate('/');
-    } catch (error) {
-      console.error("Sign out error:", error);
-    }
+    await signOut();
+    closeMenu();
+    navigate('/');
   };
   
   return (
@@ -178,15 +174,6 @@ const Navbar = () => {
                 Resources
               </Button>
             </Link>
-            
-            {isAuthenticated && user && (
-              <Link to="/become-tutor" onClick={closeMenu}>
-                <Button variant={isActive("/become-tutor") ? "default" : "ghost"} className="w-full justify-start text-lg">
-                  <UserPlus className="mr-3" size={20} />
-                  Become a Tutor
-                </Button>
-              </Link>
-            )}
 
             <div className="flex items-center justify-between border-t border-border pt-4 mt-2">
               <span>Dark Mode</span>
@@ -197,9 +184,8 @@ const Navbar = () => {
             
             <div className="pt-6 flex flex-col space-y-4">
               {isAuthenticated ? (
-                <Button variant="destructive" className="w-full flex items-center justify-center gap-2" onClick={handleSignOut}>
-                  <LogOut size={18} />
-                  <span>Sign Out</span>
+                <Button variant="destructive" className="w-full" onClick={handleSignOut}>
+                  Sign Out
                 </Button>
               ) : (
                 <>
