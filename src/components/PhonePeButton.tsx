@@ -6,11 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface PhonePeButtonProps {
-  subscriptionType: "monthly" | "annual";
+  subscriptionType: "free" | "starter" | "pro" | "plus" | "monthly" | "annual";
+  planPeriod?: "monthly" | "annual";
   className?: string;
 }
 
-const PhonePeButton = ({ subscriptionType, className }: PhonePeButtonProps) => {
+const PhonePeButton = ({ subscriptionType, planPeriod = "monthly", className }: PhonePeButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePhonePePayment = async () => {
@@ -19,7 +20,10 @@ const PhonePeButton = ({ subscriptionType, className }: PhonePeButtonProps) => {
       toast.info("Initializing PhonePe payment...");
       
       const { data, error } = await supabase.functions.invoke("create-phonepe-checkout", {
-        body: { subscriptionType }
+        body: { 
+          subscriptionType,
+          planPeriod
+        }
       });
       
       if (error) {

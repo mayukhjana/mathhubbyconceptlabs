@@ -24,15 +24,18 @@ const PremiumSection = () => {
             <Sparkles className="w-4 h-4 mr-2" />
             <span>Unlock Your Full Potential</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Upgrade to Premium</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">Choose Your Plan</h2>
           <p className="text-gray-300 max-w-xl mx-auto">
-            Advanced features designed to help you excel in mathematics with personalized learning tools.
+            From free to premium, we have plans designed to help every student excel in mathematics with the right tools.
           </p>
         </div>
         
-        <div className="flex flex-col lg:flex-row items-stretch gap-12">
-          <PremiumFeatures />
-          <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
+        <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        <div className="mt-12 text-center">
+          <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
+            <Link to="/premium">View All Plan Details</Link>
+          </Button>
         </div>
       </div>
     </section>
