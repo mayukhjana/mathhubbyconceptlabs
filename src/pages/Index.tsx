@@ -8,7 +8,6 @@ import BoardsSection from "@/components/BoardsSection";
 import PremiumSection from "@/components/PremiumSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
-import JoinBanner from "@/components/JoinBanner";
 
 const Index: React.FC = () => {
   return (
@@ -20,7 +19,6 @@ const Index: React.FC = () => {
       <PremiumSection />
       <TestimonialsSection />
       <FAQSection />
-      <JoinBanner />
       <Footer />
       <div className="fixed bottom-4 right-4 z-50">
         <elevenlabs-convai agent-id="edFvSxL1bJBXJMNu2u0K"></elevenlabs-convai>
