@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
-import { getContentTypeFromFile, fileToTypedBlob } from "@/utils/fileUtils";
+import { getContentTypeFromFile } from "@/utils/fileUtils";
 import { toast } from "sonner";
 import { createSpecificBucket } from "./buckets";
 
@@ -60,9 +60,13 @@ export const uploadExamFile = async (
       throw error;
     }
     
-    // Get the correct content type using our utility
+    // Always use application/pdf for PDF files regardless of what the browser says
     const contentType = 'application/pdf';
-    console.log(`Setting content type: ${contentType} for file: ${file.name}`);
+    console.log(`Setting content type: ${contentType} for file: ${file.name}, size: ${file.size}bytes`);
+    
+    // Create a blob with the correct content type to ensure it's uploaded properly
+    const fileArrayBuffer = await file.arrayBuffer();
+    const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
     
     // Set the correct content type in upload options
     const options = {
@@ -74,7 +78,7 @@ export const uploadExamFile = async (
     const { data, error } = await supabase
       .storage
       .from(bucketName)
-      .upload(fileName, file, options);
+      .upload(fileName, fileBlob, options);
     
     if (error) {
       console.error(`Error uploading ${fileType}:`, error);
@@ -127,13 +131,17 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
     const contentType = getContentTypeFromFile(file);
     console.log(`Using content type: ${contentType}`);
     
+    // Create a blob with the correct content type
+    const fileArrayBuffer = await file.arrayBuffer();
+    const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
+    
     // Ensure bucket exists
     await ensureAvatarsBucket();
     
     // Upload image with the correct content type
     const { data, error } = await supabase.storage
       .from('avatars')
-      .upload(fileName, file, {
+      .upload(fileName, fileBlob, {
         contentType: contentType,
         upsert: true,
         cacheControl: '3600'
@@ -194,13 +202,17 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
     const contentType = getContentTypeFromFile(file);
     console.log(`Uploading question image with content type: ${contentType}`);
     
+    // Create a blob with the correct content type
+    const fileArrayBuffer = await file.arrayBuffer();
+    const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
+    
     // Ensure questions bucket exists
     await ensureQuestionsBucket();
     
     // Upload image with the correct content type
     const { data, error } = await supabase.storage
       .from('questions')
-      .upload(fileName, file, {
+      .upload(fileName, fileBlob, {
         contentType: contentType,
         upsert: true,
         cacheControl: '3600'

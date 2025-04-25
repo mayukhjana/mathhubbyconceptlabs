@@ -40,7 +40,7 @@ export const ExamNavigation = ({
         </Button>
         
         <Button 
-          variant="outline"
+          variant={currentQuestionIndex === totalQuestions - 1 ? "secondary" : "outline"}
           onClick={onNext}
           disabled={currentQuestionIndex === totalQuestions - 1}
           className="gap-2"
