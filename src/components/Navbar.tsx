@@ -84,6 +84,13 @@ const Navbar = () => {
               <span>Resources</span>
             </Button>
           </Link>
+
+          <Button variant="outline" className="flex items-center gap-2" asChild>
+            <a href="https://form.typeform.com/to/xxxxx" target="_blank" rel="noopener noreferrer">
+              <BookOpen size={18} />
+              <span>Become a Tutor</span>
+            </a>
+          </Button>
         </nav>
         
         <div className="hidden md:flex items-center space-x-2">
@@ -155,6 +162,13 @@ const Navbar = () => {
                 Resources
               </Button>
             </Link>
+
+            <Button variant="outline" className="w-full justify-start text-lg" asChild>
+              <a href="https://form.typeform.com/to/xxxxx" target="_blank" rel="noopener noreferrer">
+                <BookOpen className="mr-3" size={20} />
+                Become a Tutor
+              </a>
+            </Button>
 
             <div className="flex items-center justify-between border-t border-border pt-4 mt-2">
               <span>Dark Mode</span>
