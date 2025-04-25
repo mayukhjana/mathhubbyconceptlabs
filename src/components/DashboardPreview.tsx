@@ -4,10 +4,8 @@ import { Link } from "react-router-dom";
 import SubjectProgress from "@/components/SubjectProgress";
 import ProgressLineChart from "@/components/charts/ProgressLineChart";
 import SubjectDistribution from "@/components/charts/SubjectDistribution";
-
 const DashboardPreview = () => {
-  return (
-    <>
+  return <>
       {/* Main dashboard card */}
       <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 transform perspective-1000 rotate-y-1 rotate-x-1">
         <div className="bg-gradient-to-r from-gray-100/80 to-gray-50/80 dark:from-gray-900/80 dark:to-gray-850/80 backdrop-blur-sm rounded-t-2xl p-3 flex items-center gap-2 border-b border-gray-200/50 dark:border-gray-700/50">
@@ -38,22 +36,14 @@ const DashboardPreview = () => {
             </div>
             <div className="h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-mathprimary via-blue-500 to-mathsecondary dark:from-blue-500 dark:via-blue-400 dark:to-purple-500 rounded-full transition-all duration-1000" style={{
-                width: "82%"
-              }}></div>
+              width: "82%"
+            }}></div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 flex flex-col items-center text-center border border-gray-100/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300 backdrop-blur-sm">
-              <Calendar className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
-              <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">23/25</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Chapters Completed</span>
-            </div>
-            <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 flex flex-col items-center text-center border border-gray-100/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300 backdrop-blur-sm">
-              <Award className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
-              <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">92%</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Average Score</span>
-            </div>
+            
+            
           </div>
           
           {/* Charts Section */}
@@ -97,8 +87,6 @@ const DashboardPreview = () => {
           <span>Next test: Tomorrow</span>
         </div>
       </div>
-    </>
-  );
+    </>;
 };
-
 export default DashboardPreview;
