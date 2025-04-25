@@ -20,34 +20,41 @@ export const ExamNavigation = ({
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-4 z-40">
       <div className="container mx-auto flex justify-between items-center max-w-4xl">
-        <Button 
-          variant="outline" 
-          onClick={onPrevious}
-          disabled={currentQuestionIndex === 0}
-          className="gap-2"
-        >
-          <ArrowLeft size={16} />
-          Previous
-        </Button>
-        
-        <Button 
-          variant="default"
-          onClick={onSubmit}
-          className="gap-2 bg-mathprimary hover:bg-mathprimary/90"
-        >
-          <CheckSquare size={16} />
-          Submit Exam
-        </Button>
-        
-        <Button 
-          variant={currentQuestionIndex === totalQuestions - 1 ? "secondary" : "outline"}
-          onClick={onNext}
-          disabled={currentQuestionIndex === totalQuestions - 1}
-          className="gap-2"
-        >
-          Next
-          <ArrowRight size={16} />
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={onPrevious}
+            disabled={currentQuestionIndex === 0}
+            className="gap-2"
+          >
+            <ArrowLeft size={16} />
+            Previous
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={onNext}
+            disabled={currentQuestionIndex === totalQuestions - 1}
+            className="gap-2"
+          >
+            Next
+            <ArrowRight size={16} />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Question {currentQuestionIndex + 1} of {totalQuestions}
+          </span>
+          <Button 
+            variant="default"
+            onClick={onSubmit}
+            className="gap-2 bg-mathprimary hover:bg-mathprimary/90"
+          >
+            <CheckSquare size={16} />
+            Submit Exam
+          </Button>
+        </div>
       </div>
     </div>
   );
