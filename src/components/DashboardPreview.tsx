@@ -1,8 +1,9 @@
-
-import { BookOpen, Trophy, Zap, BarChart, Clock, Book, FileText, Target, Calendar, Award } from "lucide-react";
+import { BookOpen, Trophy, Zap, ChartBar, Clock, Book, FileText, Target, Calendar, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import SubjectProgress from "@/components/SubjectProgress";
+import ProgressLineChart from "@/components/charts/ProgressLineChart";
+import SubjectDistribution from "@/components/charts/SubjectDistribution";
 
 const DashboardPreview = () => {
   return (
@@ -52,6 +53,25 @@ const DashboardPreview = () => {
               <Award className="h-8 w-8 text-transparent bg-clip-text bg-gradient-to-r from-mathprimary to-blue-500 dark:from-blue-400 dark:to-blue-300 mb-2" />
               <span className="font-bold text-lg bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">92%</span>
               <span className="text-xs text-gray-500 dark:text-gray-400">Average Score</span>
+            </div>
+          </div>
+          
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 border border-gray-100/20 dark:border-gray-700/20 backdrop-blur-sm">
+              <h4 className="font-medium bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent mb-3 flex items-center gap-2">
+                <ChartBar className="w-4 h-4" />
+                Weekly Progress
+              </h4>
+              <ProgressLineChart />
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 border border-gray-100/20 dark:border-gray-700/20 backdrop-blur-sm">
+              <h4 className="font-medium bg-gradient-to-r from-mathdark to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent mb-3 flex items-center gap-2">
+                <ChartBar className="w-4 h-4" />
+                Subject Distribution
+              </h4>
+              <SubjectDistribution />
             </div>
           </div>
           
