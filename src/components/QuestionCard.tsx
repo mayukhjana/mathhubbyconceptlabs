@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -72,8 +73,10 @@ const QuestionCard = ({
   }, [question.image_url]);
 
   const handleAnswerChange = (answer: string) => {
-    setSelectedAnswer(answer);
-    onAnswer(question.id, answer);
+    // If the user selects the same answer that's already selected, clear the selection
+    const newAnswer = answer === selectedAnswer ? "" : answer;
+    setSelectedAnswer(newAnswer);
+    onAnswer(question.id, newAnswer);
   };
 
   const handleImageLoad = () => {
@@ -102,6 +105,14 @@ const QuestionCard = ({
       return correct.includes(selected);
     }
     return selected === correct;
+  };
+
+  // Custom radio handler for double-click to unselect
+  const handleRadioDoubleClick = (optionId: string) => {
+    if (selectedAnswer === optionId) {
+      setSelectedAnswer("");
+      onAnswer(question.id, "");
+    }
   };
 
   return (
@@ -188,7 +199,11 @@ const QuestionCard = ({
           <RadioGroup defaultValue={userAnswer} onValueChange={handleAnswerChange}>
             <div className="grid gap-2">
               {question.options.map((option) => (
-                <div key={option.id} className="flex items-center space-x-2">
+                <div 
+                  key={option.id} 
+                  className="flex items-center space-x-2"
+                  onDoubleClick={() => handleRadioDoubleClick(option.id)}
+                >
                   <RadioGroupItem value={option.id} id={option.id} />
                   <Label htmlFor={option.id}>{option.text}</Label>
                 </div>

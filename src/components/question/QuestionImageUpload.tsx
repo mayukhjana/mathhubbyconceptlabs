@@ -61,6 +61,15 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
     
     setIsImageLoading(true);
     setImageError(false);
+    
+    // Log file information for debugging
+    console.log("Uploading image:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: new Date(file.lastModified).toISOString()
+    });
+    
     onImageUpload(file);
   };
 
