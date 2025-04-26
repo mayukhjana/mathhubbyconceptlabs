@@ -45,6 +45,7 @@ export type Database = {
           duration: number
           id: string
           is_premium: boolean
+          last_attempted_at: string | null
           title: string
           year: string
         }
@@ -59,6 +60,7 @@ export type Database = {
           duration?: number
           id?: string
           is_premium?: boolean
+          last_attempted_at?: string | null
           title: string
           year: string
         }
@@ -73,6 +75,7 @@ export type Database = {
           duration?: number
           id?: string
           is_premium?: boolean
+          last_attempted_at?: string | null
           title?: string
           year?: string
         }
@@ -114,6 +117,7 @@ export type Database = {
           created_at: string | null
           exam_id: string
           id: string
+          is_image_question: boolean | null
           is_multi_correct: boolean | null
           marks: number
           negative_marks: number
@@ -122,6 +126,7 @@ export type Database = {
           option_c: string
           option_d: string
           order_number: number
+          question_image_url: string | null
           question_text: string
         }
         Insert: {
@@ -129,6 +134,7 @@ export type Database = {
           created_at?: string | null
           exam_id: string
           id?: string
+          is_image_question?: boolean | null
           is_multi_correct?: boolean | null
           marks?: number
           negative_marks?: number
@@ -137,6 +143,7 @@ export type Database = {
           option_c: string
           option_d: string
           order_number: number
+          question_image_url?: string | null
           question_text: string
         }
         Update: {
@@ -144,6 +151,7 @@ export type Database = {
           created_at?: string | null
           exam_id?: string
           id?: string
+          is_image_question?: boolean | null
           is_multi_correct?: boolean | null
           marks?: number
           negative_marks?: number
@@ -152,6 +160,7 @@ export type Database = {
           option_c?: string
           option_d?: string
           order_number?: number
+          question_image_url?: string | null
           question_text?: string
         }
         Relationships: [

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,14 +36,34 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
           <CardTitle>Question {index + 1}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Question Text</Label>
-            <Textarea
-              value={formData.question_text}
-              onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
-              required
+          <div className="flex items-center space-x-2 mb-4">
+            <Switch
+              id={`is-image-question-${index}`}
+              checked={formData.is_image_question}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_image_question: checked })}
             />
+            <Label htmlFor={`is-image-question-${index}`}>Use Image Question</Label>
           </div>
+
+          {formData.is_image_question ? (
+            <div className="space-y-2">
+              <Label>Question Image</Label>
+              <QuestionImageUpload
+                imageUrl={imageUrl}
+                index={index}
+                onImageUpload={handleImageUpload}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Question Text</Label>
+              <Textarea
+                value={formData.question_text}
+                onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
+                required
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Question Image (Optional)</Label>

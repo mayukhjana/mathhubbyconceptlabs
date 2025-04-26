@@ -16,6 +16,7 @@ interface QuestionCardProps {
     negative_marks: number;
     is_multi_correct: boolean;
     image_url?: string;
+    is_image_question: boolean;
   };
   onAnswer: (id: string, answer: string) => void;
   userAnswer?: string;
@@ -118,9 +119,7 @@ const QuestionCard = ({
           </span>
         </CardTitle>
         <CardDescription className="space-y-4">
-          <p className="font-bold text-foreground text-base">{question.text}</p>
-          
-          {question.image_url && (
+          {question.is_image_question ? (
             <div className="mt-4">
               {imageLoading && (
                 <div className="flex justify-center items-center py-4">
@@ -135,7 +134,7 @@ const QuestionCard = ({
                 </div>
               ) : (
                 <img 
-                  src={cacheBustUrl}
+                  src={question.image_url}
                   alt="Question" 
                   className={cn(
                     "max-w-full h-auto rounded-lg border border-border mx-auto",
@@ -143,10 +142,11 @@ const QuestionCard = ({
                   )}
                   onLoad={handleImageLoad}
                   onError={handleImageError}
-                  crossOrigin="anonymous"
                 />
               )}
             </div>
+          ) : (
+            <p className="font-bold text-foreground text-base">{question.text}</p>
           )}
         </CardDescription>
       </CardHeader>
