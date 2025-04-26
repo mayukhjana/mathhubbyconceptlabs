@@ -1,5 +1,5 @@
 
-import { Image as LucideImage } from "lucide-react";
+import { Image as LucideImage, ImageOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -14,11 +14,26 @@ interface QuestionImageUploadProps {
 const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUploadProps) => {
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    // Reset loading state when imageUrl changes
+    // Reset loading and error states when imageUrl changes
     if (imageUrl) {
-      setIsImageLoading(false);
+      setIsImageLoading(true);
+      setImageError(false);
+      
+      // Preload the image
+      const img = new Image();
+      img.src = imageUrl;
+      img.onload = () => {
+        setIsImageLoading(false);
+        setImageError(false);
+      };
+      img.onerror = () => {
+        setIsImageLoading(false);
+        setImageError(true);
+        console.error("Failed to load image:", imageUrl);
+      };
     }
   }, [imageUrl]);
 
@@ -45,18 +60,8 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
     }
     
     setIsImageLoading(true);
-    onImageUpload(file);
-  };
-
-  const handleImageLoad = () => {
-    setIsImageLoading(false);
     setImageError(false);
-  };
-
-  const handleImageError = () => {
-    setIsImageLoading(false);
-    setImageError(true);
-    toast.error("Failed to load image. Please try uploading again.");
+    onImageUpload(file);
   };
 
   return (
@@ -72,17 +77,17 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
             </div>
           ) : imageError ? (
             <div className="py-4">
-              <LucideImage className="h-8 w-8 mx-auto mb-2 text-red-500" />
+              <ImageOff className="h-8 w-8 mx-auto mb-2 text-red-500" />
               <p className="text-sm text-red-500">Failed to load image</p>
               <p className="text-sm text-muted-foreground">Click to upload a new image</p>
             </div>
           ) : (
             <img 
               src={imageUrl} 
-              alt="Question" 
-              className="max-w-full h-auto mx-auto"
-              onLoad={handleImageLoad}
-              onError={handleImageError}
+              alt="Question"
+              className="max-w-full h-auto mx-auto rounded-md"
+              onLoad={() => setIsImageLoading(false)}
+              onError={() => setImageError(true)}
             />
           )}
           <p className="text-sm text-muted-foreground">Click to change image</p>

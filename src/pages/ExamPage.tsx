@@ -387,22 +387,20 @@ const ExamPage = () => {
                   Previous
                 </Button>
                 
-                <div className="space-x-2">
-                  <Button
-                    onClick={skipQuestion}
-                    variant="secondary"
-                  >
-                    Skip Question
-                  </Button>
-                  
-                  {currentQuestionIndex < exam.questions.length - 1 ? (
-                    <Button onClick={handleNext}>Next</Button>
-                  ) : (
-                    <Button onClick={handleSubmit} variant="default" className="bg-mathprimary">
-                      Submit Exam
-                    </Button>
-                  )}
-                </div>
+                <Button 
+                  onClick={handleSubmit} 
+                  variant="default" 
+                  className="bg-mathprimary hover:bg-mathprimary/90"
+                >
+                  Submit Exam
+                </Button>
+                
+                <Button 
+                  onClick={skipQuestion}
+                  variant="outline"
+                >
+                  {currentQuestionIndex < exam.questions.length - 1 ? "Next" : "Skip"}
+                </Button>
               </div>
             </>
           ) : (
