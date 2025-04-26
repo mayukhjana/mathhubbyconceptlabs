@@ -10,15 +10,18 @@ import QuestionOptions from "./question/QuestionOptions";
 import CorrectAnswerSelection from "./question/CorrectAnswerSelection";
 import { useQuestionForm } from "@/hooks/useQuestionForm";
 import type { Question } from "@/services/exam/types";
-
 interface QuestionFormProps {
   initialData?: Question;
   onSave: (question: Question) => void;
   onCancel: () => void;
   index: number;
 }
-
-const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProps) => {
+const QuestionForm = ({
+  initialData,
+  onSave,
+  onCancel,
+  index
+}: QuestionFormProps) => {
   const {
     formData,
     setFormData,
@@ -26,102 +29,76 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
     selectedCorrectAnswers,
     handleImageUpload,
     handleCorrectAnswerChange,
-    handleSubmit,
-  } = useQuestionForm({ initialData, onSave, index });
-
-  return (
-    <Card>
+    handleSubmit
+  } = useQuestionForm({
+    initialData,
+    onSave,
+    index
+  });
+  return <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
           <CardTitle>Question {index + 1}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-2 mb-4">
-            <Switch
-              id={`is-image-question-${index}`}
-              checked={formData.is_image_question}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_image_question: checked })}
-            />
+            <Switch id={`is-image-question-${index}`} checked={formData.is_image_question} onCheckedChange={checked => setFormData({
+            ...formData,
+            is_image_question: checked
+          })} />
             <Label htmlFor={`is-image-question-${index}`}>Use Image Question</Label>
           </div>
 
-          {formData.is_image_question ? (
-            <div className="space-y-2">
+          {formData.is_image_question ? <div className="space-y-2">
               <Label>Question Image</Label>
-              <QuestionImageUpload
-                imageUrl={imageUrl}
-                index={index}
-                onImageUpload={handleImageUpload}
-              />
-            </div>
-          ) : (
-            <div className="space-y-2">
+              <QuestionImageUpload imageUrl={imageUrl} index={index} onImageUpload={handleImageUpload} />
+            </div> : <div className="space-y-2">
               <Label>Question Text</Label>
-              <Textarea
-                value={formData.question_text}
-                onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
-                required
-              />
-            </div>
-          )}
+              <Textarea value={formData.question_text} onChange={e => setFormData({
+            ...formData,
+            question_text: e.target.value
+          })} required />
+            </div>}
 
-          <div className="space-y-2">
-            <Label>Question Image (Optional)</Label>
-            <QuestionImageUpload
-              imageUrl={imageUrl}
-              index={index}
-              onImageUpload={handleImageUpload}
-            />
-          </div>
+          
 
-          <QuestionOptions
-            options={{
-              a: formData.option_a,
-              b: formData.option_b,
-              c: formData.option_c,
-              d: formData.option_d
-            }}
-            onChange={(key, value) => setFormData({ ...formData, [key]: value })}
-          />
+          <QuestionOptions options={{
+          a: formData.option_a,
+          b: formData.option_b,
+          c: formData.option_c,
+          d: formData.option_d
+        }} onChange={(key, value) => setFormData({
+          ...formData,
+          [key]: value
+        })} />
 
           <div className="space-y-2">
             <Label>Correct Answer</Label>
-            <CorrectAnswerSelection
-              isMultiCorrect={formData.is_multi_correct}
-              selectedAnswers={selectedCorrectAnswers}
-              correctAnswer={formData.correct_answer as string}
-              index={index}
-              onAnswerChange={handleCorrectAnswerChange}
-            />
+            <CorrectAnswerSelection isMultiCorrect={formData.is_multi_correct} selectedAnswers={selectedCorrectAnswers} correctAnswer={formData.correct_answer as string} index={index} onAnswerChange={handleCorrectAnswerChange} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Marks</Label>
-              <Input
-                type="number"
-                min="0"
-                value={String(formData.marks)}
-                onChange={(e) => setFormData({ ...formData, marks: Number(e.target.value) })}
-              />
+              <Input type="number" min="0" value={String(formData.marks)} onChange={e => setFormData({
+              ...formData,
+              marks: Number(e.target.value)
+            })} />
             </div>
             <div className="space-y-2">
               <Label>Negative Marks</Label>
-              <Input
-                type="number"
-                min="0"
-                value={String(formData.negative_marks)}
-                onChange={(e) => setFormData({ ...formData, negative_marks: Number(e.target.value) })}
-              />
+              <Input type="number" min="0" value={String(formData.negative_marks)} onChange={e => setFormData({
+              ...formData,
+              negative_marks: Number(e.target.value)
+            })} />
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
-            <Switch
-              id={`is-multi-correct-${index}`}
-              checked={formData.is_multi_correct}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_multi_correct: checked })}
-            />
+            <Switch id={`is-multi-correct-${index}`} checked={formData.is_multi_correct} onCheckedChange={checked => setFormData({
+            ...formData,
+            is_multi_correct: checked
+          })} />
             <Label htmlFor={`is-multi-correct-${index}`}>Multiple Correct Answers</Label>
           </div>
         </CardContent>
@@ -134,8 +111,6 @@ const QuestionForm = ({ initialData, onSave, onCancel, index }: QuestionFormProp
           </Button>
         </CardFooter>
       </form>
-    </Card>
-  );
+    </Card>;
 };
-
 export default QuestionForm;
