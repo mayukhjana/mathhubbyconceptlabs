@@ -111,7 +111,9 @@ export const ExamResults = ({
                 correctAnswer: question.correct_answer,
                 marks: question.marks,
                 negative_marks: question.negative_marks,
-                is_multi_correct: question.is_multi_correct
+                is_multi_correct: question.is_multi_correct,
+                image_url: question.image_url,
+                is_image_question: question.is_image_question || false
               }}
               onAnswer={() => {}}
               userAnswer={userAnswers[question.id]}

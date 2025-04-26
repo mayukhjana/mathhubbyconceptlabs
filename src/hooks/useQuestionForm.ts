@@ -25,6 +25,7 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
     marks: initialData?.marks || 1,
     negative_marks: initialData?.negative_marks || 0,
     is_multi_correct: initialData?.is_multi_correct || false,
+    is_image_question: initialData?.is_image_question || false,
     order_number: initialData?.order_number || index + 1,
     image_url: initialData?.image_url
   });

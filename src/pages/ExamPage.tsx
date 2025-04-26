@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,7 +75,6 @@ const ExamPage = () => {
           return;
         }
         
-        // Check if exam was already attempted
         if (user) {
           const wasAttempted = await checkExamAttempted(user.id, examId);
           if (wasAttempted) {
@@ -371,7 +369,8 @@ const ExamPage = () => {
                   marks: currentQuestion.marks,
                   negative_marks: currentQuestion.negative_marks,
                   is_multi_correct: currentQuestion.is_multi_correct,
-                  image_url: currentQuestion.image_url
+                  image_url: currentQuestion.image_url,
+                  is_image_question: currentQuestion.is_image_question || false
                 }}
                 onAnswer={handleAnswer}
                 userAnswer={userAnswers[currentQuestion.id]}
