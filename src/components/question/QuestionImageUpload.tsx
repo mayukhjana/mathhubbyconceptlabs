@@ -1,7 +1,7 @@
 
 import { Image as LucideImage } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getContentTypeFromFile } from "@/utils/fileUtils";
 
@@ -13,6 +13,14 @@ interface QuestionImageUploadProps {
 
 const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUploadProps) => {
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    // Reset loading state when imageUrl changes
+    if (imageUrl) {
+      setIsImageLoading(false);
+    }
+  }, [imageUrl]);
 
   const handleClick = () => {
     document.getElementById(`question-image-${index}`)?.click();
@@ -40,6 +48,17 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
     onImageUpload(file);
   };
 
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setIsImageLoading(false);
+    setImageError(true);
+    toast.error("Failed to load image. Please try uploading again.");
+  };
+
   return (
     <div 
       className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-accent transition-colors"
@@ -51,12 +70,19 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
             <div className="flex justify-center items-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
+          ) : imageError ? (
+            <div className="py-4">
+              <LucideImage className="h-8 w-8 mx-auto mb-2 text-red-500" />
+              <p className="text-sm text-red-500">Failed to load image</p>
+              <p className="text-sm text-muted-foreground">Click to upload a new image</p>
+            </div>
           ) : (
             <img 
               src={imageUrl} 
               alt="Question" 
               className="max-w-full h-auto mx-auto"
-              onLoad={() => setIsImageLoading(false)}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
           )}
           <p className="text-sm text-muted-foreground">Click to change image</p>

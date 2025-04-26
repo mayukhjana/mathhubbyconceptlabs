@@ -4,13 +4,167 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 interface RequestBody {
   question: string;
-  image?: string; // base64 encoded image
+  image?: string; // base64 encoded
 }
 
+function createSupabaseClient(authHeader: string | null) {
+  if (authHeader) {
+    return createClient(supabaseUrl!, supabaseAnonKey!, {
+      global: { headers: { Authorization: authHeader } }
+    });
+  }
+  return createClient(supabaseUrl!, supabaseServiceKey!);
+}
+
+async function checkUserQuotaAndUpdate(supabase: any, userId: string): Promise<boolean> {
+  // Check if user exists in user_ai_doubts table
+  let { data: userAiDoubts, error: fetchError } = await supabase
+    .from('user_ai_doubts')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {  // PGRST116 = not found
+    console.error("Error fetching user AI doubts:", fetchError);
+    return false;
+  }
+
+  // If user doesn't have a record, create one
+  if (!userAiDoubts) {
+    const { error: insertError } = await supabase
+      .from('user_ai_doubts')
+      .insert({
+        user_id: userId,
+        total_used: 1
+      });
+
+    if (insertError) {
+      console.error("Error creating user AI doubts record:", insertError);
+      return false;
+    }
+    return true;
+  }
+
+  // Check if user has used less than 5 doubts or is premium
+  const { data: userPremium } = await supabase
+    .from('user_premium')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .single();
+
+  const isPremium = !!userPremium;
+
+  if (isPremium || userAiDoubts.total_used < 5) {
+    // Increment total_used if not premium
+    if (!isPremium) {
+      const { error: updateError } = await supabase
+        .from('user_ai_doubts')
+        .update({ total_used: userAiDoubts.total_used + 1, updated_at: new Date().toISOString() })
+        .eq('id', userAiDoubts.id);
+
+      if (updateError) {
+        console.error("Error updating user AI doubts:", updateError);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+async function saveAiChatHistory(supabase: any, userId: string, question: string, answer: string, hasImage: boolean = false) {
+  const { error } = await supabase
+    .from('ai_chat_history')
+    .insert({
+      user_id: userId,
+      question,
+      answer,
+      has_image: hasImage
+    });
+
+  if (error) {
+    console.error("Error saving chat history:", error);
+  }
+}
+
+// Call Gemini API for math problems
+async function callGeminiApi(question: string, imageBase64?: string) {
+  try {
+    const apiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    
+    const requestBody: any = {
+      contents: [
+        {
+          parts: [
+            {
+              text: `You are MathHub AI, a specialized math tutor that helps students solve math problems.
+                     Focus on providing clear, step-by-step solutions to math problems.
+                     For complex math, use clear explanations and break down the concepts.
+                     If a question is not math-related, politely redirect to math topics.
+                     Always be encouraging and supportive.
+                     
+                     Here is the student's question: ${question}`
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048
+      }
+    };
+    
+    // Add image if provided
+    if (imageBase64) {
+      requestBody.contents[0].parts.push({
+        inline_data: {
+          mime_type: "image/jpeg",
+          data: imageBase64
+        }
+      });
+    }
+    
+    const response = await fetch(`${apiEndpoint}?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API error response:", errorText);
+      throw new Error(`Gemini API returned ${response.status}: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error("No response generated from Gemini");
+    }
+    
+    // Extract the text content from the response
+    const answer = data.candidates[0].content.parts
+      .filter((part: any) => part.text)
+      .map((part: any) => part.text)
+      .join("\n");
+      
+    return answer;
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+    throw error;
+  }
+}
+
+// Handle the request
 Deno.serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -18,248 +172,60 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify API key exists
-    if (!geminiApiKey) {
-      console.error("Missing Gemini API key");
-      return new Response(JSON.stringify({ error: "Server configuration error: Missing API key" }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Get auth header and create supabase client
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Create Supabase client with proper authentication
-    const supabase = createClient(
-      supabaseUrl || '',
-      supabaseServiceKey || '', 
-      {
-        global: { 
-          headers: { Authorization: authHeader } 
-        }
-      }
-    );
+    const supabase = createSupabaseClient(authHeader);
 
     // Get user info from JWT
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error("Authentication error:", userError);
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Parse request body
-    let requestBody: RequestBody;
-    try {
-      requestBody = await req.json();
-    } catch (e) {
-      console.error("Error parsing request body:", e);
-      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
-        status: 400, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    const { question, image } = await req.json() as RequestBody;
 
-    const { question, image } = requestBody;
-
-    if (!question) {
-      return new Response(JSON.stringify({ error: 'Question is required' }), {
-        status: 400, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Check if user has reached the limit (5 questions per day for free users)
-    const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD
-    
-    // Check if user is premium
-    const { data: premiumData, error: premiumError } = await supabase
-      .from('user_premium')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .maybeSingle();
-    
-    if (premiumError) {
-      console.error("Error checking premium status:", premiumError);
-    }
-    
-    const isPremium = !!premiumData;
-    
-    if (!isPremium) {
-      // Count today's questions for free users
-      const { count, error: countError } = await supabase
-        .from('ai_chat_history')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .gte('created_at', `${today}T00:00:00`)
-        .lte('created_at', `${today}T23:59:59`);
-      
-      if (countError) {
-        console.error('Error checking daily limit:', countError);
-      } else if (count && count >= 5) {
-        return new Response(JSON.stringify({ 
-          error: 'Daily limit reached for free users. Please upgrade to premium for unlimited questions.' 
-        }), {
-          status: 429, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
-    // Prepare request for Gemini
-    let payload: any = {
-      contents: [{
-        parts: [
-          { 
-            text: `As MathHub AI, you specialize in mathematics education. You provide clear, step-by-step solutions to math problems with helpful explanations. When answering, use proper mathematical notation and break down complex concepts. If you're uncertain about any part of the question, explain why and offer the best possible guidance.
-
-User Question: ${question}`
-          }
-        ]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
-        topK: 40
-      }
-    };
-
-    // Add image to request if provided
-    if (image) {
-      try {
-        payload.contents[0].parts.push({
-          inline_data: {
-            mime_type: "image/jpeg", // Assuming JPEG; adjust as needed
-            data: image
-          }
-        });
-      } catch (error) {
-        console.error("Error adding image to payload:", error);
-        // Continue without the image if there's an error
-      }
-    }
-
-    console.log("Calling Gemini API with question:", question.substring(0, 50) + "...");
-
-    // Call Gemini API with proper error handling
-    let geminiResponse;
-    try {
-      geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-    } catch (error) {
-      console.error("Network error calling Gemini API:", error);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to connect to AI service',
-        details: error.message || String(error)
+    // Check if user can make this request
+    const canProceed = await checkUserQuotaAndUpdate(supabase, user.id);
+    if (!canProceed) {
+      return new Response(JSON.stringify({
+        error: 'Free quota exhausted. Please upgrade to premium.'
       }), {
-        status: 503, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error('Gemini API error status:', geminiResponse.status);
-      console.error('Gemini API error response:', errorText);
-      
-      try {
-        // Try to parse the error as JSON
-        const errorJson = JSON.parse(errorText);
-        return new Response(JSON.stringify({ 
-          error: 'AI service error',
-          details: errorJson.error?.message || 'Unknown error',
-          status: geminiResponse.status
-        }), {
-          status: 502, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      } catch (e) {
-        // If parsing fails, return the raw error text
-        return new Response(JSON.stringify({ 
-          error: 'AI service error',
-          details: errorText.substring(0, 200),
-          status: geminiResponse.status
-        }), {
-          status: 502, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
-    let geminiData;
-    try {
-      geminiData = await geminiResponse.json();
-    } catch (error) {
-      console.error("Error parsing Gemini response:", error);
-      return new Response(JSON.stringify({ 
-        error: 'Invalid response from AI service',
-        details: error.message || String(error)
-      }), {
-        status: 502, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-    
-    // Debug response structure
-    console.log("Gemini API response structure:", Object.keys(geminiData));
-    
     let answer;
-    if (geminiData.candidates && geminiData.candidates.length > 0 && 
-        geminiData.candidates[0].content && geminiData.candidates[0].content.parts && 
-        geminiData.candidates[0].content.parts.length > 0) {
-      answer = geminiData.candidates[0].content.parts[0].text;
-    } else {
-      console.error("Unexpected response structure from Gemini:", JSON.stringify(geminiData).substring(0, 200));
+    try {
+      // Call Gemini API for answer
+      answer = await callGeminiApi(question, image);
+      
+      // Save chat history
+      await saveAiChatHistory(supabase, user.id, question, answer, !!image);
+      
+    } catch (error: any) {
+      console.error('Error processing math question:', error);
       return new Response(JSON.stringify({ 
-        error: "Failed to generate an answer",
-        details: "The AI service returned an unexpected response format"
+        error: 'Failed to get answer from Gemini AI',
+        details: error.message 
       }), {
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
-    }
-
-    // Save the interaction to history
-    const { error: historyError } = await supabase
-      .from('ai_chat_history')
-      .insert({
-        user_id: user.id,
-        question,
-        answer,
-        has_image: !!image
-      });
-
-    if (historyError) {
-      console.error('Error saving to chat history:', historyError);
-      // Continue even if saving to history fails
     }
 
     return new Response(JSON.stringify({ answer }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
-    
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing request:', error);
     return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error.message || String(error)
+      error: 'Internal server error', 
+      details: error.message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

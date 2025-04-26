@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, TrashIcon, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -215,7 +214,7 @@ const MathHubAI: React.FC = () => {
         });
       }
       
-      console.log("Calling Gemini Math AI function with question:", question.substring(0, 50));
+      console.log("Calling Gemini Math AI function");
       
       const { data, error } = await supabase.functions.invoke('gemini-math-ai', {
         body: {
@@ -257,18 +256,6 @@ const MathHubAI: React.FC = () => {
         toast({
           title: "AI Service Error",
           description: errorDetails,
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-
-      if (!data.answer) {
-        setError("AI returned an empty answer.");
-        toast({
-          title: "Error",
-          description: "Received an empty response from the AI. Please try again.",
           variant: "destructive"
         });
         

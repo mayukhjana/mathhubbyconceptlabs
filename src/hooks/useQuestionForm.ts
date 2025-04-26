@@ -105,10 +105,25 @@ export const useQuestionForm = ({ initialData, onSave, index }: UseQuestionFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.question_text || !formData.option_a || !formData.option_b || 
+    if (formData.is_image_question) {
+      // For image questions, require an image
+      if (!formData.image_url) {
+        toast.error("Please upload an image for the question");
+        return;
+      }
+    } else {
+      // For text questions, require question text
+      if (!formData.question_text) {
+        toast.error("Please enter question text");
+        return;
+      }
+    }
+    
+    // Common validations for all question types
+    if (!formData.option_a || !formData.option_b || 
         !formData.option_c || !formData.option_d || 
         (formData.is_multi_correct && selectedCorrectAnswers.length === 0)) {
-      toast.error("Please fill in all fields and select at least one correct answer");
+      toast.error("Please fill in all option fields and select at least one correct answer");
       return;
     }
 
