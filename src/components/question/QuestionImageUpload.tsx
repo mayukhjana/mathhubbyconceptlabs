@@ -3,7 +3,7 @@ import { Image as LucideImage, ImageOff, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { getContentTypeFromFile, forceCorrectContentType } from "@/utils/fileUtils";
 import { Button } from "@/components/ui/button";
 
 interface QuestionImageUploadProps {
@@ -31,36 +31,47 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
     document.getElementById(`question-image-${index}`)?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Validate file type
-    const contentType = getContentTypeFromFile(file);
-    if (!contentType.startsWith('image/')) {
-      toast.error("Please upload an image file");
-      return;
+    try {
+      // Validate file type
+      const contentType = getContentTypeFromFile(file);
+      if (!contentType.startsWith('image/')) {
+        toast.error("Please upload an image file");
+        return;
+      }
+      
+      // Check file size (5MB limit)
+      const maxSizeInBytes = 5 * 1024 * 1024;
+      if (file.size > maxSizeInBytes) {
+        toast.error("Image size must be less than 5MB");
+        return;
+      }
+      
+      setIsImageLoading(true);
+      setImageError(false);
+      
+      // Log file information for debugging
+      console.log("Uploading image:", {
+        name: file.name,
+        type: file.type,
+        detectedType: contentType,
+        size: file.size,
+        lastModified: new Date(file.lastModified).toISOString()
+      });
+      
+      // Process the file to ensure correct content type
+      const processedFile = await forceCorrectContentType(file);
+      
+      onImageUpload(processedFile);
+    } catch (error) {
+      console.error("Error processing image file:", error);
+      toast.error("Error processing image. Please try another file.");
+      setImageError(true);
+      setIsImageLoading(false);
     }
-    
-    // Check file size (5MB limit)
-    const maxSizeInBytes = 5 * 1024 * 1024;
-    if (file.size > maxSizeInBytes) {
-      toast.error("Image size must be less than 5MB");
-      return;
-    }
-    
-    setIsImageLoading(true);
-    setImageError(false);
-    
-    // Log file information for debugging
-    console.log("Uploading image:", {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: new Date(file.lastModified).toISOString()
-    });
-    
-    onImageUpload(file);
   };
 
   const handleRetryLoad = () => {

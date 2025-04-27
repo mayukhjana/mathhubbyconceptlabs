@@ -1,6 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { corsHeaders } from '../_shared/cors.ts';
+import { fileToTypedBlob } from '../_shared/utils.ts';
 
 const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
 const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -59,6 +60,28 @@ async function checkUserQuotaAndUpdate(supabase: any, userId: string): Promise<b
     return true;
   }
 
+  // Check if today is a new day compared to last update
+  const today = new Date().toISOString().split('T')[0];
+  const lastUpdate = new Date(userAiDoubts.updated_at).toISOString().split('T')[0];
+  
+  if (today !== lastUpdate) {
+    // Reset count if it's a new day
+    const { error: resetError } = await supabase
+      .from('user_ai_doubts')
+      .update({ 
+        total_used: 1, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', userAiDoubts.id);
+      
+    if (resetError) {
+      console.error("Error resetting user AI doubts count:", resetError);
+      return false;
+    }
+    
+    return true;
+  }
+
   // Check if user has used less than 5 doubts or is premium
   const { data: userPremium } = await supabase
     .from('user_premium')
@@ -74,7 +97,10 @@ async function checkUserQuotaAndUpdate(supabase: any, userId: string): Promise<b
     if (!isPremium) {
       const { error: updateError } = await supabase
         .from('user_ai_doubts')
-        .update({ total_used: userAiDoubts.total_used + 1, updated_at: new Date().toISOString() })
+        .update({ 
+          total_used: userAiDoubts.total_used + 1, 
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', userAiDoubts.id);
 
       if (updateError) {
@@ -88,13 +114,14 @@ async function checkUserQuotaAndUpdate(supabase: any, userId: string): Promise<b
   return false;
 }
 
-async function saveAiChatHistory(supabase: any, userId: string, question: string, answer: string) {
+async function saveAiChatHistory(supabase: any, userId: string, question: string, answer: string, hasImage: boolean = false) {
   const { error } = await supabase
     .from('ai_chat_history')
     .insert({
       user_id: userId,
       question,
-      answer
+      answer,
+      has_image: hasImage
     });
 
   if (error) {
@@ -263,6 +290,7 @@ Deno.serve(async (req) => {
     let response;
     let data;
     let answer;
+    let hasImage = files && files.length > 0;
 
     // Call the appropriate API based on the selected model
     if (model.startsWith('gpt-')) {
@@ -357,7 +385,7 @@ Deno.serve(async (req) => {
 
     // Save chat history only if not using custom key
     if (!useCustomKey) {
-      await saveAiChatHistory(supabase, user.id, question, answer);
+      await saveAiChatHistory(supabase, user.id, question, answer, hasImage);
     }
 
     return new Response(JSON.stringify({ answer }), {
