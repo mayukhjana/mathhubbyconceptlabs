@@ -10,56 +10,19 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log("Function invoked: gemini-math-ai");
-  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("Handling OPTIONS preflight request");
-    return new Response(null, { 
-      status: 200,
-      headers: corsHeaders 
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate API key
     if (!GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ 
-          error: "Server configuration error", 
-          details: "GEMINI_API_KEY is not configured" 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      throw new Error("GEMINI_API_KEY is not configured in Supabase secrets");
     }
 
-    // Parse request body
-    let requestData;
-    try {
-      requestData = await req.json();
-    } catch (parseError) {
-      console.error("Error parsing request JSON:", parseError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Invalid request format", 
-          details: "Could not parse request body as JSON" 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    const { question, image } = requestData;
+    const { question, image } = await req.json();
     
-    // Validate input
     if (!question && !image) {
-      console.error("Missing input: no question or image provided");
       return new Response(
         JSON.stringify({ 
           error: "Missing input", 
@@ -72,13 +35,10 @@ serve(async (req) => {
       );
     }
 
-    console.log("Processing request with:", 
-      question ? `question: ${question.substring(0, 50)}...` : "no question", 
-      image ? "image provided" : "no image"
-    );
+    console.log("Received request with question:", question?.substring(0, 100), "and image:", image ? "yes" : "no");
     
     // Build request for Gemini
-    const requestBody = {
+    const requestBody: any = {
       contents: [
         {
           parts: []
@@ -140,7 +100,6 @@ serve(async (req) => {
         });
       } catch (imageError) {
         console.error("Error processing image:", imageError);
-        // Continue without image if there's an error processing it
       }
     }
 
@@ -149,63 +108,21 @@ serve(async (req) => {
     
     console.log("Calling Gemini API...");
     
-    let response;
-    try {
-      response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-      });
-    } catch (fetchError) {
-      console.error("Network error calling Gemini API:", fetchError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Network error", 
-          details: "Failed to connect to Gemini API"
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
     
-    // Check response status
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorBody);
-      
-      let errorDetails;
-      try {
-        errorDetails = JSON.parse(errorBody);
-      } catch (e) {
-        errorDetails = errorBody.substring(0, 200) + (errorBody.length > 200 ? '...' : '');
-      }
-      
+      const errorText = await response.text();
+      console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorText);
       return new Response(
         JSON.stringify({ 
-          error: "Gemini API error", 
-          details: `Status ${response.status}: ${JSON.stringify(errorDetails)}`
-        }),
-        { 
-          status: 502, // Gateway error 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
-    // Parse API response
-    let data;
-    try {
-      data = await response.json();
-    } catch (parseError) {
-      console.error("Error parsing Gemini API response:", parseError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Invalid response format", 
-          details: "Could not parse Gemini API response as JSON"
+          error: "Failed to get answer from Gemini AI", 
+          details: `Status: ${response.status}` 
         }),
         { 
           status: 500, 
@@ -214,13 +131,14 @@ serve(async (req) => {
       );
     }
     
-    // Validate response content
+    const data = await response.json();
+    
     if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
-      console.error("Invalid response structure from Gemini:", JSON.stringify(data));
+      console.error("Invalid response from Gemini:", JSON.stringify(data));
       return new Response(
         JSON.stringify({ 
           error: "Invalid response from Gemini AI",
-          details: "Expected response structure not found" 
+          details: "No content generated" 
         }),
         { 
           status: 500, 
@@ -229,25 +147,10 @@ serve(async (req) => {
       );
     }
     
-    // Extract answer
     const answer = data.candidates[0].content.parts[0].text;
-    if (!answer) {
-      console.error("Empty answer from Gemini API");
-      return new Response(
-        JSON.stringify({ 
-          error: "Empty response", 
-          details: "Gemini AI returned an empty answer"
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
     
     console.log("Successfully generated response from Gemini");
     
-    // Return successful response
     return new Response(
       JSON.stringify({ answer }),
       { 
@@ -257,12 +160,11 @@ serve(async (req) => {
     );
     
   } catch (error) {
-    // Catch-all error handler
-    console.error("Unhandled error in gemini-math-ai function:", error);
+    console.error("Error in gemini-math-ai function:", error);
     return new Response(
       JSON.stringify({ 
         error: "Internal server error", 
-        details: error.message || "An unexpected error occurred"
+        details: error.message 
       }),
       { 
         status: 500, 

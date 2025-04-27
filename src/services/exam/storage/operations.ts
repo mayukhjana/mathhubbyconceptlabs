@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
-import { getContentTypeFromFile, fileToTypedBlob, forceCorrectContentType } from "@/utils/fileUtils";
+import { getContentTypeFromFile } from "@/utils/fileUtils";
 import { toast } from "sonner";
 import { createSpecificBucket } from "./buckets";
 
@@ -60,15 +59,12 @@ export const uploadExamFile = async (
       throw error;
     }
     
-    // Force the correct content type regardless of what the browser says
-    const processedFile = await forceCorrectContentType(file);
-    
     // Always use application/pdf for PDF files regardless of what the browser says
     const contentType = 'application/pdf';
     console.log(`Setting content type: ${contentType} for file: ${file.name}, size: ${file.size}bytes`);
     
     // Create a blob with the correct content type to ensure it's uploaded properly
-    const fileArrayBuffer = await processedFile.arrayBuffer();
+    const fileArrayBuffer = await file.arrayBuffer();
     const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
     
     // Set the correct content type in upload options
@@ -130,15 +126,12 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
       throw new Error('Only image files are allowed for avatars');
     }
     
-    // Process file to ensure correct content type
-    const processedFile = await forceCorrectContentType(file);
-    
     // Get proper content type
-    const contentType = getContentTypeFromFile(processedFile);
+    const contentType = getContentTypeFromFile(file);
     console.log(`Using content type: ${contentType}`);
     
     // Create a blob with the correct content type
-    const fileArrayBuffer = await processedFile.arrayBuffer();
+    const fileArrayBuffer = await file.arrayBuffer();
     const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
     
     // Ensure bucket exists
@@ -199,20 +192,17 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
       }
     }
     
-    // Process file to ensure correct content type
-    const processedFile = await forceCorrectContentType(file);
-    
     // Generate unique filename
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
     const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
     const fileName = `question_${uniqueId}.${fileExt}`;
     
     // Get proper content type
-    const contentType = getContentTypeFromFile(processedFile);
+    const contentType = getContentTypeFromFile(file);
     console.log(`Uploading question image with content type: ${contentType}`);
     
     // Create a blob with the correct content type
-    const fileArrayBuffer = await processedFile.arrayBuffer();
+    const fileArrayBuffer = await file.arrayBuffer();
     const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
     
     // Ensure questions bucket exists

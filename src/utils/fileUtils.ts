@@ -76,32 +76,3 @@ export const fileToTypedBlob = async (file: File): Promise<Blob> => {
     throw error;
   }
 };
-
-/**
- * Forces the correct content type for a file based on its extension
- * This is useful when the browser reports an incorrect content type
- */
-export const forceCorrectContentType = async (file: File): Promise<File> => {
-  const correctType = getContentTypeFromFile(file);
-  
-  // If the type is already correct, return the original file
-  if (file.type === correctType) {
-    return file;
-  }
-  
-  console.log(`Forcing content type from ${file.type} to ${correctType} for ${file.name}`);
-  
-  try {
-    // Create a new file with the correct content type
-    const arrayBuffer = await file.arrayBuffer();
-    const newFile = new File([arrayBuffer], file.name, { 
-      type: correctType,
-      lastModified: file.lastModified 
-    });
-    
-    return newFile;
-  } catch (error) {
-    console.error("Error forcing content type:", error);
-    return file; // Fall back to original file on error
-  }
-};
