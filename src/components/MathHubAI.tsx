@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import ChatInterface from "./mathHub/ChatInterface";
 import ChatInputForm from "./mathHub/ChatInputForm";
 import ChatHistory from "./mathHub/ChatHistory";
-import { Message, ChatSession } from "./mathHub/types";
+import { Message, ChatSession, ChatHistoryItem } from "./mathHub/types";
 import { getContentTypeFromFile } from "@/utils/fileUtils";
 
 const MathHubAI: React.FC = () => {
@@ -25,6 +25,9 @@ const MathHubAI: React.FC = () => {
   const [showAllHistory, setShowAllHistory] = useState(false);
   const { user, isPremium } = useAuth();
   const { toast } = useToast();
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const historyEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
