@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { getBucketName, generateFileName } from "./paths";
 import { getContentTypeFromFile } from "@/utils/fileUtils";
@@ -223,8 +222,9 @@ export const uploadQuestionImage = async (file: File): Promise<string | null> =>
       throw error;
     }
     
-    // Get public URL
-    const publicUrl = supabase.storage.from('questions').getPublicUrl(fileName).data.publicUrl;
+    // Get public URL with cache-busting parameter
+    const timestamp = new Date().getTime();
+    const publicUrl = `${supabase.storage.from('questions').getPublicUrl(fileName).data.publicUrl}?t=${timestamp}`;
     console.log("Question image uploaded successfully:", publicUrl);
     
     return publicUrl;

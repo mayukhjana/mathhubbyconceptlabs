@@ -1,9 +1,10 @@
 
-import { Image as LucideImage, ImageOff } from "lucide-react";
+import { Image as LucideImage, ImageOff, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getContentTypeFromFile } from "@/utils/fileUtils";
+import { Button } from "@/components/ui/button";
 
 interface QuestionImageUploadProps {
   imageUrl?: string;
@@ -15,25 +16,14 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [key, setKey] = useState(Date.now()); // Used to force image refresh
 
+  // Reset component state when imageUrl changes
   useEffect(() => {
-    // Reset loading and error states when imageUrl changes
     if (imageUrl) {
       setIsImageLoading(true);
       setImageError(false);
-      
-      // Preload the image
-      const img = new Image();
-      img.src = imageUrl;
-      img.onload = () => {
-        setIsImageLoading(false);
-        setImageError(false);
-      };
-      img.onerror = () => {
-        setIsImageLoading(false);
-        setImageError(true);
-        console.error("Failed to load image:", imageUrl);
-      };
+      setKey(Date.now());
     }
   }, [imageUrl]);
 
@@ -73,6 +63,18 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
     onImageUpload(file);
   };
 
+  const handleRetryLoad = () => {
+    if (!imageUrl) return;
+    
+    setIsImageLoading(true);
+    setImageError(false);
+    setRetryCount(prev => prev + 1);
+    
+    // Force image reload with a new cache-busting parameter
+    const timestamp = new Date().getTime();
+    setKey(timestamp);
+  };
+
   return (
     <div 
       className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-accent transition-colors"
@@ -80,26 +82,53 @@ const QuestionImageUpload = ({ imageUrl, index, onImageUpload }: QuestionImageUp
     >
       {imageUrl ? (
         <div className="space-y-2">
-          {isImageLoading ? (
+          {isImageLoading && (
             <div className="flex justify-center items-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : imageError ? (
+          )}
+          
+          {imageError ? (
             <div className="py-4">
               <ImageOff className="h-8 w-8 mx-auto mb-2 text-red-500" />
               <p className="text-sm text-red-500">Failed to load image</p>
-              <p className="text-sm text-muted-foreground">Click to upload a new image</p>
+              <div className="flex justify-center mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRetryLoad();
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Retry
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">or click to upload a new image</p>
             </div>
           ) : (
             <img 
-              src={imageUrl} 
+              key={`img-${key}`}
+              src={`${imageUrl}?t=${key}`}
               alt="Question"
-              className="max-w-full h-auto mx-auto rounded-md"
-              onLoad={() => setIsImageLoading(false)}
-              onError={() => setImageError(true)}
+              className={`max-w-full h-auto mx-auto rounded-md ${isImageLoading ? 'hidden' : 'block'}`}
+              onLoad={() => {
+                console.log("Image loaded successfully");
+                setIsImageLoading(false);
+                setImageError(false);
+              }}
+              onError={(e) => {
+                console.error("Failed to load image:", imageUrl);
+                setIsImageLoading(false);
+                setImageError(true);
+              }}
             />
           )}
-          <p className="text-sm text-muted-foreground">Click to change image</p>
+          
+          {!imageError && !isImageLoading && (
+            <p className="text-sm text-muted-foreground">Click to change image</p>
+          )}
         </div>
       ) : (
         <div className="py-4">

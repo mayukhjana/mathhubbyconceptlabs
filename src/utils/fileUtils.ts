@@ -62,12 +62,17 @@ export const fileToTypedBlob = async (file: File): Promise<Blob> => {
   const contentType = getContentTypeFromFile(file);
   console.log(`Converting file to blob with content type: ${contentType}, filename: ${file.name}`);
   
-  // Read file as ArrayBuffer
-  const arrayBuffer = await file.arrayBuffer();
-  
-  // Create new Blob with correct content type
-  const blob = new Blob([arrayBuffer], { type: contentType });
-  console.log(`Created blob with type: ${blob.type}, size: ${blob.size}`);
-  
-  return blob;
+  try {
+    // Read file as ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // Create new Blob with correct content type
+    const blob = new Blob([arrayBuffer], { type: contentType });
+    console.log(`Created blob with type: ${blob.type}, size: ${blob.size}`);
+    
+    return blob;
+  } catch (error) {
+    console.error("Error converting file to blob:", error);
+    throw error;
+  }
 };
