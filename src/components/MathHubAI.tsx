@@ -1,37 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, ImagePlus, Loader2, AlertCircle, TrashIcon, MessageSquare } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect, useRef } from "react";
+import { Sparkles, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  created_at: string;
-  image?: string;
-}
-
-interface ChatHistoryItem {
-  id: string;
-  user_id: string;
-  question: string;
-  answer: string;
-  created_at: string;
-  has_image?: boolean;
-}
+import ChatInterface from "./mathHub/ChatInterface";
+import ChatInputForm from "./mathHub/ChatInputForm";
+import ChatHistory from "./mathHub/ChatHistory";
+import { Message, ChatSession, ChatHistoryItem } from "./mathHub/types";
 
 const MathHubAI: React.FC = () => {
   const [question, setQuestion] = useState("");
@@ -39,12 +17,16 @@ const MathHubAI: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [dailyQuestionsCount, setDailyQuestionsCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("new-chat");
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const { user, isPremium } = useAuth();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const historyEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -54,11 +36,19 @@ const MathHubAI: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (activeTab === "new-chat") {
+      scrollToBottom("chat");
+    } else {
+      scrollToBottom("history");
+    }
+  }, [messages, chatSessions, activeTab]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (ref: "chat" | "history") => {
+    if (ref === "chat") {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      historyEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const fetchChatHistory = async () => {
@@ -67,8 +57,8 @@ const MathHubAI: React.FC = () => {
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: true })
-        .limit(50);
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error("Error fetching chat history:", error);
@@ -76,14 +66,19 @@ const MathHubAI: React.FC = () => {
       }
 
       if (data) {
-        const formattedMessages: Message[] = data.map((item: ChatHistoryItem) => ({
+        const sessions = groupChatsByDate(data);
+        setChatSessions(sessions);
+
+        const recentMessages = data.slice(0, 10).reverse();
+        
+        const formattedMessages: Message[] = recentMessages.map((item: ChatHistoryItem) => ({
           id: item.id,
           role: 'user' as const,
           content: item.question,
           created_at: item.created_at,
           image: item.has_image ? 'image' : undefined
         })).flatMap((userMessage, index) => {
-          const item = data[index];
+          const item = recentMessages[index];
           return [
             userMessage,
             {
@@ -100,6 +95,51 @@ const MathHubAI: React.FC = () => {
     } catch (error) {
       console.error("Error in fetchChatHistory:", error);
     }
+  };
+
+  const groupChatsByDate = (chatItems: ChatHistoryItem[]): ChatSession[] => {
+    const allChatItems = [...chatItems];
+    
+    const groupedChats: Record<string, ChatHistoryItem[]> = {};
+    
+    allChatItems.forEach(item => {
+      const dateStr = new Date(item.created_at).toISOString().split('T')[0];
+      if (!groupedChats[dateStr]) {
+        groupedChats[dateStr] = [];
+      }
+      groupedChats[dateStr].push(item);
+    });
+    
+    const sessions: ChatSession[] = Object.entries(groupedChats).map(([dateStr, items]) => {
+      const messages: Message[] = items.flatMap(item => [
+        {
+          id: item.id,
+          role: 'user' as const,
+          content: item.question,
+          created_at: item.created_at,
+          image: item.has_image ? 'image' : undefined
+        },
+        {
+          id: `assistant-${item.id}`,
+          role: 'assistant' as const,
+          content: item.answer,
+          created_at: item.created_at
+        }
+      ]);
+      
+      return {
+        date: dateStr,
+        messages
+      };
+    });
+    
+    sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    if (!isPremium && !showAllHistory) {
+      return sessions.slice(0, 5);
+    }
+    
+    return sessions;
   };
 
   const checkDailyLimit = async () => {
@@ -160,9 +200,6 @@ const MathHubAI: React.FC = () => {
   const removeImage = () => {
     setImage(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -189,6 +226,7 @@ const MathHubAI: React.FC = () => {
 
     try {
       setIsLoading(true);
+      setActiveTab("new-chat");
 
       const tempId = Date.now().toString();
       const userMessage: Message = {
@@ -214,69 +252,75 @@ const MathHubAI: React.FC = () => {
         });
       }
       
-      console.log("Calling Gemini Math AI function");
+      console.log("Calling Math AI function");
       
-      const { data, error } = await supabase.functions.invoke('gemini-math-ai', {
-        body: {
-          question,
-          image: imageBase64
+      try {
+        const { data: geminiData, error: geminiError } = await supabase.functions.invoke('gemini-math-ai', {
+          body: {
+            question,
+            image: imageBase64
+          }
+        });
+
+        if (geminiError) {
+          console.error("Error calling Gemini AI function:", geminiError);
+          
+          const { data, error } = await supabase.functions.invoke('mathhub-ai', {
+            body: {
+              question,
+              model: 'gpt-4o-mini',
+              files: imageBase64 ? [{
+                name: image?.name || 'image.jpg',
+                content: imageBase64,
+                type: image?.type || 'image/jpeg'
+              }] : []
+            }
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          if (!data || data.error) {
+            throw new Error(data?.error || "Failed to get an answer");
+          }
+
+          const assistantMessage: Message = {
+            id: `assistant-${tempId}`,
+            role: 'assistant',
+            content: data.answer,
+            created_at: new Date().toISOString()
+          };
+          
+          setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
+          
+        } else {
+          const assistantMessage: Message = {
+            id: `assistant-${tempId}`,
+            role: 'assistant',
+            content: geminiData.answer,
+            created_at: new Date().toISOString()
+          };
+          
+          setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
         }
-      });
-
-      if (error) {
-        console.error("Error calling AI function:", error);
-        setError(`Error: ${error.message || "Failed to get an answer. Please try again."}`);
+        
+        setQuestion("");
+        removeImage();
+        
+        fetchChatHistory();
+        if (!isPremium) {
+          checkDailyLimit();
+        }
+      } catch (apiError: any) {
+        console.error("API call error:", apiError);
+        setError(`API Error: ${apiError.message || "Unknown error occurred"}`);
         toast({
-          title: "Error",
-          description: error.message || "Failed to get an answer. Please try again.",
+          title: "API Error",
+          description: apiError.message || "Unknown error occurred",
           variant: "destructive"
         });
-        
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-
-      if (!data) {
-        const errorMsg = "Received empty response from the AI.";
-        setError(errorMsg);
-        toast({
-          title: "Error",
-          description: errorMsg,
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-      
-      if (data.error) {
-        console.error("AI service returned error:", data.error);
-        const errorDetails = data.details ? `${data.error}: ${data.details}` : data.error;
-        setError(errorDetails);
-        toast({
-          title: "AI Service Error",
-          description: errorDetails,
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-
-      const assistantMessage: Message = {
-        id: `assistant-${tempId}`,
-        role: 'assistant',
-        content: data.answer,
-        created_at: new Date().toISOString()
-      };
-      
-      setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
-      
-      setQuestion("");
-      removeImage();
-      
-      if (!isPremium) {
-        setDailyQuestionsCount(prev => prev + 1);
       }
       
     } catch (error: any) {
@@ -307,6 +351,7 @@ const MathHubAI: React.FC = () => {
         }
           
         setMessages([]);
+        setChatSessions([]);
         setDailyQuestionsCount(0);
         
         toast({
@@ -326,9 +371,14 @@ const MathHubAI: React.FC = () => {
     }
   };
 
+  const loadMoreHistory = () => {
+    setShowAllHistory(true);
+    fetchChatHistory();
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col space-y-4 max-w-4xl mx-auto">
+      <div className="flex flex-col space-y-4 max-w-5xl mx-auto">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center">
@@ -336,7 +386,7 @@ const MathHubAI: React.FC = () => {
               MathHub AI
             </h1>
             <p className="text-muted-foreground mt-1">
-              Your personal math tutor powered by Google Gemini
+              Your personal math tutor powered by AI
             </p>
           </div>
           
@@ -349,189 +399,74 @@ const MathHubAI: React.FC = () => {
         </div>
 
         {error && (
-          <Alert variant="destructive" className="mb-4">
+          <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl">Math AI Assistant</CardTitle>
-            <CardDescription>
-              Ask any math question or upload a math problem image
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col space-y-4">
-              <div className="h-[400px] border rounded-lg p-4 relative bg-muted/30 overflow-auto">
-                <ScrollArea className="h-full pr-4">
-                  {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                      <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-2" />
-                      <p className="text-muted-foreground">
-                        No conversation history yet. Ask your first math question!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col space-y-4">
-                      {messages.map((message) => (
-                        <div 
-                          key={message.id}
-                          className={`flex ${
-                            message.role === 'user' ? 'justify-end' : 'justify-start'
-                          }`}
-                        >
-                          <div 
-                            className={`rounded-lg p-4 max-w-[85%] ${
-                              message.role === 'user' 
-                                ? 'bg-mathprimary text-white ml-12' 
-                                : 'bg-muted mr-12'
-                            }`}
-                          >
-                            {message.role === 'assistant' ? (
-                              <div className="flex items-start space-x-3">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src="/lovable-uploads/0cfac2ed-f408-4c67-81fa-bb01eb283ca8.png" />
-                                  <AvatarFallback>AI</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="mb-1 font-medium">MathHub AI</div>
-                                  <div className="math-content">
-                                    <ReactMarkdown 
-                                      remarkPlugins={[remarkGfm, remarkMath]}
-                                      rehypePlugins={[rehypeKatex]}
-                                    >
-                                      {message.content}
-                                    </ReactMarkdown>
-                                  </div>
-                                </div>
-                              </div>
-                            ) : (
-                              <div>
-                                <div className="mb-1 font-medium">You</div>
-                                <div>{message.content}</div>
-                                {message.image && (
-                                  <div className="mt-2 max-w-[200px]">
-                                    {typeof message.image === 'string' && message.image !== 'image' && (
-                                      <img 
-                                        src={message.image} 
-                                        alt="Uploaded" 
-                                        className="rounded-md max-h-[200px] object-contain"
-                                      />
-                                    )}
-                                    {message.image === 'image' && (
-                                      <div className="p-2 bg-black/10 rounded text-sm text-center">
-                                        [Image attached]
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  )}
-                </ScrollArea>
-              </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger value="new-chat">New Chat</TabsTrigger>
+            <TabsTrigger value="history">Chat History</TabsTrigger>
+          </TabsList>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {imagePreview && (
-                  <div className="relative border rounded-md p-2 inline-block">
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      className="max-h-[150px] rounded-md"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                      onClick={removeImage}
-                    >
-                      <TrashIcon className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-
-                <div className="flex flex-col space-y-2">
-                  <Textarea 
-                    placeholder="Enter your math question here..." 
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    className="min-h-[100px]"
-                    disabled={isLoading}
+          <TabsContent value="new-chat">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl">Math AI Assistant</CardTitle>
+                <CardDescription>
+                  Ask any math question or upload a math problem image
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col space-y-4">
+                  <ChatInterface 
+                    messages={messages} 
+                    messagesEndRef={messagesEndRef}
                   />
-
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={isLoading}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isLoading}
-                      >
-                        <ImagePlus className="h-4 w-4 mr-2" />
-                        Upload Image
-                      </Button>
-
-                      {messages.length > 0 && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          onClick={clearHistory}
-                          disabled={isLoading}
-                        >
-                          <TrashIcon className="h-4 w-4 mr-2" />
-                          Clear History
-                        </Button>
-                      )}
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="bg-mathprimary hover:bg-mathprimary/90" 
-                      disabled={(!question.trim() && !image) || isLoading || (!isPremium && dailyQuestionsCount >= 5)}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Ask Question
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <ChatInputForm 
+                    question={question}
+                    setQuestion={setQuestion}
+                    imagePreview={imagePreview}
+                    handleImageUpload={handleImageUpload}
+                    removeImage={removeImage}
+                    handleSubmit={handleSubmit}
+                    clearHistory={clearHistory}
+                    isLoading={isLoading}
+                    hasMessages={messages.length > 0}
+                    isPremium={isPremium}
+                    remainingQuestions={5 - dailyQuestionsCount}
+                  />
                 </div>
-              </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              <Alert>
-                <Sparkles className="h-4 w-4" />
-                <AlertTitle>Tips for best results</AlertTitle>
-                <AlertDescription>
-                  Be specific with your math questions. You can ask about algebra, calculus, geometry, or upload an image of a math problem.
-                </AlertDescription>
-              </Alert>
-            </div>
-          </CardContent>
-        </Card>
+          <TabsContent value="history">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl">Chat History</CardTitle>
+                <CardDescription>
+                  {isPremium 
+                    ? "Access all your previous conversations" 
+                    : "Free users can view up to 5 days of chat history"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChatHistory 
+                  chatSessions={chatSessions}
+                  clearHistory={clearHistory}
+                  loadMoreHistory={loadMoreHistory}
+                  showAllHistory={showAllHistory}
+                  isPremium={isPremium}
+                  historyEndRef={historyEndRef}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
