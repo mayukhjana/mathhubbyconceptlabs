@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +10,6 @@ import ChatInterface from "./mathHub/ChatInterface";
 import ChatInputForm from "./mathHub/ChatInputForm";
 import ChatHistory from "./mathHub/ChatHistory";
 import { Message, ChatSession, ChatHistoryItem } from "./mathHub/types";
-import { getContentTypeFromFile } from "@/utils/fileUtils";
 
 const MathHubAI: React.FC = () => {
   const [question, setQuestion] = useState("");
@@ -257,66 +255,55 @@ const MathHubAI: React.FC = () => {
       console.log("Calling Math AI function");
       
       try {
-        const { data, error } = await supabase.functions.invoke('mathhub-ai', {
+        const { data: geminiData, error: geminiError } = await supabase.functions.invoke('gemini-math-ai', {
           body: {
             question,
-            model: 'gpt-4o-mini',
-            files: imageBase64 ? [{
-              name: image?.name || 'image.jpg',
-              content: imageBase64,
-              type: image?.type || 'image/jpeg'
-            }] : []
+            image: imageBase64
           }
         });
 
-        if (error) {
-          console.error("Error calling AI function:", error);
-          setError(`Error: ${error.message || "Failed to get an answer. Please try again."}`);
-          toast({
-            title: "Error",
-            description: error.message || "Failed to get an answer. Please try again.",
-            variant: "destructive"
-          });
+        if (geminiError) {
+          console.error("Error calling Gemini AI function:", geminiError);
           
-          setMessages(prev => prev.filter(msg => msg.id !== tempId));
-          return;
-        }
+          const { data, error } = await supabase.functions.invoke('mathhub-ai', {
+            body: {
+              question,
+              model: 'gpt-4o-mini',
+              files: imageBase64 ? [{
+                name: image?.name || 'image.jpg',
+                content: imageBase64,
+                type: image?.type || 'image/jpeg'
+              }] : []
+            }
+          });
 
-        if (!data) {
-          const errorMsg = "Received empty response from the AI.";
-          setError(errorMsg);
-          toast({
-            title: "Error",
-            description: errorMsg,
-            variant: "destructive"
-          });
-          
-          setMessages(prev => prev.filter(msg => msg.id !== tempId));
-          return;
-        }
-        
-        if (data.error) {
-          console.error("AI service returned error:", data.error);
-          const errorDetails = data.details ? `${data.error}: ${data.details}` : data.error;
-          setError(errorDetails);
-          toast({
-            title: "AI Service Error",
-            description: errorDetails,
-            variant: "destructive"
-          });
-          
-          setMessages(prev => prev.filter(msg => msg.id !== tempId));
-          return;
-        }
+          if (error) {
+            throw error;
+          }
 
-        const assistantMessage: Message = {
-          id: `assistant-${tempId}`,
-          role: 'assistant',
-          content: data.answer,
-          created_at: new Date().toISOString()
-        };
-        
-        setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
+          if (!data || data.error) {
+            throw new Error(data?.error || "Failed to get an answer");
+          }
+
+          const assistantMessage: Message = {
+            id: `assistant-${tempId}`,
+            role: 'assistant',
+            content: data.answer,
+            created_at: new Date().toISOString()
+          };
+          
+          setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
+          
+        } else {
+          const assistantMessage: Message = {
+            id: `assistant-${tempId}`,
+            role: 'assistant',
+            content: geminiData.answer,
+            created_at: new Date().toISOString()
+          };
+          
+          setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
+        }
         
         setQuestion("");
         removeImage();
@@ -435,8 +422,10 @@ const MathHubAI: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col space-y-4">
-                  <ChatInterface messages={messages} />
-                  <div ref={messagesEndRef} />
+                  <ChatInterface 
+                    messages={messages} 
+                    messagesEndRef={messagesEndRef}
+                  />
                   <ChatInputForm 
                     question={question}
                     setQuestion={setQuestion}
@@ -472,8 +461,8 @@ const MathHubAI: React.FC = () => {
                   loadMoreHistory={loadMoreHistory}
                   showAllHistory={showAllHistory}
                   isPremium={isPremium}
+                  historyEndRef={historyEndRef}
                 />
-                <div ref={historyEndRef} />
               </CardContent>
             </Card>
           </TabsContent>

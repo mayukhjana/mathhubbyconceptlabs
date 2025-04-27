@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, User, Bot } from "lucide-react";
@@ -11,9 +11,10 @@ import { Message } from "./types";
 
 interface ChatInterfaceProps {
   messages: Message[];
+  messagesEndRef?: React.RefObject<HTMLDivElement>;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, messagesEndRef }) => {
   const renderMessageContent = (message: Message) => {
     if (message.role === 'assistant') {
       return (
@@ -97,6 +98,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages }) => {
                 </div>
               </div>
             ))}
+            {messagesEndRef && <div ref={messagesEndRef} />}
           </div>
         )}
       </ScrollArea>

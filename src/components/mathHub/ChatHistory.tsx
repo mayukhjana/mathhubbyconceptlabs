@@ -18,6 +18,7 @@ interface ChatHistoryProps {
   loadMoreHistory: () => void;
   showAllHistory: boolean;
   isPremium: boolean;
+  historyEndRef?: React.RefObject<HTMLDivElement>;
 }
 
 const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -26,9 +27,8 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
   loadMoreHistory,
   showAllHistory,
   isPremium,
+  historyEndRef,
 }) => {
-  // Remove the unused historyEndRef
-  
   const formatSessionDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const today = new Date();
@@ -170,6 +170,8 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
                 </Button>
               </div>
             )}
+            
+            {historyEndRef && <div ref={historyEndRef} />}
           </div>
         )}
       </ScrollArea>
