@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -255,73 +256,84 @@ const MathHubAI: React.FC = () => {
       
       console.log("Calling Math AI function");
       
-      const { data, error } = await supabase.functions.invoke('mathhub-ai', {
-        body: {
-          question,
-          model: 'gpt-4o-mini',
-          files: imageBase64 ? [{
-            name: image?.name || 'image.jpg',
-            content: imageBase64,
-            type: image?.type || 'image/jpeg'
-          }] : []
+      try {
+        const { data, error } = await supabase.functions.invoke('mathhub-ai', {
+          body: {
+            question,
+            model: 'gpt-4o-mini',
+            files: imageBase64 ? [{
+              name: image?.name || 'image.jpg',
+              content: imageBase64,
+              type: image?.type || 'image/jpeg'
+            }] : []
+          }
+        });
+
+        if (error) {
+          console.error("Error calling AI function:", error);
+          setError(`Error: ${error.message || "Failed to get an answer. Please try again."}`);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to get an answer. Please try again.",
+            variant: "destructive"
+          });
+          
+          setMessages(prev => prev.filter(msg => msg.id !== tempId));
+          return;
         }
-      });
 
-      if (error) {
-        console.error("Error calling AI function:", error);
-        setError(`Error: ${error.message || "Failed to get an answer. Please try again."}`);
+        if (!data) {
+          const errorMsg = "Received empty response from the AI.";
+          setError(errorMsg);
+          toast({
+            title: "Error",
+            description: errorMsg,
+            variant: "destructive"
+          });
+          
+          setMessages(prev => prev.filter(msg => msg.id !== tempId));
+          return;
+        }
+        
+        if (data.error) {
+          console.error("AI service returned error:", data.error);
+          const errorDetails = data.details ? `${data.error}: ${data.details}` : data.error;
+          setError(errorDetails);
+          toast({
+            title: "AI Service Error",
+            description: errorDetails,
+            variant: "destructive"
+          });
+          
+          setMessages(prev => prev.filter(msg => msg.id !== tempId));
+          return;
+        }
+
+        const assistantMessage: Message = {
+          id: `assistant-${tempId}`,
+          role: 'assistant',
+          content: data.answer,
+          created_at: new Date().toISOString()
+        };
+        
+        setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
+        
+        setQuestion("");
+        removeImage();
+        
+        fetchChatHistory();
+        if (!isPremium) {
+          checkDailyLimit();
+        }
+      } catch (apiError: any) {
+        console.error("API call error:", apiError);
+        setError(`API Error: ${apiError.message || "Unknown error occurred"}`);
         toast({
-          title: "Error",
-          description: error.message || "Failed to get an answer. Please try again.",
+          title: "API Error",
+          description: apiError.message || "Unknown error occurred",
           variant: "destructive"
         });
-        
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-
-      if (!data) {
-        const errorMsg = "Received empty response from the AI.";
-        setError(errorMsg);
-        toast({
-          title: "Error",
-          description: errorMsg,
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-      
-      if (data.error) {
-        console.error("AI service returned error:", data.error);
-        const errorDetails = data.details ? `${data.error}: ${data.details}` : data.error;
-        setError(errorDetails);
-        toast({
-          title: "AI Service Error",
-          description: errorDetails,
-          variant: "destructive"
-        });
-        
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        return;
-      }
-
-      const assistantMessage: Message = {
-        id: `assistant-${tempId}`,
-        role: 'assistant',
-        content: data.answer,
-        created_at: new Date().toISOString()
-      };
-      
-      setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
-      
-      setQuestion("");
-      removeImage();
-      
-      fetchChatHistory();
-      if (!isPremium) {
-        checkDailyLimit();
       }
       
     } catch (error: any) {
@@ -424,6 +436,7 @@ const MathHubAI: React.FC = () => {
               <CardContent>
                 <div className="flex flex-col space-y-4">
                   <ChatInterface messages={messages} />
+                  <div ref={messagesEndRef} />
                   <ChatInputForm 
                     question={question}
                     setQuestion={setQuestion}
@@ -460,6 +473,7 @@ const MathHubAI: React.FC = () => {
                   showAllHistory={showAllHistory}
                   isPremium={isPremium}
                 />
+                <div ref={historyEndRef} />
               </CardContent>
             </Card>
           </TabsContent>

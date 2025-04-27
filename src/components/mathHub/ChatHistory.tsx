@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+
+import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,8 +27,8 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
   showAllHistory,
   isPremium,
 }) => {
-  const historyEndRef = useRef<HTMLDivElement>(null);
-
+  // Remove the unused historyEndRef
+  
   const formatSessionDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const today = new Date();
@@ -169,7 +170,6 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
                 </Button>
               </div>
             )}
-            <div ref={historyEndRef} />
           </div>
         )}
       </ScrollArea>
