@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,21 +36,37 @@ const MathHubAI: React.FC = () => {
     }
   }, [user]);
 
+  // Ensure chat persists when component re-renders
   useEffect(() => {
-    if (activeTab === "new-chat") {
-      scrollToBottom("chat");
-    } else {
-      scrollToBottom("history");
+    const savedMessages = localStorage.getItem('mathHubMessages');
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        console.error("Error parsing saved messages:", e);
+        localStorage.removeItem('mathHubMessages');
+      }
+    }
+  }, []);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('mathHubMessages', JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (activeTab === "new-chat" && messagesEndRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 100);
+    } else if (activeTab === "history" && historyEndRef.current) {
+      setTimeout(() => {
+        historyEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 100);
     }
   }, [messages, chatSessions, activeTab]);
-
-  const scrollToBottom = (ref: "chat" | "history") => {
-    if (ref === "chat") {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      historyEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   const fetchChatHistory = async () => {
     try {
@@ -68,29 +85,6 @@ const MathHubAI: React.FC = () => {
       if (data) {
         const sessions = groupChatsByDate(data);
         setChatSessions(sessions);
-
-        const recentMessages = data.slice(0, 10).reverse();
-        
-        const formattedMessages: Message[] = recentMessages.map((item: ChatHistoryItem) => ({
-          id: item.id,
-          role: 'user' as const,
-          content: item.question,
-          created_at: item.created_at,
-          image: item.has_image ? 'image' : undefined
-        })).flatMap((userMessage, index) => {
-          const item = recentMessages[index];
-          return [
-            userMessage,
-            {
-              id: `assistant-${item.id}`,
-              role: 'assistant' as const,
-              content: item.answer,
-              created_at: item.created_at
-            }
-          ];
-        });
-
-        setMessages(formattedMessages);
       }
     } catch (error) {
       console.error("Error in fetchChatHistory:", error);
@@ -202,6 +196,31 @@ const MathHubAI: React.FC = () => {
     setImagePreview(null);
   };
 
+  const saveAIResponse = async (question: string, answer: string, hasImage: boolean = false) => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('ai_chat_history')
+        .insert({
+          user_id: user.id,
+          question,
+          answer,
+          has_image: hasImage
+        });
+
+      if (error) {
+        console.error("Error saving chat history:", error);
+        throw error;
+      }
+
+      // Make sure to update history
+      fetchChatHistory();
+    } catch (error) {
+      console.error("Error in saveAIResponse:", error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -237,8 +256,10 @@ const MathHubAI: React.FC = () => {
         image: image ? imagePreview || 'image' : undefined
       };
       
+      // Add user message immediately
       setMessages(prev => [...prev, userMessage]);
       
+      // Prepare image data if exists
       let imageBase64 = null;
       if (image) {
         const reader = new FileReader();
@@ -255,6 +276,7 @@ const MathHubAI: React.FC = () => {
       console.log("Calling Math AI function");
       
       try {
+        // Try Gemini first
         const { data: geminiData, error: geminiError } = await supabase.functions.invoke('gemini-math-ai', {
           body: {
             question,
@@ -265,6 +287,7 @@ const MathHubAI: React.FC = () => {
         if (geminiError) {
           console.error("Error calling Gemini AI function:", geminiError);
           
+          // Fallback to OpenAI
           const { data, error } = await supabase.functions.invoke('mathhub-ai', {
             body: {
               question,
@@ -292,7 +315,11 @@ const MathHubAI: React.FC = () => {
             created_at: new Date().toISOString()
           };
           
-          setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
+          // Update messages with final answer
+          setMessages(prev => [...prev.filter(msg => msg.id !== tempId + "-loading"), userMessage, assistantMessage]);
+          
+          // Save to database
+          await saveAIResponse(question, data.answer, !!imageBase64);
           
         } else {
           const assistantMessage: Message = {
@@ -302,13 +329,17 @@ const MathHubAI: React.FC = () => {
             created_at: new Date().toISOString()
           };
           
-          setMessages(prev => [...prev.filter(msg => msg.id !== tempId), userMessage, assistantMessage]);
+          // Update messages with final answer
+          setMessages(prev => [...prev.filter(msg => msg.id !== tempId + "-loading"), userMessage, assistantMessage]);
+          
+          // Save to database
+          await saveAIResponse(question, geminiData.answer, !!imageBase64);
         }
         
+        // Reset form
         setQuestion("");
         removeImage();
         
-        fetchChatHistory();
         if (!isPremium) {
           checkDailyLimit();
         }
@@ -320,7 +351,9 @@ const MathHubAI: React.FC = () => {
           description: apiError.message || "Unknown error occurred",
           variant: "destructive"
         });
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        
+        // Remove temporary messages if error occurs
+        setMessages(prev => prev.filter(msg => msg.id !== tempId && msg.id !== tempId + "-loading"));
       }
       
     } catch (error: any) {
@@ -353,6 +386,7 @@ const MathHubAI: React.FC = () => {
         setMessages([]);
         setChatSessions([]);
         setDailyQuestionsCount(0);
+        localStorage.removeItem('mathHubMessages');
         
         toast({
           title: "Success",

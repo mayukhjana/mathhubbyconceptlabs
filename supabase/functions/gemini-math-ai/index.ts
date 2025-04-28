@@ -1,273 +1,156 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { corsHeaders } from '../_shared/cors.ts';
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+interface RequestBody {
+  question: string;
+  image?: string; // base64 encoded
+}
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req) => {
-  console.log("Function invoked: gemini-math-ai");
+// Main request handler
+Deno.serve(async (req) => {
+  console.log("Gemini math AI function invoked");
   
-  // Handle CORS preflight requests
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    console.log("Handling OPTIONS preflight request");
-    return new Response(null, { 
-      status: 200,
-      headers: corsHeaders 
-    });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Validate API key
-    if (!GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY not configured");
+    // Get API key from environment variable
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
+      console.error("Missing GEMINI_API_KEY");
       return new Response(
-        JSON.stringify({ 
-          error: "Server configuration error", 
-          details: "GEMINI_API_KEY is not configured" 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: "Server configuration error: Missing API key" }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Parse request body
-    let requestData;
+    let requestBody: RequestBody;
     try {
-      requestData = await req.json();
-    } catch (parseError) {
-      console.error("Error parsing request JSON:", parseError);
+      requestBody = await req.json();
+    } catch (error) {
+      console.error("Error parsing request body:", error);
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid request format", 
-          details: "Could not parse request body as JSON" 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: "Invalid request format" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { question, image } = requestData;
+    // Extract question and image from request
+    const { question, image } = requestBody;
     
     // Validate input
     if (!question && !image) {
-      console.error("Missing input: no question or image provided");
+      console.error("Missing required fields");
       return new Response(
-        JSON.stringify({ 
-          error: "Missing input", 
-          details: "Please provide a question or an image" 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: "Question or image is required" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log("Processing request with:", 
-      question ? `question: ${question.substring(0, 50)}...` : "no question", 
-      image ? "image provided" : "no image"
-    );
-    
-    // Build request for Gemini
-    const requestBody = {
-      contents: [
-        {
-          parts: []
-        }
-      ],
-      generationConfig: {
-        temperature: 0.4,
-        topK: 32,
-        topP: 1,
-        maxOutputTokens: 2048,
-      },
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        }
-      ]
-    };
-    
-    // Setup system prompt
-    const systemPrompt = `You are MathHub AI, a specialized math tutor developed by MathHub. 
-    You are an expert in all areas of mathematics including algebra, calculus, geometry, statistics, 
-    and more. Your goal is to help students understand mathematical concepts and solve problems. 
-    Provide clear step-by-step explanations. Format your answers using markdown, including LaTeX 
-    for mathematical expressions where appropriate. Be thorough but concise.`;
-    
-    // Add system prompt
-    requestBody.contents[0].parts.push({
-      text: systemPrompt
-    });
-    
-    // Add user's question
-    if (question) {
-      requestBody.contents[0].parts.push({
-        text: question
-      });
-    }
-    
+    console.log(`Received request with question: ${question}\n and image: ${image ? "yes" : "no"}`);
+
+    // Set up content parts for the API request
+    const parts = [
+      {
+        text: `You are MathHub AI, a specialized math tutor that helps students solve math problems step by step. 
+Here is the math question: ${question}`
+      }
+    ];
+
     // Add image if provided
     if (image) {
-      try {
-        requestBody.contents[0].parts.push({
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: image
-          }
-        });
-      } catch (imageError) {
-        console.error("Error processing image:", imageError);
-        // Continue without image if there's an error processing it
-      }
+      parts.push({
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: image
+        }
+      });
     }
 
-    // Call Gemini API
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
-    
     console.log("Calling Gemini API...");
     
-    let response;
-    try {
-      response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
+    // Call Google's Gemini API
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{
+          role: 'user',
+          parts
+        }],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 2048,
         },
-        body: JSON.stringify(requestBody)
-      });
-    } catch (fetchError) {
-      console.error("Network error calling Gemini API:", fetchError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Network error", 
-          details: "Failed to connect to Gemini API"
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
-    // Check response status
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
+      })
+    });
+
+    // Check for API errors
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorBody);
-      
-      let errorDetails;
-      try {
-        errorDetails = JSON.parse(errorBody);
-      } catch (e) {
-        errorDetails = errorBody.substring(0, 200) + (errorBody.length > 200 ? '...' : '');
-      }
-      
+      const errorData = await response.text();
+      console.error(`Gemini API error: ${response.status} - ${errorData}`);
       return new Response(
-        JSON.stringify({ 
-          error: "Gemini API error", 
-          details: `Status ${response.status}: ${JSON.stringify(errorDetails)}`
-        }),
-        { 
-          status: 502, // Gateway error 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: `Gemini API error: ${response.status}` }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
-    // Parse API response
-    let data;
+
     try {
-      data = await response.json();
+      const data = await response.json();
+      
+      // Check for valid response structure
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        console.error("Invalid response from Gemini API:", data);
+        return new Response(
+          JSON.stringify({ error: "Invalid response format from Gemini API" }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Extract the answer text from the response
+      const answerText = data.candidates[0].content.parts[0].text;
+      console.log("Successfully generated response from Gemini");
+
+      return new Response(
+        JSON.stringify({ answer: answerText }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     } catch (parseError) {
       console.error("Error parsing Gemini API response:", parseError);
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid response format", 
-          details: "Could not parse Gemini API response as JSON"
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: "Failed to process Gemini API response" }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
-    // Validate response content
-    if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
-      console.error("Invalid response structure from Gemini:", JSON.stringify(data));
-      return new Response(
-        JSON.stringify({ 
-          error: "Invalid response from Gemini AI",
-          details: "Expected response structure not found" 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
-    // Extract answer
-    const answer = data.candidates[0].content.parts[0].text;
-    if (!answer) {
-      console.error("Empty answer from Gemini API");
-      return new Response(
-        JSON.stringify({ 
-          error: "Empty response", 
-          details: "Gemini AI returned an empty answer"
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
-    console.log("Successfully generated response from Gemini");
-    
-    // Return successful response
-    return new Response(
-      JSON.stringify({ answer }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-    
   } catch (error) {
-    // Catch-all error handler
-    console.error("Unhandled error in gemini-math-ai function:", error);
+    console.error("Unexpected error:", error);
     return new Response(
-      JSON.stringify({ 
-        error: "Internal server error", 
-        details: error.message || "An unexpected error occurred"
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ error: "An unexpected error occurred" }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
