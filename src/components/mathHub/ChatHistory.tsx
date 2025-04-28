@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +29,13 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
   isPremium,
   historyEndRef,
 }) => {
+  // Add useEffect to automatically scroll when history changes
+  useEffect(() => {
+    if (historyEndRef?.current) {
+      historyEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [chatSessions, historyEndRef]);
+
   const formatSessionDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const today = new Date();
@@ -92,7 +99,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-8 pb-2">
             {chatSessions.map((session) => (
               <div key={session.date} className="space-y-4">
                 <div className="flex items-center space-x-2">
@@ -171,7 +178,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
               </div>
             )}
             
-            {historyEndRef && <div ref={historyEndRef} />}
+            {historyEndRef && <div ref={historyEndRef} className="h-1" />}
           </div>
         )}
       </ScrollArea>

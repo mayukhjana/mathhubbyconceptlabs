@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, User, Bot } from "lucide-react";
@@ -15,6 +15,13 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, messagesEndRef }) => {
+  // Add useEffect to automatically scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef?.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [messages, messagesEndRef]);
+
   const renderMessageContent = (message: Message) => {
     if (message.role === 'assistant') {
       return (
@@ -63,7 +70,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, messagesEndRef 
             </p>
           </div>
         ) : (
-          <div className="flex flex-col space-y-4">
+          <div className="flex flex-col space-y-4 pb-2">
             {messages.map((message) => (
               <div 
                 key={message.id}
@@ -98,7 +105,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, messagesEndRef 
                 </div>
               </div>
             ))}
-            {messagesEndRef && <div ref={messagesEndRef} />}
+            {messagesEndRef && <div ref={messagesEndRef} className="h-1" />}
           </div>
         )}
       </ScrollArea>
