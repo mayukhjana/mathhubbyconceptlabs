@@ -1,10 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { GraduationCap, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
-
 const Footer = () => {
-  return (
-    <footer className="bg-mathdark text-white pt-12 pb-8">
+  return <footer className="bg-mathdark text-white pt-12 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
@@ -81,17 +78,11 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-2">
-              <li className="flex items-start space-x-2">
-                <MapPin size={18} className="shrink-0 mt-1" />
-                <span className="text-gray-300">205M Raja Rammohan Roy Road,Kolkata-700008</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Phone size={18} className="shrink-0" />
-                <span className="text-gray-300">+91  7595971688</span>
-              </li>
+              
+              
               <li className="flex items-center space-x-2">
                 <Mail size={18} className="shrink-0" />
-                <span className="text-gray-300"> mayukhjana27@gmail.com</span>
+                <span className="text-gray-300">admin@mathhub.online</span>
               </li>
             </ul>
           </div>
@@ -101,8 +92,6 @@ const Footer = () => {
           <p>© {new Date().getFullYear()} MathHub. All rights reserved.</p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
