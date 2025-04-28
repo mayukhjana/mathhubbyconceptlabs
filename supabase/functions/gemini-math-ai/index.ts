@@ -72,8 +72,9 @@ Here is the math question: ${question}`
 
     console.log("Calling Gemini API...");
     
-    // Call Google's Gemini API
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent', {
+    // Call Google's Gemini API with the updated model name
+    // Using gemini-1.5-flash instead of the deprecated gemini-pro-vision
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -113,8 +114,10 @@ Here is the math question: ${question}`
     if (!response.ok) {
       const errorData = await response.text();
       console.error(`Gemini API error: ${response.status} - ${errorData}`);
+      
+      // Return a more descriptive error that will be handled by the fallback
       return new Response(
-        JSON.stringify({ error: `Gemini API error: ${response.status}` }),
+        JSON.stringify({ error: `Gemini API error: ${response.status}. Falling back to alternative model.` }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

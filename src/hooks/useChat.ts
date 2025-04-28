@@ -224,6 +224,7 @@ export const useChat = () => {
       }
 
       try {
+        // First try with Gemini AI
         const { data: geminiData, error: geminiError } = await supabase.functions.invoke('gemini-math-ai', {
           body: {
             question,
@@ -234,6 +235,13 @@ export const useChat = () => {
         let answer;
         if (geminiError) {
           console.error("Error calling Gemini AI function:", geminiError);
+          
+          // Fallback to OpenAI
+          toast({
+            title: "Using backup AI model",
+            description: "The primary AI model is unavailable. Using backup model instead.",
+            variant: "default"
+          });
           
           const { data, error } = await supabase.functions.invoke('mathhub-ai', {
             body: {
@@ -282,7 +290,8 @@ export const useChat = () => {
           variant: "destructive"
         });
         
-        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        // Don't remove the user's message on error, so they can try again
+        // setMessages(prev => prev.filter(msg => msg.id !== tempId));
       }
       
     } catch (error: any) {
