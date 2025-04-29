@@ -1,9 +1,12 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, ChevronRight } from "lucide-react";
 import DashboardPreview from "@/components/DashboardPreview";
+
 const HeroSection = () => {
-  return <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-background pt-20 pb-20">
+  return (
+    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-background pt-20 pb-20">
       {/* Animated Math Symbols Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 w-full h-full opacity-5">
@@ -53,24 +56,46 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start animate-fade-in">
               <div className="flex -space-x-4">
                 <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  <img src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81" alt="Student A" className="w-full h-full object-cover" />
+                  <img 
+                    src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81" 
+                    alt="Student A" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" alt="Student B" className="w-full h-full object-cover" />
+                  <img 
+                    src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" 
+                    alt="Student B" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  
+                  <img 
+                    src="https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b" 
+                    alt="Student C" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  
+                  <img 
+                    src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce" 
+                    alt="Student D" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="w-12 h-12 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
-                  
+                  <img 
+                    src="https://images.unsplash.com/photo-1629872430082-93d8912beccf" 
+                    alt="Student E" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
               <div>
                 <div className="flex items-center gap-1 mb-1">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} fill="currentColor" className="w-5 h-5 text-yellow-400" />)}
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Star key={i} fill="currentColor" className="w-5 h-5 text-yellow-400" />
+                  ))}
                 </div>
                 <div className="text-sm text-mathdark/70 dark:text-gray-400">
                   <span className="font-semibold text-mathdark dark:text-white">4.9/5</span> from over 5,000 reviews
@@ -86,6 +111,8 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default HeroSection;
