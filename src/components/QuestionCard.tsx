@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Image } from "lucide-react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 
 interface QuestionCardProps {
   question: {
@@ -114,6 +116,32 @@ const QuestionCard = ({
       onAnswer(question.id, "");
     }
   };
+  
+  // Function to render text with LaTeX formulas
+  const renderWithLatex = (text: string) => {
+    try {
+      return text.split(/(\$[^$]+\$)/).map((part, index) => {
+        if (part.startsWith('$') && part.endsWith('$')) {
+          const math = part.slice(1, -1);
+          return (
+            <span
+              key={index}
+              dangerouslySetInnerHTML={{
+                __html: katex.renderToString(math, {
+                  throwOnError: false,
+                  displayMode: false
+                })
+              }}
+            />
+          );
+        }
+        return <span key={index}>{part}</span>;
+      });
+    } catch (error) {
+      console.error('Error rendering LaTeX:', error);
+      return text;
+    }
+  };
 
   return (
     <Card className={cn(
@@ -157,7 +185,7 @@ const QuestionCard = ({
               )}
             </div>
           ) : (
-            <p className="font-bold text-foreground text-base">{question.text}</p>
+            <p className="font-bold text-foreground text-base">{renderWithLatex(question.text)}</p>
           )}
         </CardDescription>
       </CardHeader>
@@ -190,7 +218,7 @@ const QuestionCard = ({
                   htmlFor={`question-${question.id}-option-${option.id}`}
                   className="cursor-pointer"
                 >
-                  {option.text}
+                  {renderWithLatex(option.text)}
                 </Label>
               </div>
             ))}
@@ -205,7 +233,9 @@ const QuestionCard = ({
                   onDoubleClick={() => handleRadioDoubleClick(option.id)}
                 >
                   <RadioGroupItem value={option.id} id={option.id} />
-                  <Label htmlFor={option.id}>{option.text}</Label>
+                  <Label htmlFor={option.id}>
+                    {renderWithLatex(option.text)}
+                  </Label>
                 </div>
               ))}
             </div>
