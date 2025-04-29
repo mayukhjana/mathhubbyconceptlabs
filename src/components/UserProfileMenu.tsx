@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,8 +44,6 @@ const UserProfileMenu = () => {
         }
         
         if (data && data.avatar_url) {
-          console.log("Avatar URL from database:", data.avatar_url);
-          
           // Add timestamp to URL to prevent caching
           const timestamp = new Date().getTime();
           // Ensure we have the correct URL format by checking for existing query parameters
@@ -57,7 +54,6 @@ const UserProfileMenu = () => {
           setAvatarUrl(url);
           setAvatarError(false);
         } else {
-          console.log("No avatar URL found in profile data:", data);
           setAvatarError(true);
         }
       } catch (error) {
@@ -67,9 +63,6 @@ const UserProfileMenu = () => {
     };
     
     fetchUserAvatar();
-    
-    // Set up polling to refresh avatar every 30 seconds
-    const intervalId = setInterval(fetchUserAvatar, 30000);
     
     // Listen for avatar update events
     const handleAvatarUpdated = (event: CustomEvent) => {
@@ -82,9 +75,8 @@ const UserProfileMenu = () => {
     
     window.addEventListener('avatar-updated', handleAvatarUpdated as EventListener);
     
-    // Clear interval and event listener on component unmount
+    // Clear event listener on component unmount
     return () => {
-      clearInterval(intervalId);
       window.removeEventListener('avatar-updated', handleAvatarUpdated as EventListener);
     };
   }, [user]);
