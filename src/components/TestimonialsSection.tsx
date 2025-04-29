@@ -1,7 +1,5 @@
-
 import { Users } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-
 const testimonials = [{
   name: "Rajiv Kumar",
   role: "CBSE Student, Class 12",
@@ -23,10 +21,8 @@ const testimonials = [{
   content: "The JEE papers with detailed solutions were instrumental in my preparation. I could practice anytime and track my improvement daily.",
   avatar: "https://images.unsplash.com/photo-1452960962994-acf4fd70b632?auto=format&fit=crop&w=150&h=150"
 }];
-
 const TestimonialsSection = () => {
-  return (
-    <section className="py-20 bg-white dark:bg-gray-900">
+  return <section className="py-20 bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-mathprimary/10 dark:bg-mathprimary/20 text-mathprimary dark:text-blue-300 text-sm mb-4">
@@ -41,8 +37,7 @@ const TestimonialsSection = () => {
         
         <Carousel className="w-full max-w-5xl mx-auto">
           <CarouselContent>
-            {testimonials.map((testimonial, index) => (
-              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+            {testimonials.map((testimonial, index) => <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                 <div className="h-full bg-gray-50 dark:bg-gray-800 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-gray-700 relative">
                   <div className="text-6xl text-mathprimary/20 dark:text-blue-500/20 absolute top-4 left-4">"</div>
                   <p className="text-gray-700 dark:text-gray-300 mb-6 relative z-10">
@@ -50,7 +45,7 @@ const TestimonialsSection = () => {
                   </p>
                   <div className="flex items-center gap-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-auto">
                     <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                      <img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover" />
+                      
                     </div>
                     <div>
                       <div className="font-medium text-mathdark dark:text-white">{testimonial.name}</div>
@@ -58,8 +53,7 @@ const TestimonialsSection = () => {
                     </div>
                   </div>
                 </div>
-              </CarouselItem>
-            ))}
+              </CarouselItem>)}
           </CarouselContent>
           <div className="flex justify-center mt-8">
             <CarouselPrevious className="static translate-y-0 mr-2" />
@@ -67,8 +61,6 @@ const TestimonialsSection = () => {
           </div>
         </Carousel>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default TestimonialsSection;
