@@ -53,7 +53,10 @@ const MathEditor: React.FC<MathEditorProps> = ({ value, onChange }) => {
             <span
               key={index}
               dangerouslySetInnerHTML={{
-                __html: katex.renderToString(math, { displayMode: false })
+                __html: katex.renderToString(math, {
+                  throwOnError: false,
+                  displayMode: false
+                })
               }}
             />
           );
@@ -108,6 +111,22 @@ const MathEditor: React.FC<MathEditorProps> = ({ value, onChange }) => {
           onClick={() => insertTemplate(templates.integral)}
         >
           Integral
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => insertTemplate(templates.summation)}
+        >
+          Summation
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => insertTemplate(templates.limit)}
+        >
+          Limit
         </Button>
       </div>
 
