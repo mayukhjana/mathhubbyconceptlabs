@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,13 +12,37 @@ import { toast } from 'sonner';
 interface AvatarUploaderProps {
   avatarUrl: string | null;
   onAvatarUpdate?: (url: string) => void;
+  uploading?: boolean;
+  setUploading?: (uploading: boolean) => void;
 }
 
-const AvatarUploader = ({ avatarUrl, onAvatarUpdate }: AvatarUploaderProps) => {
+const AvatarUploader = ({ 
+  avatarUrl, 
+  onAvatarUpdate, 
+  uploading: externalUploading, 
+  setUploading: setExternalUploading 
+}: AvatarUploaderProps) => {
   const { user } = useAuth();
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(avatarUrl);
+  const [internalUploading, setInternalUploading] = useState<boolean>(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<boolean>(false);
+  
+  const uploading = externalUploading !== undefined ? externalUploading : internalUploading;
+  const setUploading = setExternalUploading || setInternalUploading;
+  
+  useEffect(() => {
+    if (avatarUrl) {
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const url = avatarUrl.includes('?') 
+        ? `${avatarUrl}&t=${timestamp}`
+        : `${avatarUrl}?t=${timestamp}`;
+      setPreviewUrl(url);
+      setImageError(false);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [avatarUrl]);
 
   const getInitials = () => {
     if (user?.email) {
@@ -45,15 +69,16 @@ const AvatarUploader = ({ avatarUrl, onAvatarUpdate }: AvatarUploaderProps) => {
       
       if (url) {
         console.log("Avatar uploaded successfully, URL:", url);
-        toast.success('Avatar updated successfully');
         
-        // Update global state via event
-        const event = new CustomEvent('avatar-updated', { detail: { url }});
-        window.dispatchEvent(event);
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const finalUrl = url.includes('?') 
+          ? `${url}&t=${timestamp}` 
+          : `${url}?t=${timestamp}`;
         
         // Call the callback if provided
         if (onAvatarUpdate) {
-          onAvatarUpdate(url);
+          onAvatarUpdate(finalUrl);
         }
       }
     } catch (error: any) {
@@ -81,6 +106,7 @@ const AvatarUploader = ({ avatarUrl, onAvatarUpdate }: AvatarUploaderProps) => {
             src={previewUrl} 
             alt="Profile" 
             onError={handleImageError}
+            crossOrigin="anonymous"
           />
         ) : (
           <AvatarFallback className="bg-mathprimary text-xl text-white">

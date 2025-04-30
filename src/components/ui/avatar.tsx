@@ -27,12 +27,11 @@ const AvatarImage = React.forwardRef<
     ref={ref}
     className={cn("aspect-square h-full w-full object-cover", className)}
     {...props}
+    crossOrigin="anonymous"
     onError={(e) => {
       console.warn("Avatar image failed to load:", props.src);
-      // Don't hide the image, let the Fallback handle it
-      if (props.onError) {
-        props.onError(e);
-      }
+      e.currentTarget.style.display = 'none';
+      // Don't call onError to avoid infinite recursion if fallback also fails
     }}
   />
 ))
