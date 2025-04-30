@@ -150,7 +150,7 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
       .upload(fileName, fileBlob, {
         contentType: contentType,
         upsert: true,
-        cacheControl: '3600'
+        cacheControl: '0' // Set to 0 to prevent caching
       });
     
     if (error) {

@@ -67,7 +67,6 @@ const UserProfileMenu = () => {
     
     // Listen for avatar update events
     const handleAvatarUpdated = (event: CustomEvent) => {
-      console.log("Avatar updated event received:", event.detail);
       if (event.detail?.url) {
         const timestamp = new Date().getTime();
         const url = event.detail.url.includes('?') 

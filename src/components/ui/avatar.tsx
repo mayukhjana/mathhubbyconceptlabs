@@ -29,7 +29,6 @@ const AvatarImage = React.forwardRef<
     {...props}
     onError={(e) => {
       console.warn("Avatar image failed to load:", props.src);
-      e.currentTarget.style.display = 'none';
       if (props.onError) {
         props.onError(e);
       }
