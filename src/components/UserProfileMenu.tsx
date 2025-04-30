@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -68,7 +69,12 @@ const UserProfileMenu = () => {
     const handleAvatarUpdated = (event: CustomEvent) => {
       console.log("Avatar updated event received:", event.detail);
       if (event.detail?.url) {
-        setAvatarUrl(event.detail.url);
+        const timestamp = new Date().getTime();
+        const url = event.detail.url.includes('?') 
+          ? `${event.detail.url}&t=${timestamp}` 
+          : `${event.detail.url}?t=${timestamp}`;
+        
+        setAvatarUrl(url);
         setAvatarError(false);
       }
     };
@@ -115,17 +121,18 @@ const UserProfileMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            {avatarUrl && !avatarError && (
+            {avatarUrl && !avatarError ? (
               <AvatarImage 
                 src={avatarUrl} 
                 alt="User avatar"
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />
+            ) : (
+              <AvatarFallback className="bg-mathprimary text-white">
+                {getInitials()}
+              </AvatarFallback>
             )}
-            <AvatarFallback className="bg-mathprimary text-white">
-              {getInitials()}
-            </AvatarFallback>
           </Avatar>
           {userIsPremium && (
             <div className="absolute -top-1 -right-1 bg-yellow-500 text-white rounded-full p-0.5">
