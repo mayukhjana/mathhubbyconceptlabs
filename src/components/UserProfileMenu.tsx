@@ -73,6 +73,7 @@ const UserProfileMenu = () => {
           ? `${event.detail.url}&t=${timestamp}` 
           : `${event.detail.url}?t=${timestamp}`;
         
+        console.log("Setting new avatar URL:", url);
         setAvatarUrl(url);
         setAvatarError(false);
       }
@@ -105,6 +106,7 @@ const UserProfileMenu = () => {
   };
   
   const handleImageLoad = () => {
+    console.log("Avatar image loaded successfully");
     setAvatarLoaded(true);
     setAvatarError(false);
   };

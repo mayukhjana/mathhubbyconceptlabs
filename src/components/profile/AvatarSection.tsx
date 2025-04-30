@@ -13,6 +13,10 @@ export const AvatarSection = ({
   uploadingAvatar, 
   setUploadingAvatar 
 }: AvatarSectionProps) => {
+  const handleAvatarUpdate = (url: string) => {
+    console.log("Avatar updated in AvatarSection:", url);
+  };
+
   return (
     <Card className="col-span-1">
       <CardHeader>
@@ -21,7 +25,7 @@ export const AvatarSection = ({
       <CardContent className="flex flex-col items-center justify-center space-y-4">
         <AvatarUploader 
           avatarUrl={avatarUrl} 
-          onAvatarUpdate={() => {}} // Handled via event system
+          onAvatarUpdate={handleAvatarUpdate}
         />
       </CardContent>
     </Card>

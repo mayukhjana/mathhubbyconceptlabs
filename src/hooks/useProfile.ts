@@ -46,6 +46,7 @@ export const useProfile = () => {
               ? `${data.avatar_url}&t=${timestamp}`
               : `${data.avatar_url}?t=${timestamp}`;
             setAvatarUrl(url);
+            console.log("Profile loaded avatar URL:", url);
           }
         }
       } catch (error) {
@@ -54,6 +55,26 @@ export const useProfile = () => {
     };
     
     fetchUserProfile();
+    
+    // Listen for avatar update events
+    const handleAvatarUpdated = (event: CustomEvent) => {
+      if (event.detail?.url) {
+        const timestamp = new Date().getTime();
+        const url = event.detail.url.includes('?') 
+          ? `${event.detail.url}&t=${timestamp}` 
+          : `${event.detail.url}?t=${timestamp}`;
+        
+        console.log("Profile hook received avatar update event:", url);
+        setAvatarUrl(url);
+      }
+    };
+    
+    window.addEventListener('avatar-updated', handleAvatarUpdated as EventListener);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('avatar-updated', handleAvatarUpdated as EventListener);
+    };
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {

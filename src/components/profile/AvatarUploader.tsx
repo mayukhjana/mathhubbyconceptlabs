@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ const AvatarUploader = ({ avatarUrl, onAvatarUpdate }: AvatarUploaderProps) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState<boolean>(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(avatarUrl);
+  const [imageError, setImageError] = useState<boolean>(false);
 
   const getInitials = () => {
     if (user?.email) {
@@ -37,11 +38,13 @@ const AvatarUploader = ({ avatarUrl, onAvatarUpdate }: AvatarUploaderProps) => {
     // Create local preview immediately for better UX
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    setImageError(false);
     
     try {
       const url = await uploadUserAvatar(file, user.id);
       
       if (url) {
+        console.log("Avatar uploaded successfully, URL:", url);
         toast.success('Avatar updated successfully');
         
         // Update global state via event
@@ -59,22 +62,25 @@ const AvatarUploader = ({ avatarUrl, onAvatarUpdate }: AvatarUploaderProps) => {
       
       // Revert to previous avatar on error
       setPreviewUrl(avatarUrl);
+      setImageError(true);
     } finally {
       setUploading(false);
     }
   };
 
+  const handleImageError = useCallback(() => {
+    console.error("Error loading avatar preview image");
+    setImageError(true);
+  }, []);
+
   return (
     <div className="flex flex-col items-center space-y-4">
       <Avatar className="h-24 w-24 border-2 border-primary">
-        {previewUrl ? (
+        {previewUrl && !imageError ? (
           <AvatarImage 
             src={previewUrl} 
             alt="Profile" 
-            onError={() => {
-              console.error("Error loading avatar image");
-              setPreviewUrl(null);
-            }}
+            onError={handleImageError}
           />
         ) : (
           <AvatarFallback className="bg-mathprimary text-xl text-white">
