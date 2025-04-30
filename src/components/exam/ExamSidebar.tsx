@@ -68,13 +68,17 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
     setIsOpen(!isOpen);
   };
   
-  // Group questions by subject (using chapter field as subject)
+  // Group questions by subject (using order_number to group them)
   const groupedQuestions = questions.reduce<Record<string, Question[]>>((groups, question) => {
-    const subject = question.chapter || 'General';
-    if (!groups[subject]) {
-      groups[subject] = [];
+    // Use question order_number to group questions (1-10, 11-20, etc.)
+    const groupSize = 10;
+    const groupNumber = Math.floor((question.order_number - 1) / groupSize) + 1;
+    const groupName = `Questions ${(groupNumber - 1) * groupSize + 1}-${groupNumber * groupSize}`;
+    
+    if (!groups[groupName]) {
+      groups[groupName] = [];
     }
-    groups[subject].push(question);
+    groups[groupName].push(question);
     return groups;
   }, {});
   
