@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Trophy, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,13 +43,13 @@ export const ExamResults = ({
   
   const incorrectAnswers = attemptedCount - correctAnswers;
   
-  // Group questions by topic
+  // Group questions by topic - fixed error by not accessing chapter/category directly
   const getTopics = () => {
     const topicMap = new Map();
     
     questions.forEach(q => {
-      // Using chapter as topic, fallback to "General" if not available
-      const topic = q.chapter || q.category || "General";
+      // Using a default topic name since Question doesn't have chapter/category
+      const topic = "General"; // Fixed to use a default value instead of undefined properties
       
       if (!topicMap.has(topic)) {
         topicMap.set(topic, {
@@ -86,8 +85,8 @@ export const ExamResults = ({
           stats.obtainedScore -= q.negative_marks;
         }
         
-        // Assuming average time per question if actual time not available
-        stats.timeTaken += q.time_taken || (timeTaken / attemptedCount);
+        // Fixed: Don't try to access time_taken property which doesn't exist
+        stats.timeTaken += timeTaken / attemptedCount; // Using average time instead
       }
     });
     
@@ -319,9 +318,9 @@ export const ExamResults = ({
                   
                   <p className="text-left mb-3">{question.question_text}</p>
                   
-                  {question.image_url && (
+                  {question.question_image_url && (
                     <img 
-                      src={question.image_url} 
+                      src={question.question_image_url} 
                       alt="Question" 
                       className="max-h-40 object-contain mx-auto mb-3" 
                     />
@@ -378,4 +377,3 @@ export const ExamResults = ({
     </div>
   );
 };
-
