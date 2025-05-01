@@ -259,34 +259,25 @@ export const ExamResults = ({
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th className="py-2 px-3 text-left">Topic</th>
-                    <th className="py-2 px-3 text-center">Questions</th>
-                    <th className="py-2 px-3 text-center">Correct</th>
-                    <th className="py-2 px-3 text-center">Score</th>
+                    
+                    
+                    
+                    
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {topicStats.map((topic, index) => <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}>
-                      <td className="py-2 px-3">{topic.topic}</td>
-                      <td className="py-2 px-3 text-center">{topic.total}</td>
-                      <td className="py-2 px-3 text-center">
-                        {topic.correct}/{topic.total}
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        {(topic.obtainedScore / topic.maxScore * 100).toFixed(1)}%
-                      </td>
+                      
+                      
+                      
+                      
                     </tr>)}
                 </tbody>
               </table>
             </div>
             
             {/* Personalized feedback */}
-            <div className="mt-6 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border">
-              <h3 className="font-bold mb-2">Personalized Feedback</h3>
-              <p className="mb-3">{getFeedbackMessage()}</p>
-              <h4 className="font-semibold mt-3 mb-1">Recommendation:</h4>
-              <p>{getStudyRecommendations()}</p>
-            </div>
+            
           </div>
         </div>
         
