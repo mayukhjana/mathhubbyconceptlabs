@@ -318,9 +318,9 @@ export const ExamResults = ({
                   
                   <p className="text-left mb-3">{question.question_text}</p>
                   
-                  {question.question_image_url && (
+                  {question.is_image_question && question.image_url && (
                     <img 
-                      src={question.question_image_url} 
+                      src={question.image_url} 
                       alt="Question" 
                       className="max-h-40 object-contain mx-auto mb-3" 
                     />
