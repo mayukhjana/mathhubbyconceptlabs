@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -20,75 +20,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarLoaded, setAvatarLoaded] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
   useEffect(() => {
     // In a real app, this would fetch premium status from a subscription service
     setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
-    
-    // Fetch user avatar if authenticated
-    const fetchUserAvatar = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', user.id)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching avatar URL:", error);
-          setAvatarError(true);
-          return;
-        }
-        
-        if (data && data.avatar_url) {
-          // Add timestamp to URL to prevent caching
-          const timestamp = new Date().getTime();
-          // Ensure we have the correct URL format by checking for existing query parameters
-          const url = data.avatar_url.includes('?') 
-            ? `${data.avatar_url}&t=${timestamp}` 
-            : `${data.avatar_url}?t=${timestamp}`;
-            
-          setAvatarUrl(url);
-          setAvatarError(false);
-        } else {
-          setAvatarError(true);
-        }
-      } catch (error) {
-        console.error('Error fetching user avatar:', error);
-        setAvatarError(true);
-      }
-    };
-    
-    fetchUserAvatar();
-    
-    // Listen for avatar update events
-    const handleAvatarUpdated = (event: CustomEvent) => {
-      if (event.detail?.url) {
-        const timestamp = event.detail.timestamp || new Date().getTime();
-        const url = event.detail.url.includes('?') 
-          ? `${event.detail.url}&t=${timestamp}` 
-          : `${event.detail.url}?t=${timestamp}`;
-        
-        console.log("UserProfileMenu received avatar update event:", url);
-        setAvatarUrl(url);
-        setAvatarError(false);
-        setAvatarLoaded(false);
-      }
-    };
-    
-    window.addEventListener('avatar-updated', handleAvatarUpdated as EventListener);
-    
-    // Clear event listener on component unmount
-    return () => {
-      window.removeEventListener('avatar-updated', handleAvatarUpdated as EventListener);
-    };
   }, [user]);
   
   if (!isAuthenticated) {
@@ -109,35 +46,14 @@ const UserProfileMenu = () => {
     navigate('/premium');
   };
   
-  const handleImageLoad = () => {
-    console.log("Avatar image loaded successfully in UserProfileMenu");
-    setAvatarLoaded(true);
-    setAvatarError(false);
-  };
-  
-  const handleImageError = () => {
-    console.error("Error loading avatar image in UserProfileMenu from URL:", avatarUrl);
-    setAvatarLoaded(false);
-    setAvatarError(true);
-  };
-  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            {avatarUrl && !avatarError ? (
-              <AvatarImage 
-                src={avatarUrl} 
-                alt="User avatar"
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-              />
-            ) : (
-              <AvatarFallback className="bg-mathprimary text-white">
-                {getInitials()}
-              </AvatarFallback>
-            )}
+            <AvatarFallback className="bg-mathprimary text-white">
+              {getInitials()}
+            </AvatarFallback>
           </Avatar>
           {userIsPremium && (
             <div className="absolute -top-1 -right-1 bg-yellow-500 text-white rounded-full p-0.5">

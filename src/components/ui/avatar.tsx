@@ -27,21 +27,6 @@ const AvatarImage = React.forwardRef<
     ref={ref}
     className={cn("aspect-square h-full w-full object-cover", className)}
     {...props}
-    crossOrigin="anonymous"
-    onError={(e) => {
-      console.warn("Avatar image failed to load:", props.src);
-      // Hide the image and show fallback when error occurs
-      e.currentTarget.style.display = 'none';
-      
-      // Find the parent AvatarRoot and ensure fallback is shown
-      const avatarRoot = e.currentTarget.closest('[data-radix-avatar-root]');
-      if (avatarRoot) {
-        const fallback = avatarRoot.querySelector('[data-radix-avatar-fallback]');
-        if (fallback) {
-          (fallback as HTMLElement).style.display = 'flex';
-        }
-      }
-    }}
   />
 ))
 AvatarImage.displayName = AvatarPrimitive.Image.displayName

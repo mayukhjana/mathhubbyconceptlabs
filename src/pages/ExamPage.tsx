@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -456,71 +455,16 @@ const ExamPage = () => {
                 </div>
               </>
             ) : (
-              <div className={`flex ${isDesktop ? 'flex-row gap-8' : 'flex-col'}`}>
-                {isDesktop && (
-                  <div className="w-80 shrink-0">
-                    <div className="sticky top-4 bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border">
-                      <h3 className="text-lg font-medium mb-4">Questions Overview</h3>
-                      <div className="space-y-4">
-                        {Object.entries(
-                          exam.questions.reduce<Record<string, Question[]>>((groups, question) => {
-                            const groupSize = 10;
-                            const groupNumber = Math.floor((question.order_number - 1) / groupSize) + 1;
-                            const groupName = `Questions ${(groupNumber - 1) * groupSize + 1}-${groupNumber * groupSize}`;
-                            
-                            if (!groups[groupName]) {
-                              groups[groupName] = [];
-                            }
-                            groups[groupName].push(question);
-                            return groups;
-                          }, {})
-                        ).map(([subject, subjectQuestions]) => (
-                          <div key={subject} className="space-y-2">
-                            <h4 className="text-sm font-medium bg-gray-100 dark:bg-gray-800 p-2 rounded">{subject}</h4>
-                            <div className="grid grid-cols-5 gap-2">
-                              {subjectQuestions.map((question, idx) => {
-                                const questionIndex = exam.questions.findIndex(q => q.id === question.id);
-                                const userAnswer = userAnswers[question.id];
-                                const isCorrect = questionsWithResults[questionIndex]?.isCorrect;
-                                
-                                let bgColor = "bg-gray-200 text-gray-500";
-                                if (userAnswer) {
-                                  bgColor = isCorrect 
-                                    ? "bg-green-500 text-white" 
-                                    : "bg-red-500 text-white";
-                                }
-                                
-                                return (
-                                  <Button
-                                    key={question.id}
-                                    variant="outline"
-                                    size="sm"
-                                    className={`h-8 w-8 p-0 flex items-center justify-center font-medium ${bgColor}`}
-                                  >
-                                    {questionIndex + 1}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div className="flex-grow">
-                  <ExamResults
-                    score={score}
-                    timeTaken={timeTaken}
-                    totalObtainedMarks={totalObtainedMarks}
-                    totalPossibleMarks={totalPossibleMarks}
-                    questions={questionsWithResults}
-                    userAnswers={userAnswers}
-                    resultSaved={resultSaved}
-                    formatTime={formatTime}
-                  />
-                </div>
-              </div>
+              <ExamResults
+                score={score}
+                timeTaken={timeTaken}
+                totalObtainedMarks={totalObtainedMarks}
+                totalPossibleMarks={totalPossibleMarks}
+                questions={questionsWithResults}
+                userAnswers={userAnswers}
+                resultSaved={resultSaved}
+                formatTime={formatTime}
+              />
             )}
           </div>
         </main>
