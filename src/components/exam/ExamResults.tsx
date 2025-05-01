@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, Trophy, CheckCircle, XCircle } from "lucide-react";
+import { ArrowRight, BarChart3, Trophy, CheckCircle, XCircle, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import QuestionCard from "@/components/QuestionCard";
 import type { Question } from "@/services/exam/types";
@@ -129,6 +129,37 @@ export const ExamResults = ({
     return `Focus on improving your understanding of ${weakTopics.join(', ')}.`;
   };
 
+  const handleDownloadSolutions = () => {
+    // Create a text document with all questions and answers
+    let solutionsText = "EXAM SOLUTIONS\n\n";
+    
+    questions.forEach((question, index) => {
+      solutionsText += `Question ${index + 1}: ${question.question_text}\n`;
+      
+      if (question.is_image_question && question.image_url) {
+        solutionsText += `[Image Question - Image URL: ${question.image_url}]\n`;
+      }
+      
+      solutionsText += `Option A: ${question.option_a}\n`;
+      solutionsText += `Option B: ${question.option_b}\n`;
+      solutionsText += `Option C: ${question.option_c}\n`;
+      solutionsText += `Option D: ${question.option_d}\n`;
+      solutionsText += `Correct Answer: ${question.correct_answer}\n`;
+      solutionsText += `Your Answer: ${userAnswers[question.id] || "Not answered"}\n\n`;
+    });
+    
+    // Create a blob and trigger download
+    const blob = new Blob([solutionsText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'exam-solutions.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
       <div className="max-w-md mx-auto">
@@ -195,16 +226,29 @@ export const ExamResults = ({
             
             <div className="mb-6">
               <h3 className="font-medium mb-3">Solution and Conceptwise Analysis</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Button 
                   variant="outline" 
                   onClick={() => setShowQuestionAnalysis(!showQuestionAnalysis)}
                   className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md flex items-center gap-3 h-auto"
                 >
                   <div className="bg-blue-100 dark:bg-blue-800/50 p-2 rounded">
-                    <BarChart3 className="h-5 w-5 text-blue-500 dark:text-blue-300" />
+                    <FileText className="h-5 w-5 text-blue-500 dark:text-blue-300" />
                   </div>
-                  <div className="text-sm text-left">Questionwise Analysis and Solutions</div>
+                  <div className="text-sm text-left">
+                    {showQuestionAnalysis ? "Hide Questionwise Analysis" : "Click to get Questionwise Analysis"}
+                  </div>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadSolutions}
+                  className="bg-green-50 dark:bg-green-900/20 p-4 rounded-md flex items-center gap-3 h-auto"
+                >
+                  <div className="bg-green-100 dark:bg-green-800/50 p-2 rounded">
+                    <Download className="h-5 w-5 text-green-500 dark:text-green-300" />
+                  </div>
+                  <div className="text-sm text-left">Download Solutions</div>
                 </Button>
               </div>
             </div>
