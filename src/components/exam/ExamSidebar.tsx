@@ -1,16 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarHeader, 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton
-} from "@/components/ui/sidebar";
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, BookOpen, HelpCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { Question } from '@/services/exam/types';
 
 interface QuestionStatus {
@@ -26,6 +19,7 @@ interface ExamSidebarProps {
   markedQuestions?: Set<string>;
   onQuestionSelect: (index: number) => void;
   examTitle: string;
+  showSidebar?: boolean; // To control visibility after exam completion
 }
 
 export const ExamSidebar: React.FC<ExamSidebarProps> = ({
@@ -34,9 +28,19 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
   userAnswers,
   markedQuestions = new Set(),
   onQuestionSelect,
-  examTitle
+  examTitle,
+  showSidebar = true
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  
+  // Default to open on desktop
+  useEffect(() => {
+    if (!isMobile && !isTablet) {
+      setIsOpen(true);
+    }
+  }, [isMobile, isTablet]);
   
   const getQuestionStatus = (questionId: string): QuestionStatus => {
     const isAnswered = userAnswers[questionId] !== undefined;
@@ -81,38 +85,46 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
     groups[groupName].push(question);
     return groups;
   }, {});
+
+  if (!showSidebar) {
+    return null;
+  }
   
   return (
     <>
-      {/* Mobile button to toggle sidebar */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="fixed top-16 left-0 z-40 md:hidden p-1 h-8 w-8 rounded-r-md border-l-0"
-        onClick={toggleSidebar}
-      >
-        {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-      </Button>
+      {/* Mobile/tablet button to toggle sidebar */}
+      {(isMobile || isTablet) && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="fixed top-16 left-0 z-40 p-1 h-8 w-8 rounded-r-md border-l-0"
+          onClick={toggleSidebar}
+        >
+          {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        </Button>
+      )}
       
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-30 transform transition-transform duration-300 ease-in-out",
-          "flex flex-col w-64 bg-white border-r shadow-lg pt-14",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          "md:translate-x-0 md:pt-0 md:static md:z-0",
-          "dark:bg-gray-900 dark:border-gray-800"
+          "flex flex-col w-64 md:w-72 lg:w-80 bg-white dark:bg-gray-900 border-r shadow-lg pt-14",
+          (isMobile || isTablet) ? (isOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0",
+          (isMobile || isTablet) ? "" : "static z-0 pt-0",
+          "dark:border-gray-800"
         )}
       >
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="font-semibold text-sm truncate">{examTitle}</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden p-1 h-8 w-8"
-            onClick={toggleSidebar}
-          >
-            <ChevronLeft size={16} />
-          </Button>
+          {(isMobile || isTablet) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-1 h-8 w-8"
+              onClick={toggleSidebar}
+            >
+              <ChevronLeft size={16} />
+            </Button>
+          )}
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -142,7 +154,7 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
             <div key={subject} className="space-y-2">
               <h3 className="text-sm font-medium bg-gray-100 dark:bg-gray-800 p-2 rounded">{subject}</h3>
               <div className="grid grid-cols-5 gap-2">
-                {subjectQuestions.map((question, idx) => {
+                {subjectQuestions.map((question) => {
                   const questionIndex = questions.findIndex(q => q.id === question.id);
                   const status = getQuestionStatus(question.id);
                   const statusColor = getStatusColor(status);
@@ -160,7 +172,7 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
                       )}
                       onClick={() => {
                         onQuestionSelect(questionIndex);
-                        if (window.innerWidth < 768) {
+                        if (isMobile || isTablet) {
                           setIsOpen(false);
                         }
                       }}
@@ -198,3 +210,20 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
     </>
   );
 };
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
+
+  return matches;
+}

@@ -30,8 +30,17 @@ const AvatarImage = React.forwardRef<
     crossOrigin="anonymous"
     onError={(e) => {
       console.warn("Avatar image failed to load:", props.src);
+      // Hide the image and show fallback when error occurs
       e.currentTarget.style.display = 'none';
-      // Don't call onError to avoid infinite recursion if fallback also fails
+      
+      // Find the parent AvatarRoot and ensure fallback is shown
+      const avatarRoot = e.currentTarget.closest('[data-radix-avatar-root]');
+      if (avatarRoot) {
+        const fallback = avatarRoot.querySelector('[data-radix-avatar-fallback]');
+        if (fallback) {
+          (fallback as HTMLElement).style.display = 'flex';
+        }
+      }
     }}
   />
 ))

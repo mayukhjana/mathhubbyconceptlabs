@@ -28,11 +28,13 @@ import { Link } from "react-router-dom";
 import { fetchExamById, fetchQuestionsForExam } from "@/services/examService";
 import { checkExamAttempted } from "@/services/exam/results"; 
 import type { Question } from "@/services/exam/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ExamPage = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
@@ -51,6 +53,11 @@ const ExamPage = () => {
   const [totalObtainedMarks, setTotalObtainedMarks] = useState(0);
   const [totalPossibleMarks, setTotalPossibleMarks] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [questionsWithResults, setQuestionsWithResults] = useState<any[]>([]);
+  
+  // Detect if using tablet
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   
   const [exam, setExam] = useState<{
     id: string;
@@ -196,7 +203,7 @@ const ExamPage = () => {
     let calculatedObtainedMarks = 0;
     let calculatedPossibleMarks = 0;
     
-    const questionsWithResults = exam.questions.map(question => {
+    const updatedQuestionsWithResults = exam.questions.map(question => {
       const userAnswer = userAnswers[question.id];
       if (!userAnswer) {
         calculatedPossibleMarks += question.marks;
@@ -241,6 +248,8 @@ const ExamPage = () => {
         isAttempted: true
       };
     });
+    
+    setQuestionsWithResults(updatedQuestionsWithResults);
     
     const calculatedScore = Math.round((correctAnswers / (exam.questions.length || 1)) * 100);
     setScore(calculatedScore);
@@ -355,7 +364,7 @@ const ExamPage = () => {
       <Navbar />
       
       <div className="flex flex-1">
-        {/* Sidebar */}
+        {/* Sidebar - always visible on desktop, toggleable on mobile/tablet */}
         <ExamSidebar 
           questions={exam.questions}
           currentQuestionIndex={currentQuestionIndex}
@@ -363,11 +372,12 @@ const ExamPage = () => {
           markedQuestions={markedForReview}
           onQuestionSelect={handleQuestionSelect}
           examTitle={exam.title}
+          showSidebar={isDesktop || (!examCompleted && (isMobile || isTablet))}
         />
         
         {/* Main content */}
-        <main className="flex-grow py-6 w-full">
-          <div className="container mx-auto px-4">
+        <main className={`flex-grow py-6 w-full ${isTablet ? 'px-6' : ''}`}>
+          <div className={`container mx-auto ${isMobile ? 'px-4' : isTablet ? 'px-6' : 'px-4 lg:px-8'}`}>
             {!examCompleted ? (
               <>
                 <ExamHeader
@@ -446,16 +456,71 @@ const ExamPage = () => {
                 </div>
               </>
             ) : (
-              <ExamResults
-                score={score}
-                timeTaken={timeTaken}
-                totalObtainedMarks={totalObtainedMarks}
-                totalPossibleMarks={totalPossibleMarks}
-                questions={exam.questions}
-                userAnswers={userAnswers}
-                resultSaved={resultSaved}
-                formatTime={formatTime}
-              />
+              <div className={`flex ${isDesktop ? 'flex-row gap-8' : 'flex-col'}`}>
+                {isDesktop && (
+                  <div className="w-80 shrink-0">
+                    <div className="sticky top-4 bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border">
+                      <h3 className="text-lg font-medium mb-4">Questions Overview</h3>
+                      <div className="space-y-4">
+                        {Object.entries(
+                          exam.questions.reduce<Record<string, Question[]>>((groups, question) => {
+                            const groupSize = 10;
+                            const groupNumber = Math.floor((question.order_number - 1) / groupSize) + 1;
+                            const groupName = `Questions ${(groupNumber - 1) * groupSize + 1}-${groupNumber * groupSize}`;
+                            
+                            if (!groups[groupName]) {
+                              groups[groupName] = [];
+                            }
+                            groups[groupName].push(question);
+                            return groups;
+                          }, {})
+                        ).map(([subject, subjectQuestions]) => (
+                          <div key={subject} className="space-y-2">
+                            <h4 className="text-sm font-medium bg-gray-100 dark:bg-gray-800 p-2 rounded">{subject}</h4>
+                            <div className="grid grid-cols-5 gap-2">
+                              {subjectQuestions.map((question, idx) => {
+                                const questionIndex = exam.questions.findIndex(q => q.id === question.id);
+                                const userAnswer = userAnswers[question.id];
+                                const isCorrect = questionsWithResults[questionIndex]?.isCorrect;
+                                
+                                let bgColor = "bg-gray-200 text-gray-500";
+                                if (userAnswer) {
+                                  bgColor = isCorrect 
+                                    ? "bg-green-500 text-white" 
+                                    : "bg-red-500 text-white";
+                                }
+                                
+                                return (
+                                  <Button
+                                    key={question.id}
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 flex items-center justify-center font-medium ${bgColor}`}
+                                  >
+                                    {questionIndex + 1}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex-grow">
+                  <ExamResults
+                    score={score}
+                    timeTaken={timeTaken}
+                    totalObtainedMarks={totalObtainedMarks}
+                    totalPossibleMarks={totalPossibleMarks}
+                    questions={questionsWithResults}
+                    userAnswers={userAnswers}
+                    resultSaved={resultSaved}
+                    formatTime={formatTime}
+                  />
+                </div>
+              </div>
             )}
           </div>
         </main>
@@ -499,5 +564,22 @@ const ExamPage = () => {
     </div>
   );
 };
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
+
+  return matches;
+}
 
 export default ExamPage;

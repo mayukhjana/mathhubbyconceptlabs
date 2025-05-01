@@ -15,6 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
@@ -23,6 +24,7 @@ const UserProfileMenu = () => {
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     // In a real app, this would fetch premium status from a subscription service
@@ -41,6 +43,7 @@ const UserProfileMenu = () => {
           
         if (error) {
           console.error("Error fetching avatar URL:", error);
+          setAvatarError(true);
           return;
         }
         
@@ -68,14 +71,15 @@ const UserProfileMenu = () => {
     // Listen for avatar update events
     const handleAvatarUpdated = (event: CustomEvent) => {
       if (event.detail?.url) {
-        const timestamp = new Date().getTime();
+        const timestamp = event.detail.timestamp || new Date().getTime();
         const url = event.detail.url.includes('?') 
           ? `${event.detail.url}&t=${timestamp}` 
           : `${event.detail.url}?t=${timestamp}`;
         
-        console.log("Setting new avatar URL:", url);
+        console.log("UserProfileMenu received avatar update event:", url);
         setAvatarUrl(url);
         setAvatarError(false);
+        setAvatarLoaded(false);
       }
     };
     
@@ -106,13 +110,13 @@ const UserProfileMenu = () => {
   };
   
   const handleImageLoad = () => {
-    console.log("Avatar image loaded successfully");
+    console.log("Avatar image loaded successfully in UserProfileMenu");
     setAvatarLoaded(true);
     setAvatarError(false);
   };
   
   const handleImageError = () => {
-    console.error("Error loading avatar image from URL:", avatarUrl);
+    console.error("Error loading avatar image in UserProfileMenu from URL:", avatarUrl);
     setAvatarLoaded(false);
     setAvatarError(true);
   };

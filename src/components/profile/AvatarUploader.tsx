@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Loader2, Upload, User } from 'lucide-react';
 import { uploadUserAvatar } from '@/services/exam/storage/operations';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AvatarUploaderProps {
   avatarUrl: string | null;
@@ -26,6 +27,8 @@ const AvatarUploader = ({
   const [internalUploading, setInternalUploading] = useState<boolean>(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<boolean>(false);
+  const isMobile = useIsMobile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const uploading = externalUploading !== undefined ? externalUploading : internalUploading;
   const setUploading = setExternalUploading || setInternalUploading;
@@ -90,6 +93,10 @@ const AvatarUploader = ({
       setImageError(true);
     } finally {
       setUploading(false);
+      // Clear the file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -100,13 +107,13 @@ const AvatarUploader = ({
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <Avatar className="h-24 w-24 border-2 border-primary">
+      <Avatar className={`border-2 border-primary ${isMobile ? 'h-20 w-20' : 'h-24 w-24'}`}>
         {previewUrl && !imageError ? (
           <AvatarImage 
             src={previewUrl} 
             alt="Profile" 
             onError={handleImageError}
-            crossOrigin="anonymous"
+            className="aspect-square object-cover"
           />
         ) : (
           <AvatarFallback className="bg-mathprimary text-xl text-white">
@@ -138,6 +145,7 @@ const AvatarUploader = ({
         </Label>
         <Input 
           id="avatar-upload" 
+          ref={fileInputRef}
           type="file" 
           accept="image/*"
           className="hidden" 
