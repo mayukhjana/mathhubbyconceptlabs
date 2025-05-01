@@ -1,9 +1,10 @@
 
 import React, { useRef } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import ChatInterface from "./mathHub/ChatInterface";
 import ChatInputForm from "./mathHub/ChatInputForm";
 import ChatHistory from "./mathHub/ChatHistory";
@@ -26,7 +27,8 @@ const MathHubAI: React.FC = () => {
     removeImage,
     handleSubmit,
     clearHistory,
-    loadMoreHistory
+    loadMoreHistory,
+    startNewChat
   } = useChat();
 
   const [activeTab, setActiveTab] = React.useState("new-chat");
@@ -70,10 +72,23 @@ const MathHubAI: React.FC = () => {
           <TabsContent value="new-chat">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-xl">Math AI Assistant</CardTitle>
-                <CardDescription>
-                  Ask any math question or upload a math problem image
-                </CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-xl">Math AI Assistant</CardTitle>
+                    <CardDescription>
+                      Ask any math question or upload a math problem image
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={startNewChat} 
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    New Chat
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col space-y-4">

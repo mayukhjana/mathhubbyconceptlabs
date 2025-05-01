@@ -174,6 +174,33 @@ export const useChat = () => {
     setImagePreview(null);
   };
 
+  const startNewChat = () => {
+    // Save current messages to history if needed
+    if (messages.length > 0 && user) {
+      // We don't need to do anything, messages are already saved to the database
+      // when the user sends a message and the AI responds
+      
+      // Clear the current messages
+      setMessages([]);
+      localStorage.removeItem('mathHubMessages');
+      toast({
+        title: "New Chat Started",
+        description: "Your previous conversation has been saved to history."
+      });
+    } else {
+      toast({
+        title: "New Chat Started",
+        description: "Your conversation area has been cleared."
+      });
+      setMessages([]);
+      localStorage.removeItem('mathHubMessages');
+    }
+    
+    // Reset the input
+    setQuestion("");
+    removeImage();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -388,6 +415,7 @@ export const useChat = () => {
     removeImage,
     handleSubmit,
     clearHistory,
-    loadMoreHistory
+    loadMoreHistory,
+    startNewChat
   };
 };

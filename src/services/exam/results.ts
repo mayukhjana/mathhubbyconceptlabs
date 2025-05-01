@@ -140,3 +140,63 @@ export const fetchChapterPerformance = async (userId: string) => {
     return [];
   }
 };
+
+// New function to fetch topic-wise performance metrics
+export const fetchTopicPerformance = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_results')
+      .select(`
+        id,
+        score,
+        total_questions,
+        time_taken,
+        total_marks,
+        obtained_marks,
+        exams(
+          title,
+          board,
+          chapter,
+          year
+        )
+      `)
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching topic performance:", error);
+      return [];
+    }
+    
+    // Group the data by topic/chapter
+    const topicData = (data || []).reduce((acc, result) => {
+      const topic = result.exams?.chapter || 'General';
+      
+      if (!acc[topic]) {
+        acc[topic] = {
+          topic,
+          totalQuestions: 0,
+          correctAnswers: 0,
+          timeTaken: 0,
+          exams: 0,
+          totalScore: 0
+        };
+      }
+      
+      const item = acc[topic];
+      item.exams++;
+      item.totalQuestions += result.total_questions;
+      item.totalScore += result.score;
+      item.timeTaken += result.time_taken || 0;
+      // Estimate correct answers based on score
+      item.correctAnswers += Math.round((result.score / 100) * result.total_questions);
+      
+      return acc;
+    }, {} as Record<string, any>);
+    
+    return Object.values(topicData);
+  } catch (err) {
+    console.error("Exception when fetching topic performance:", err);
+    return [];
+  }
+};
