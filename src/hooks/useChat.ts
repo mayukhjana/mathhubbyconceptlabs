@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,11 +47,13 @@ export const useChat = () => {
   }, [user]);
 
   const fetchChatHistory = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('ai_chat_history')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -69,6 +70,9 @@ export const useChat = () => {
       console.error("Error in fetchChatHistory:", error);
     }
   };
+
+  // Create a memoized version of fetchChatHistory that can be passed to useEffect dependencies
+  const refreshChatHistory = useCallback(fetchChatHistory, [user]);
 
   const groupChatsByDate = (chatItems: any[]): ChatSession[] => {
     const allChatItems = [...chatItems];
@@ -199,6 +203,9 @@ export const useChat = () => {
     // Reset the input
     setQuestion("");
     removeImage();
+    
+    // Refresh chat history to show updated sessions
+    refreshChatHistory();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -352,7 +359,8 @@ export const useChat = () => {
         throw error;
       }
 
-      fetchChatHistory();
+      // Refresh chat history immediately after saving a new chat
+      refreshChatHistory();
     } catch (error) {
       console.error("Error in saveAIResponse:", error);
     }
@@ -416,6 +424,7 @@ export const useChat = () => {
     handleSubmit,
     clearHistory,
     loadMoreHistory,
-    startNewChat
+    startNewChat,
+    refreshChatHistory
   };
 };

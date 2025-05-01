@@ -28,24 +28,35 @@ const MathHubAI: React.FC = () => {
     handleSubmit,
     clearHistory,
     loadMoreHistory,
-    startNewChat
+    startNewChat,
+    refreshChatHistory
   } = useChat();
 
   const [activeTab, setActiveTab] = React.useState("new-chat");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const historyEndRef = useRef<HTMLDivElement>(null);
 
+  // Update this useEffect to also refresh chat history when switching to history tab
   React.useEffect(() => {
     if (activeTab === "new-chat" && messagesEndRef.current) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
       }, 100);
     } else if (activeTab === "history" && historyEndRef.current) {
+      refreshChatHistory();
       setTimeout(() => {
         historyEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
       }, 100);
     }
-  }, [messages, chatSessions, activeTab]);
+  }, [messages, chatSessions, activeTab, refreshChatHistory]);
+
+  // Add handler for tab change to refresh history
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "history") {
+      refreshChatHistory();
+    }
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -63,7 +74,7 @@ const MathHubAI: React.FC = () => {
           </Alert>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="new-chat">New Chat</TabsTrigger>
             <TabsTrigger value="history">Chat History</TabsTrigger>
