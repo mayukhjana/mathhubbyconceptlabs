@@ -31,8 +31,12 @@ const PremiumSection = () => {
         </div>
         
         <div className="flex flex-col lg:flex-row items-stretch gap-12">
-          <PremiumFeatures />
-          <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
+          <div className="w-full lg:w-1/3">
+            <PremiumFeatures />
+          </div>
+          <div className="w-full lg:w-2/3">
+            <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
+          </div>
         </div>
       </div>
     </section>

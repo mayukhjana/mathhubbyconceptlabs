@@ -5,44 +5,49 @@ import { CheckCircle, Clock } from "lucide-react";
 import PhonePeButton from "@/components/PhonePeButton";
 
 interface PricingCardProps {
-  type: "monthly" | "annual";
+  type: "basic" | "standard" | "premium" | "monthly" | "annual";
   price: string;
+  period?: string;
   isLoading: boolean;
   isPremium: boolean;
   onSubscribe: () => void;
   features: string[];
   isBestValue?: boolean;
+  title?: string;
 }
 
 const PricingCard = ({
   type,
   price,
+  period = "month",
   isLoading,
   isPremium,
   onSubscribe,
   features,
-  isBestValue
+  isBestValue,
+  title = "Premium"
 }: PricingCardProps) => {
-  const title = type === "monthly" ? "Premium Monthly" : "Premium Annual";
-  const period = type === "monthly" ? "month" : "year";
   const buttonClasses = isBestValue ? "bg-yellow-500 hover:bg-yellow-600" : "";
   const phonePeButtonClasses = isBestValue 
     ? "bg-white border-yellow-500 text-yellow-600 hover:bg-yellow-50"
     : "";
+    
+  const cardClasses = isBestValue 
+    ? "border-yellow-500/50 shadow-md hover:shadow-lg transform scale-105" 
+    : "hover:shadow-md transition-shadow";
 
   return (
-    <div className="border rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col relative">
+    <div className={`border rounded-xl shadow-sm p-6 flex flex-col relative ${cardClasses}`}>
       {isBestValue && (
         <div className="absolute top-0 right-0 bg-yellow-500 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-medium">
-          Best Value
+          Most Popular
         </div>
       )}
       
       <div className="mb-4">
         <Badge variant="outline" className="text-mathprimary border-mathprimary mb-2">
-          {type === "monthly" ? "Monthly" : "Annual"}
+          {title}
         </Badge>
-        <h3 className="text-2xl font-bold">{title}</h3>
         <div className="mt-4 mb-2">
           <span className="text-3xl font-bold">{price}</span>
           <span className="text-muted-foreground">/{period}</span>
@@ -54,7 +59,7 @@ const PricingCard = ({
         <ul className="space-y-3 mb-6">
           {features.map((feature, index) => (
             <li key={index} className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+              <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0" />
               <span>{feature}</span>
             </li>
           ))}

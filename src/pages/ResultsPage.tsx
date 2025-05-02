@@ -13,6 +13,11 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import { 
   BarChart3, 
@@ -23,7 +28,10 @@ import {
   Activity, 
   Calendar,
   MapPin,
-  Lightbulb
+  Lightbulb,
+  Sparkles,
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { toast } from "sonner";
@@ -31,6 +39,7 @@ import { fetchExamResults } from "@/services/exam/results";
 import ChapterPerformanceChart from "@/components/ChapterPerformanceChart";
 import ExamResultsByType from "@/components/ExamResultsByType";
 import { ExamResult } from "@/services/exam/types";
+import { supabase } from "@/integrations/supabase/client";
 
 type AnalysisData = {
   totalExams: number;
@@ -46,6 +55,8 @@ const ResultsPage = () => {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
   const [analysisData, setAnalysisData] = useState<AnalysisData>({
     totalExams: 0,
     averageScore: 0,
@@ -75,6 +86,11 @@ const ResultsPage = () => {
         // Analyze the data for detailed insights
         if (typedResults && typedResults.length > 0) {
           analyzeResultsData(typedResults);
+          
+          // Only generate insights if there are results
+          if (typedResults.length >= 2) {
+            generateAiInsights(typedResults);
+          }
         }
       } catch (err) {
         console.error("Error fetching results:", err);
@@ -132,6 +148,31 @@ const ResultsPage = () => {
       scoresByBoard,
       progressOverTime
     });
+  };
+  
+  const generateAiInsights = async (results: ExamResult[]) => {
+    if (results.length === 0) return;
+    
+    try {
+      setLoadingInsights(true);
+      
+      const { data, error } = await supabase.functions.invoke('generate-insights', {
+        body: { results }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.analysis) {
+        setAiInsights(data.analysis);
+      }
+    } catch (error) {
+      console.error("Error generating AI insights:", error);
+      toast.error("Failed to generate AI insights. Please try again later.");
+    } finally {
+      setLoadingInsights(false);
+    }
   };
 
   if (loading) {
@@ -254,6 +295,61 @@ const ResultsPage = () => {
                   </CardContent>
                 </Card>
               </div>
+              
+              {/* AI-Generated Personalized Insights */}
+              {results.length >= 2 && (
+                <Card className="mb-8 overflow-hidden border-mathprimary/20">
+                  <CardHeader className="bg-gradient-to-r from-mathprimary/10 to-mathprimary/5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-mathprimary/20 p-2 rounded-full">
+                          <Sparkles className="h-5 w-5 text-mathprimary" />
+                        </div>
+                        <CardTitle>AI-Powered Personalized Insights</CardTitle>
+                      </div>
+                    </div>
+                    <CardDescription>
+                      Custom analysis based on your exam performance patterns
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {loadingInsights ? (
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-mathprimary mb-4" />
+                        <p className="text-muted-foreground">Generating personalized insights...</p>
+                      </div>
+                    ) : aiInsights ? (
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        {aiInsights.split('\n').map((paragraph, index) => {
+                          // Check if the paragraph is a heading
+                          if (paragraph.startsWith('#')) {
+                            return <h3 key={index} className="text-lg font-bold mt-4 mb-2">{paragraph.replace(/^#+ /, '')}</h3>;
+                          }
+                          // Check if the paragraph is a list item
+                          else if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
+                            return <li key={index} className="ml-4">{paragraph.substring(2)}</li>;
+                          }
+                          // Regular paragraph
+                          else if (paragraph.trim()) {
+                            return <p key={index} className="mb-3">{paragraph}</p>;
+                          }
+                          // Empty line
+                          return <br key={index} />;
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <Lightbulb className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                        <p className="text-lg font-medium mb-2">No insights generated yet</p>
+                        <p className="text-muted-foreground mb-4">Take more exams to get personalized AI recommendations</p>
+                        <Button onClick={() => results.length >= 2 && generateAiInsights(results)}>
+                          Generate Insights
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <Card className="h-full">
