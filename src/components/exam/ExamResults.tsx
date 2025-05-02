@@ -139,9 +139,9 @@ export const ExamResults = ({
         solutionsText += `Your Answer: ${userAnswer}\n`;
         solutionsText += `Correct Answer: ${question.correct_answer}\n`;
         
-        // Add explanation if available
-        if (question.solution) {
-          solutionsText += `\nExplanation: ${question.solution}\n`;
+        // Add explanation if available - fix TS error by checking if solution exists
+        if (question.explanation || question.answer_explanation) {
+          solutionsText += `\nExplanation: ${question.explanation || question.answer_explanation || ""}\n`;
         }
         
         solutionsText += `\n${"-".repeat(40)}\n\n`;

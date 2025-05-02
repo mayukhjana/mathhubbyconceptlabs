@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Award, CheckCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
-import PremiumFeatures from "@/components/PremiumFeatures";
 import PremiumPricing from "@/components/PremiumPricing";
 
 const PremiumSection = () => {
@@ -36,16 +35,38 @@ const PremiumSection = () => {
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Unlock your full potential with our premium plans and take your math skills to the next level
           </p>
+          
+          <div className="mt-8 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-white/20 transition">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-blue-400" />
+                </div>
+                <h3 className="font-medium mb-1">5,000+ Papers</h3>
+                <p className="text-sm text-gray-300">Access our full collection of study materials</p>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-white/20 transition">
+                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-green-400" />
+                </div>
+                <h3 className="font-medium mb-1">Detailed Analytics</h3>
+                <p className="text-sm text-gray-300">Track your progress and identify weak areas</p>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-white/20 transition">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-purple-400" />
+                </div>
+                <h3 className="font-medium mb-1">AI Assistance</h3>
+                <p className="text-sm text-gray-300">Get instant help with complex problems</p>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
-          <div className="lg:col-span-2">
-            <PremiumFeatures />
-          </div>
-          
-          <div className="lg:col-span-3">
-            <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
-          </div>
+        <div className="max-w-5xl mx-auto">
+          <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
         
         <div className="text-center mt-16">

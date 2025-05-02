@@ -50,9 +50,16 @@ const MathHubAI: React.FC = () => {
     }
   }, [messages, chatSessions, activeTab, refreshChatHistory]);
 
-  // Add handler for tab change to refresh history
+  // Add handler for tab change to refresh history and save current chat if needed
   const handleTabChange = (value: string) => {
+    // If switching from new-chat to history, save the current chat first
+    if (activeTab === "new-chat" && value === "history" && messages.length > 0) {
+      // We don't need to explicitly save the chat as it's saved when messages are exchanged
+      // But we do need to refresh the history to show the latest conversations
+    }
+    
     setActiveTab(value);
+    
     if (value === "history") {
       refreshChatHistory();
     }
