@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Award, Clock } from "lucide-react";
+import { Award, Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExamResult } from "@/services/exam/types";
 
@@ -123,7 +123,13 @@ const ExamResultsByType = ({ results, loading }: ExamResultProps) => {
                           : "bg-blue-500"
                       }`}></div>
                       <div>
-                        {result.exams?.title || "Unknown Exam"}
+                        <Link 
+                          to={`/exam/${result.exam_id}`} 
+                          className="hover:text-mathprimary hover:underline flex items-center gap-1"
+                        >
+                          {result.exams?.title || "Unknown Exam"}
+                          <ExternalLink className="h-3 w-3 inline-block" />
+                        </Link>
                         <div className="text-xs text-muted-foreground">
                           {result.exams?.board || ""} · {result.exams?.chapter || "General"} · {result.exams?.year || ""}
                         </div>

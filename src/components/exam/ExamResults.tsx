@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import QuestionCard from "@/components/QuestionCard";
 import type { Question } from "@/services/exam/types";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface ExamResultsProps {
   score: number;
@@ -105,33 +106,65 @@ export const ExamResults = ({
   };
   
   const handleDownloadSolutions = () => {
-    // Create a text document with all questions and answers
-    let solutionsText = "EXAM SOLUTIONS\n\n";
-    questions.forEach((question, index) => {
-      solutionsText += `Question ${index + 1}: ${question.question_text}\n`;
-      if (question.is_image_question && question.image_url) {
-        solutionsText += `[Image Question - Image URL: ${question.image_url}]\n`;
-      }
-      solutionsText += `Option A: ${question.option_a}\n`;
-      solutionsText += `Option B: ${question.option_b}\n`;
-      solutionsText += `Option C: ${question.option_c}\n`;
-      solutionsText += `Option D: ${question.option_d}\n`;
-      solutionsText += `Correct Answer: ${question.correct_answer}\n`;
-      solutionsText += `Your Answer: ${userAnswers[question.id] || "Not answered"}\n\n`;
-    });
+    try {
+      // Create a more formatted PDF-like text document with detailed solutions
+      let solutionsText = "======================================\n";
+      solutionsText += "           EXAM SOLUTIONS               \n";
+      solutionsText += "======================================\n\n";
+      
+      // Add exam summary
+      solutionsText += `EXAM SUMMARY\n`;
+      solutionsText += `Score: ${score}% (${totalObtainedMarks}/${totalPossibleMarks} marks)\n`;
+      solutionsText += `Time Taken: ${formatTime(timeTaken)}\n`;
+      solutionsText += `Correct Answers: ${correctAnswers}/${questions.length}\n\n`;
+      
+      // Add detailed solutions for each question
+      questions.forEach((question, index) => {
+        const userAnswer = userAnswers[question.id] || "Not answered";
+        const isCorrect = userAnswer === question.correct_answer;
+        
+        solutionsText += `QUESTION ${index + 1} ${isCorrect ? "(CORRECT)" : "(INCORRECT)"}\n`;
+        solutionsText += `${question.question_text}\n`;
+        
+        if (question.is_image_question && question.image_url) {
+          solutionsText += `[This question includes an image]\n`;
+        }
+        
+        solutionsText += `\nOptions:\n`;
+        solutionsText += `A: ${question.option_a}\n`;
+        solutionsText += `B: ${question.option_b}\n`;
+        solutionsText += `C: ${question.option_c}\n`;
+        solutionsText += `D: ${question.option_d}\n\n`;
+        
+        solutionsText += `Your Answer: ${userAnswer}\n`;
+        solutionsText += `Correct Answer: ${question.correct_answer}\n`;
+        
+        // Add explanation if available
+        if (question.solution) {
+          solutionsText += `\nExplanation: ${question.solution}\n`;
+        }
+        
+        solutionsText += `\n${"-".repeat(40)}\n\n`;
+      });
 
-    // Create a blob and trigger download
-    const blob = new Blob([solutionsText], {
-      type: 'text/plain'
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'exam-solutions.txt';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      // Create a blob and trigger download
+      const blob = new Blob([solutionsText], {
+        type: 'text/plain'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'detailed-exam-solutions.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success("Solutions downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading solutions:", error);
+      toast.error("Failed to download solutions. Please try again.");
+    }
   };
   
   return <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
