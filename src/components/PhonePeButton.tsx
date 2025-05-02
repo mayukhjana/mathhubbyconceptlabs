@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface PhonePeButtonProps {
-  subscriptionType: "monthly" | "annual";
+  subscriptionType: "monthly" | "annual" | "basic" | "standard" | "premium";
   className?: string;
 }
 
@@ -18,8 +18,13 @@ const PhonePeButton = ({ subscriptionType, className }: PhonePeButtonProps) => {
       setIsLoading(true);
       toast.info("Initializing PhonePe payment...");
       
+      // Convert plan types to subscription types
+      const paymentType = ["basic", "standard", "premium"].includes(subscriptionType) 
+        ? "monthly" 
+        : subscriptionType;
+      
       const { data, error } = await supabase.functions.invoke("create-phonepe-checkout", {
-        body: { subscriptionType }
+        body: { subscriptionType: paymentType }
       });
       
       if (error) {
