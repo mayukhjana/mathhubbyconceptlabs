@@ -1,16 +1,12 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Award, CheckCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import PremiumFeatures from "@/components/PremiumFeatures";
 import PremiumPricing from "@/components/PremiumPricing";
-
 const PremiumSection = () => {
   const [activeTab, setActiveTab] = useState<'monthly' | 'yearly'>('monthly');
-
-  return (
-    <section className="py-24 bg-gradient-to-b from-mathdark/95 to-black dark:from-gray-900 dark:to-black text-white relative overflow-hidden">
+  return <section className="py-24 bg-gradient-to-b from-mathdark/95 to-black dark:from-gray-900 dark:to-black text-white relative overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-20 right-10 w-96 h-96 bg-mathprimary opacity-15 rounded-full filter blur-[100px]"></div>
@@ -31,16 +27,12 @@ const PremiumSection = () => {
         </div>
         
         <div className="flex flex-col lg:flex-row items-stretch gap-12">
-          <div className="w-full lg:w-1/3">
-            <PremiumFeatures />
-          </div>
+          
           <div className="w-full lg:w-2/3">
             <PremiumPricing activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default PremiumSection;
