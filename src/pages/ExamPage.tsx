@@ -363,7 +363,7 @@ const ExamPage = () => {
       <Navbar />
       
       <div className="flex flex-1">
-        {/* Sidebar - always visible on desktop, toggleable on mobile/tablet */}
+        {/* Sidebar - always visible on desktop during exam, toggleable on mobile/tablet */}
         <ExamSidebar 
           questions={exam.questions}
           currentQuestionIndex={currentQuestionIndex}
@@ -371,7 +371,9 @@ const ExamPage = () => {
           markedQuestions={markedForReview}
           onQuestionSelect={handleQuestionSelect}
           examTitle={exam.title}
-          showSidebar={isDesktop || (!examCompleted && (isMobile || isTablet))}
+          showSidebar={true} // Always show sidebar component, but control visibility inside
+          examCompleted={examCompleted} // Pass whether exam is completed
+          questionsWithResults={questionsWithResults} // Pass questions with results for correct/incorrect answers
         />
         
         {/* Main content */}
