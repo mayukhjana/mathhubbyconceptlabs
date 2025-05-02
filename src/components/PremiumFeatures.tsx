@@ -1,5 +1,5 @@
 
-import { Award, CheckCircle } from "lucide-react";
+import { Award, CheckCircle, Sparkles } from "lucide-react";
 
 const PremiumFeatures = () => {
   const features = [
