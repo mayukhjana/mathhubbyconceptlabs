@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Trophy, CheckCircle, XCircle, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -139,9 +140,10 @@ export const ExamResults = ({
         solutionsText += `Your Answer: ${userAnswer}\n`;
         solutionsText += `Correct Answer: ${question.correct_answer}\n`;
         
-        // Add explanation if available - fix TS error by checking if solution exists
-        if (question.explanation || question.answer_explanation) {
-          solutionsText += `\nExplanation: ${question.explanation || question.answer_explanation || ""}\n`;
+        // Add explanation if available
+        const explanation = question.explanation || question.answer_explanation || "";
+        if (explanation) {
+          solutionsText += `\nExplanation: ${explanation}\n`;
         }
         
         solutionsText += `\n${"-".repeat(40)}\n\n`;
@@ -377,3 +379,4 @@ export const ExamResults = ({
       </div>
     </div>;
 };
+

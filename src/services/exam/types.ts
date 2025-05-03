@@ -1,4 +1,3 @@
-
 export interface Question {
   id: string;
   exam_id: string;
@@ -14,6 +13,8 @@ export interface Question {
   is_multi_correct: boolean;
   is_image_question?: boolean;
   image_url?: string;
+  explanation?: string;
+  answer_explanation?: string;
   created_at?: string;
 }
 
