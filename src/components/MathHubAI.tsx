@@ -1,5 +1,5 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import ChatInputForm from "./mathHub/ChatInputForm";
 import ChatHistory from "./mathHub/ChatHistory";
 import MathHubHeader from "./mathHub/MathHubHeader";
 import { useChat } from "@/hooks/useChat";
+import { useToast } from "@/components/ui/use-toast";
 
 const MathHubAI: React.FC = () => {
   const {
@@ -33,11 +34,20 @@ const MathHubAI: React.FC = () => {
   } = useChat();
 
   const [activeTab, setActiveTab] = React.useState("new-chat");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const historyEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  // Mark messages as unsaved when new messages are added
+  useEffect(() => {
+    if (messages.length > 0) {
+      setHasUnsavedChanges(true);
+    }
+  }, [messages]);
 
   // Update this useEffect to also refresh chat history when switching to history tab
-  React.useEffect(() => {
+  useEffect(() => {
     if (activeTab === "new-chat" && messagesEndRef.current) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -53,9 +63,10 @@ const MathHubAI: React.FC = () => {
   // Add handler for tab change to refresh history and save current chat if needed
   const handleTabChange = (value: string) => {
     // If switching from new-chat to history, save the current chat first
-    if (activeTab === "new-chat" && value === "history" && messages.length > 0) {
-      // We don't need to explicitly save the chat as it's saved when messages are exchanged
-      // But we do need to refresh the history to show the latest conversations
+    if (activeTab === "new-chat" && value === "history" && hasUnsavedChanges && messages.length > 0) {
+      // Save current conversation to history
+      saveCurrentConversation();
+      setHasUnsavedChanges(false);
     }
     
     setActiveTab(value);
@@ -63,6 +74,27 @@ const MathHubAI: React.FC = () => {
     if (value === "history") {
       refreshChatHistory();
     }
+  };
+
+  // Function to save current conversation
+  const saveCurrentConversation = () => {
+    // We don't need to manually save, just trigger a refresh of chat history
+    refreshChatHistory();
+    
+    toast({
+      title: "Chat saved",
+      description: "Your conversation has been saved to history.",
+      duration: 2000,
+    });
+  };
+
+  // Modified startNewChat to properly save chat history
+  const handleStartNewChat = () => {
+    if (hasUnsavedChanges && messages.length > 0) {
+      saveCurrentConversation();
+      setHasUnsavedChanges(false);
+    }
+    startNewChat();
   };
 
   return (
@@ -100,7 +132,7 @@ const MathHubAI: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={startNewChat} 
+                    onClick={handleStartNewChat} 
                     className="flex items-center gap-1"
                   >
                     <Plus className="h-4 w-4" />
