@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -9,6 +8,8 @@ import { Image } from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import GoogleTranslateButton from "./GoogleTranslateButton";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuestionCardProps {
   question: {
@@ -42,6 +43,31 @@ const QuestionCard = ({
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [cacheBustUrl, setCacheBustUrl] = useState<string | undefined>(question.image_url);
+  const [examType, setExamType] = useState<string | null>(null);
+  const { examId } = useParams<{ examId: string }>();
+
+  // Fetch exam details to determine if it's a WBJEE paper
+  useEffect(() => {
+    const fetchExamDetails = async () => {
+      if (examId) {
+        try {
+          const { data, error } = await supabase
+            .from('exams')
+            .select('board')
+            .eq('id', examId)
+            .single();
+          
+          if (data && !error) {
+            setExamType(data.board);
+          }
+        } catch (error) {
+          console.error("Error fetching exam details:", error);
+        }
+      }
+    };
+    
+    fetchExamDetails();
+  }, [examId]);
 
   useEffect(() => {
     if (question.image_url) {
@@ -149,6 +175,10 @@ const QuestionCard = ({
     return `${question.text}\n\nOptions:\nA: ${question.options[0].text}\nB: ${question.options[1].text}\nC: ${question.options[2].text}\nD: ${question.options[3].text}`;
   };
 
+  // Determine if this is a WBJEE paper to set Bengali as target language
+  const isWBJEE = examType === 'WBJEE';
+  const targetLanguage = isWBJEE ? 'bn' : undefined; // 'bn' is the language code for Bengali
+
   return (
     <Card className={cn(
       "transition-colors",
@@ -160,7 +190,10 @@ const QuestionCard = ({
         <CardTitle className="flex justify-between items-start">
           <span className="text-sm text-muted-foreground font-normal">Question {questionNumber}</span>
           <div className="flex items-center gap-2">
-            <GoogleTranslateButton text={getAllQuestionText()} />
+            <GoogleTranslateButton 
+              text={getAllQuestionText()} 
+              targetLanguage={targetLanguage}
+            />
             <span className="text-xs text-muted-foreground">
               {question.marks} marks {question.negative_marks > 0 && `(-${question.negative_marks} negative)`}
             </span>

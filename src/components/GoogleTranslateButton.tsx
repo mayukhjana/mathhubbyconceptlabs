@@ -7,9 +7,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface GoogleTranslateButtonProps {
   text: string;
+  targetLanguage?: string; // Add optional target language prop
 }
 
-const GoogleTranslateButton = ({ text }: GoogleTranslateButtonProps) => {
+const GoogleTranslateButton = ({ text, targetLanguage }: GoogleTranslateButtonProps) => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [translated, setTranslated] = useState(false);
 
@@ -31,6 +32,7 @@ const GoogleTranslateButton = ({ text }: GoogleTranslateButtonProps) => {
         new window.google.translate.TranslateElement(
           {
             pageLanguage: 'en',
+            includedLanguages: targetLanguage ? targetLanguage : '', // Use the target language if provided
             autoDisplay: false,
             layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
           },
@@ -42,7 +44,27 @@ const GoogleTranslateButton = ({ text }: GoogleTranslateButtonProps) => {
           const translateButton = document.querySelector('.goog-te-combo') as HTMLSelectElement;
           if (translateButton) {
             translateButton.focus();
-            translateButton.click();
+            
+            // If target language is provided, select it directly
+            if (targetLanguage && translateButton) {
+              const options = Array.from(translateButton.options);
+              const targetOption = options.find(option => 
+                option.value.toLowerCase() === targetLanguage.toLowerCase()
+              );
+              
+              if (targetOption) {
+                translateButton.value = targetOption.value;
+                // Create and dispatch a change event to trigger the translation
+                const event = new Event('change', { bubbles: true });
+                translateButton.dispatchEvent(event);
+              } else {
+                // If specific language not found, just open the dropdown
+                translateButton.click();
+              }
+            } else {
+              // If no target language, just open the dropdown
+              translateButton.click();
+            }
           }
           setIsTranslating(false);
           setTranslated(true);
@@ -53,11 +75,31 @@ const GoogleTranslateButton = ({ text }: GoogleTranslateButtonProps) => {
       setTimeout(() => {
         const translateButton = document.querySelector('.goog-te-combo') as HTMLSelectElement;
         if (translateButton) {
-          translateButton.focus();
-          translateButton.click();
+          // If target language is provided, select it directly
+          if (targetLanguage) {
+            const options = Array.from(translateButton.options);
+            const targetOption = options.find(option => 
+              option.value.toLowerCase() === targetLanguage.toLowerCase()
+            );
+            
+            if (targetOption) {
+              translateButton.value = targetOption.value;
+              // Create and dispatch a change event to trigger the translation
+              const event = new Event('change', { bubbles: true });
+              translateButton.dispatchEvent(event);
+            } else {
+              // If specific language not found, just open the dropdown
+              translateButton.focus();
+              translateButton.click();
+            }
+          } else {
+            // If no target language, just open the dropdown
+            translateButton.focus();
+            translateButton.click();
+          }
+          setIsTranslating(false);
+          setTranslated(true);
         }
-        setIsTranslating(false);
-        setTranslated(true);
       }, 300);
     }
   };
@@ -78,7 +120,7 @@ const GoogleTranslateButton = ({ text }: GoogleTranslateButtonProps) => {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Translate page</p>
+          <p>Translate {targetLanguage ? `to ${targetLanguage}` : 'page'}</p>
         </TooltipContent>
       </Tooltip>
       
