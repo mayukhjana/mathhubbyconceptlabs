@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Image } from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import GoogleTranslateButton from "./GoogleTranslateButton";
 
 interface QuestionCardProps {
   question: {
@@ -143,6 +144,11 @@ const QuestionCard = ({
     }
   };
 
+  // Collect all text for translation
+  const getAllQuestionText = () => {
+    return `${question.text}\n\nOptions:\nA: ${question.options[0].text}\nB: ${question.options[1].text}\nC: ${question.options[2].text}\nD: ${question.options[3].text}`;
+  };
+
   return (
     <Card className={cn(
       "transition-colors",
@@ -153,9 +159,12 @@ const QuestionCard = ({
       <CardHeader>
         <CardTitle className="flex justify-between items-start">
           <span className="text-sm text-muted-foreground font-normal">Question {questionNumber}</span>
-          <span className="text-xs text-muted-foreground">
-            {question.marks} marks {question.negative_marks > 0 && `(-${question.negative_marks} negative)`}
-          </span>
+          <div className="flex items-center gap-2">
+            <GoogleTranslateButton text={getAllQuestionText()} />
+            <span className="text-xs text-muted-foreground">
+              {question.marks} marks {question.negative_marks > 0 && `(-${question.negative_marks} negative)`}
+            </span>
+          </div>
         </CardTitle>
         <CardDescription className="space-y-4">
           {question.is_image_question ? (
