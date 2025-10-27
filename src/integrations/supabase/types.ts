@@ -14,7 +14,220 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      exams: {
+        Row: {
+          board: string
+          chapter: string | null
+          class: string
+          created_at: string | null
+          duration: number
+          id: string
+          is_premium: boolean | null
+          title: string
+          updated_at: string | null
+          year: string
+        }
+        Insert: {
+          board: string
+          chapter?: string | null
+          class: string
+          created_at?: string | null
+          duration: number
+          id?: string
+          is_premium?: boolean | null
+          title: string
+          updated_at?: string | null
+          year: string
+        }
+        Update: {
+          board?: string
+          chapter?: string | null
+          class?: string
+          created_at?: string | null
+          duration?: number
+          id?: string
+          is_premium?: boolean | null
+          title?: string
+          updated_at?: string | null
+          year?: string
+        }
+        Relationships: []
+      }
+      premium_subscriptions: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          status: string
+          stripe_subscription_id: string | null
+          subscription_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          subscription_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          subscription_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          answer_explanation: string | null
+          correct_answer: string
+          created_at: string | null
+          exam_id: string
+          explanation: string | null
+          id: string
+          image_url: string | null
+          is_image_question: boolean | null
+          is_multi_correct: boolean | null
+          marks: number | null
+          negative_marks: number | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          order_number: number
+          question_text: string
+        }
+        Insert: {
+          answer_explanation?: string | null
+          correct_answer: string
+          created_at?: string | null
+          exam_id: string
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          is_image_question?: boolean | null
+          is_multi_correct?: boolean | null
+          marks?: number | null
+          negative_marks?: number | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          order_number: number
+          question_text: string
+        }
+        Update: {
+          answer_explanation?: string | null
+          correct_answer?: string
+          created_at?: string | null
+          exam_id?: string
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          is_image_question?: boolean | null
+          is_multi_correct?: boolean | null
+          marks?: number | null
+          negative_marks?: number | null
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          order_number?: number
+          question_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_results: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          exam_id: string
+          id: string
+          obtained_marks: number | null
+          score: number
+          time_taken: number | null
+          total_marks: number | null
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          exam_id: string
+          id?: string
+          obtained_marks?: number | null
+          score: number
+          time_taken?: number | null
+          total_marks?: number | null
+          total_questions: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          exam_id?: string
+          id?: string
+          obtained_marks?: number | null
+          score?: number
+          time_taken?: number | null
+          total_marks?: number | null
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
