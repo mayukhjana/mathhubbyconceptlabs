@@ -23,21 +23,22 @@ export const AuthGuard = ({
   
   // Check if user has admin role
   const { data: isAdmin, isLoading: isCheckingAdmin } = useQuery({
-    queryKey: ['isAdmin', user?.email],
+    queryKey: ['isAdmin', user?.id],
     queryFn: async () => {
-      if (user?.email === "f20212334@goa.bits-pilani.ac.in" || user?.email === "santanuj1201@gmail.com") {
-        return true;
-      }
+      if (!user?.id) return false;
       
-      // Fallback to check via RPC for other potential admin users
-      const { data, error } = await supabase.rpc('has_role', { _role: 'admin' });
+      const { data, error } = await supabase.rpc('has_role', { 
+        _user_id: user.id, 
+        _role: 'admin' 
+      });
+      
       if (error) {
         console.error('Error checking admin role:', error);
         return false;
       }
       return data || false;
     },
-    enabled: isAuthenticated && requireAdmin,
+    enabled: isAuthenticated && requireAdmin && !!user?.id,
   });
 
   useEffect(() => {

@@ -58,40 +58,26 @@ export const fetchQuestionsForExam = async (examId: string) => {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('questions')
-      .select('*')
-      .eq('exam_id', examId)
-      .order('order_number', { ascending: true });
+    // Use the secure RPC function that doesn't expose answers
+    const { data, error } = await supabase.rpc('get_exam_questions', { 
+      exam_uuid: examId 
+    });
       
     if (error) {
       console.error("Error fetching questions:", error);
       return [];
     }
     
-    console.log("Fetched questions:", data);
+    console.log("Fetched questions (without answers):", data);
 
-    // Process multi-correct answers from comma-separated strings and add is_multi_correct if not present
-    const processedData = data.map(question => {
-      // Create a base question with all properties from the fetched data
-      const baseQuestion = { ...question };
-      
-      // Add is_multi_correct property if not present in the database result
-      if (baseQuestion.is_multi_correct === undefined) {
-        baseQuestion.is_multi_correct = typeof question.correct_answer === 'string' && 
-                                        question.correct_answer.includes(',');
-      }
-      
-      // Convert comma-separated string to array if multi-correct
-      if (baseQuestion.is_multi_correct && typeof question.correct_answer === 'string') {
-        return {
-          ...baseQuestion,
-          correct_answer: question.correct_answer.split(',')
-        };
-      }
-      
-      return baseQuestion;
-    });
+    // Map the data to include placeholder correct_answer for type compatibility
+    // The actual answer validation will happen server-side
+    const processedData = data.map((question: any) => ({
+      ...question,
+      correct_answer: '', // Placeholder - answers are validated server-side
+      explanation: '',
+      answer_explanation: ''
+    }));
     
     return processedData as Question[];
   } catch (error) {
