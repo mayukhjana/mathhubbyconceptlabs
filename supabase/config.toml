@@ -1,1 +1,31 @@
 project_id = "vhhysrbupmctklmmextr"
+
+[functions.mathhub-ai]
+verify_jwt = true
+
+[functions.validate-answers]
+verify_jwt = true
+
+[functions.sql-execute]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.create-phonepe-checkout]
+verify_jwt = true
+
+[functions.check-premium]
+verify_jwt = true
+
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.gemini-math-ai]
+verify_jwt = true
+
+[functions.generate-insights]
+verify_jwt = true
+
+[functions.submit-support-ticket]
+verify_jwt = true
