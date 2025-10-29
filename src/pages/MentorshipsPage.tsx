@@ -16,6 +16,8 @@ interface Teacher {
   hourly_rate: number;
   bio: string | null;
   experience_years: number | null;
+  qualification?: string | null;
+  current_company?: string | null;
   profiles?: {
     full_name: string | null;
     avatar_url: string | null;

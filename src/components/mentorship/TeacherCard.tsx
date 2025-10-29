@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, User, Clock } from 'lucide-react';
+import { Star, User, Clock, Briefcase, GraduationCap } from 'lucide-react';
 
 interface Teacher {
   id: string;
@@ -11,6 +11,8 @@ interface Teacher {
   hourly_rate: number;
   bio: string | null;
   experience_years: number | null;
+  qualification?: string | null;
+  current_company?: string | null;
   profiles?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -53,6 +55,22 @@ export const TeacherCard = ({ teacher }: TeacherCardProps) => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {(teacher.current_company || teacher.qualification) && (
+          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            {teacher.current_company && (
+              <div className="flex items-center gap-1.5">
+                <Briefcase className="h-4 w-4" />
+                <span>{teacher.current_company}</span>
+              </div>
+            )}
+            {teacher.qualification && (
+              <div className="flex items-center gap-1.5">
+                <GraduationCap className="h-4 w-4" />
+                <span>{teacher.qualification}</span>
+              </div>
+            )}
+          </div>
+        )}
         {teacher.bio && (
           <p className="text-sm text-muted-foreground line-clamp-3">
             {teacher.bio}
