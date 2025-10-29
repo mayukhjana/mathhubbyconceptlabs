@@ -6,19 +6,74 @@ import { BookOpen } from "lucide-react";
 const BoardsSection = () => {
   const boards = [
     {
-      name: "ICSE",
-      description: "Access ICSE board papers from the past 10 years organized by chapters.",
-      link: "/boards/icse",
-    },
-    {
       name: "CBSE",
       description: "Comprehensive collection of CBSE math papers with solutions.",
       link: "/boards/cbse",
     },
     {
-      name: "West Bengal",
-      description: "All West Bengal board math papers sorted by year and chapter.",
+      name: "ICSE",
+      description: "Access ICSE board papers from the past 10 years organized by chapters.",
+      link: "/boards/icse",
+    },
+    {
+      name: "Maharashtra State Board",
+      description: "Complete Maharashtra SSC and HSC math papers with detailed solutions.",
+      link: "/boards/maharashtra",
+    },
+    {
+      name: "Tamil Nadu State Board",
+      description: "Tamil Nadu board math papers for all standards with chapter-wise practice.",
+      link: "/boards/tamil-nadu",
+    },
+    {
+      name: "Karnataka State Board",
+      description: "KSEEB math papers and resources for SSLC and PUC students.",
+      link: "/boards/karnataka",
+    },
+    {
+      name: "Kerala State Board",
+      description: "Kerala SSLC and Plus One/Two math papers with comprehensive solutions.",
+      link: "/boards/kerala",
+    },
+    {
+      name: "Uttar Pradesh Board",
+      description: "UP Board math papers for high school and intermediate students.",
+      link: "/boards/uttar-pradesh",
+    },
+    {
+      name: "Rajasthan Board",
+      description: "RBSE math papers with solutions for secondary and senior secondary.",
+      link: "/boards/rajasthan",
+    },
+    {
+      name: "Madhya Pradesh Board",
+      description: "MP Board math papers for classes 10th and 12th with detailed explanations.",
+      link: "/boards/madhya-pradesh",
+    },
+    {
+      name: "Gujarat State Board",
+      description: "GSEB math papers for SSC and HSC with chapter-wise practice tests.",
+      link: "/boards/gujarat",
+    },
+    {
+      name: "Bihar Board",
+      description: "Bihar Board math papers for matriculation and intermediate exams.",
+      link: "/boards/bihar",
+    },
+    {
+      name: "West Bengal Board",
+      description: "WBBSE and WBCHSE math papers sorted by year and chapter.",
       link: "/boards/west-bengal",
+    },
+    {
+      name: "Andhra Pradesh Board",
+      description: "AP Board math papers for SSC and intermediate with solutions.",
+      link: "/boards/andhra-pradesh",
+    },
+    {
+      name: "Telangana Board",
+      description: "TS Board math papers for SSC and intermediate students.",
+      link: "/boards/telangana",
     }
   ];
 
@@ -40,23 +95,23 @@ const BoardsSection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {boards.map((board, index) => (
-            <div key={board.name} className="group bg-card border border-border rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              <div className={`h-48 bg-gradient-to-br ${
-                index === 0 ? "from-mathprimary via-mathsecondary to-mathaccent" :
-                index === 1 ? "from-mathsecondary via-mathaccent to-mathprimary" :
+            <div key={board.name} className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className={`h-32 bg-gradient-to-br ${
+                index % 3 === 0 ? "from-mathprimary via-mathsecondary to-mathaccent" :
+                index % 3 === 1 ? "from-mathsecondary via-mathaccent to-mathprimary" :
                 "from-mathaccent via-mathprimary to-mathsecondary"
               } flex items-center justify-center relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-white/5"></div>
-                <h3 className="text-4xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300">{board.name}</h3>
+                <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2">{board.name}</h3>
               </div>
-              <div className="p-6">
-                <p className="text-muted-foreground mb-4 leading-relaxed">
+              <div className="p-4">
+                <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
                   {board.description}
                 </p>
-                <Button asChild className="w-full bg-gradient-to-r from-mathprimary to-mathsecondary hover:shadow-lg hover:scale-105 transition-all duration-300">
-                  <Link to={board.link}>View {board.name} Papers</Link>
+                <Button asChild size="sm" className="w-full bg-gradient-to-r from-mathprimary to-mathsecondary hover:shadow-lg hover:scale-105 transition-all duration-300">
+                  <Link to={board.link}>View Papers</Link>
                 </Button>
               </div>
             </div>

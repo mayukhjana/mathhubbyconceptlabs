@@ -42,9 +42,11 @@ const HeroSection = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
-              <Button size="lg" className="text-base h-14 px-8 gap-2 bg-gradient-to-r from-mathprimary via-mathsecondary to-mathaccent hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-mathprimary/20 dark:shadow-mathprimary/10 animate-fade-in">
-                <span>Start Learning Now</span>
-                <ArrowRight size={16} />
+              <Button size="lg" className="text-base h-14 px-8 gap-2 bg-gradient-to-r from-mathprimary via-mathsecondary to-mathaccent hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-mathprimary/20 dark:shadow-mathprimary/10 animate-fade-in" asChild>
+                <Link to="/boards">
+                  <span>Start Learning Now</span>
+                  <ArrowRight size={16} />
+                </Link>
               </Button>
               <Button size="lg" variant="outline" className="text-base h-14 px-8 border-2 hover:bg-accent/50 dark:hover:bg-accent/30 transition-all duration-300 animate-fade-in" asChild>
                 <Link to="/boards">Explore Papers</Link>
