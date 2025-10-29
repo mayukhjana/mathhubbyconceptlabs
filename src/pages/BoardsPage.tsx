@@ -32,13 +32,18 @@ const BoardsPage = () => {
           return acc;
         }, {});
 
-        const boardsData = Object.values(boardCounts).map((item: any) => ({
-          id: item.board.toLowerCase().replace(/\s+/g, '-'),
-          title: item.board,
-          description: `Access previous year math papers for ${item.board}.`,
-          image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
-          paperCount: item.count
-        }));
+        // Filter out entrance exams (JEE, WBJEE) - they are not boards
+        const excludedBoards = ['jee main', 'jee advanced', 'wbjee'];
+        
+        const boardsData = Object.values(boardCounts)
+          .filter((item: any) => !excludedBoards.includes(item.board.toLowerCase()))
+          .map((item: any) => ({
+            id: item.board.toLowerCase().replace(/\s+/g, '-'),
+            title: item.board,
+            description: `Access previous year math papers for ${item.board}.`,
+            image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+            paperCount: item.count
+          }));
 
         setBoards(boardsData);
       } catch (error) {
