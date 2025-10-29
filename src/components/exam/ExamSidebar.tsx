@@ -125,10 +125,7 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
         variant="outline" 
         size="sm" 
         className={cn(
-          "fixed z-40 p-1 h-8 w-8 rounded-r-md border-l-0",
-          examCompleted 
-            ? "top-16 left-0" // Always show at top when exam completed 
-            : (isMobile || isTablet) ? "top-16 left-0" : "hidden" // Only show on mobile/tablet during exam
+          "fixed z-40 p-1 h-8 w-8 rounded-r-md border-l-0 top-16 left-0"
         )} 
         onClick={toggleSidebar}
       >
@@ -140,7 +137,6 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
           "fixed inset-y-0 left-0 z-30 transform transition-transform duration-300 ease-in-out", 
           "flex flex-col w-64 md:w-72 lg:w-80 bg-white dark:bg-gray-900 border-r shadow-lg pt-14", 
           isOpen ? "translate-x-0" : "-translate-x-full",
-          examCompleted || isMobile || isTablet ? "" : "static z-0 pt-0 translate-x-0",
           "dark:border-gray-800"
         )}
       >

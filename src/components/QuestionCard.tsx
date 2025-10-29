@@ -321,16 +321,16 @@ const QuestionCard = ({
             ))}
           </div>
         ) : (
-          <RadioGroup defaultValue={userAnswer} onValueChange={handleAnswerChange}>
+          <RadioGroup value={selectedAnswer} onValueChange={handleAnswerChange}>
             <div className="grid gap-2">
               {question.options.map((option) => (
                 <div 
                   key={option.id} 
-                  className="flex items-center space-x-2"
-                  onDoubleClick={() => handleRadioDoubleClick(option.id)}
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={() => handleAnswerChange(option.id)}
                 >
                   <RadioGroupItem value={option.id} id={option.id} />
-                  <Label htmlFor={option.id}>
+                  <Label htmlFor={option.id} className="cursor-pointer">
                     {renderWithLatex(translatedOptions[option.id] || option.text)}
                   </Label>
                 </div>

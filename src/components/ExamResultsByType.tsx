@@ -124,7 +124,7 @@ const ExamResultsByType = ({ results, loading }: ExamResultProps) => {
                       }`}></div>
                       <div>
                         <Link 
-                          to={`/result-details/${result.id}`} 
+                          to={`/exams/${result.exam_id}`} 
                           className="hover:text-mathprimary hover:underline flex items-center gap-1"
                         >
                           {result.exams?.title || "Unknown Exam"}
