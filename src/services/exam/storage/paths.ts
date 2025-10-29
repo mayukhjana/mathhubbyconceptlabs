@@ -4,21 +4,11 @@
  */
 
 /**
- * Gets the correct bucket name based on exam board and file type
+ * Gets the unified bucket name for exam files
+ * All exam papers go to 'exam-papers', all solutions go to 'exam-solutions'
  */
 export const getBucketName = (board: string, fileType: 'paper' | 'solution'): string => {
-  const boardLower = board.toLowerCase().replace(/\s+/g, '_');
-  
-  const bucketMap: Record<string, { paper: string; solution: string }> = {
-    'wbjee': { paper: 'wbjee_papers', solution: 'wbjee_solutions' },
-    'jee_mains': { paper: 'jee_mains_papers', solution: 'jee_mains_solutions' },
-    'jee_advanced': { paper: 'jee_advanced_papers', solution: 'jee_advanced_solutions' }
-  };
-  
-  const mappedBucket = bucketMap[boardLower];
-  return mappedBucket 
-    ? mappedBucket[fileType] 
-    : (fileType === 'paper' ? 'exam_papers' : 'solutions');
+  return fileType === 'paper' ? 'exam-papers' : 'exam-solutions';
 };
 
 /**
