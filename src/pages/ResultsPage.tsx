@@ -367,7 +367,9 @@ const ResultsPage = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {Object.entries(analysisData.examsByBoard).map(([board, count]) => {
+                        {Object.entries(analysisData.examsByBoard)
+                          .filter(([board]) => !['WBJEE', 'JEE Main', 'JEE Advanced', 'BITSAT', 'SSC CGL', 'VITEEE', 'SRMJEEE', 'KCET', 'MHT CET', 'COMEDK', 'TS EAMCET', 'AP EAMCET', 'KEAM', 'TNEA', 'CUET', 'IPU CET', 'UPSEE', 'Other Exams'].includes(board))
+                          .map(([board, count]) => {
                           const avgScore = analysisData.scoresByBoard[board] || 0;
                           return (
                             <div key={board} className="flex flex-col p-4 rounded-lg bg-gradient-to-br from-muted/50 to-muted border hover:border-mathprimary/50 transition-colors">
@@ -380,8 +382,41 @@ const ResultsPage = () => {
                           );
                         })}
                       </div>
+                      {Object.entries(analysisData.examsByBoard).filter(([board]) => !['WBJEE', 'JEE Main', 'JEE Advanced', 'BITSAT', 'SSC CGL', 'VITEEE', 'SRMJEEE', 'KCET', 'MHT CET', 'COMEDK', 'TS EAMCET', 'AP EAMCET', 'KEAM', 'TNEA', 'CUET', 'IPU CET', 'UPSEE', 'Other Exams'].includes(board)).length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No board exam results yet</p>
+                      )}
                     </CardContent>
                   </Card>
+
+                  {/* Entrance Exam Performance */}
+                  {Object.entries(analysisData.examsByBoard)
+                    .filter(([board]) => ['WBJEE', 'JEE Main', 'JEE Advanced', 'BITSAT', 'SSC CGL', 'VITEEE', 'SRMJEEE', 'KCET', 'MHT CET', 'COMEDK', 'TS EAMCET', 'AP EAMCET', 'KEAM', 'TNEA', 'CUET', 'IPU CET', 'UPSEE', 'Other Exams'].includes(board))
+                    .length > 0 && (
+                    <Card className="mt-6">
+                      <CardHeader>
+                        <CardTitle>Entrance Exam Performance</CardTitle>
+                        <CardDescription>Your scores across entrance exams</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {Object.entries(analysisData.examsByBoard)
+                            .filter(([board]) => ['WBJEE', 'JEE Main', 'JEE Advanced', 'BITSAT', 'SSC CGL', 'VITEEE', 'SRMJEEE', 'KCET', 'MHT CET', 'COMEDK', 'TS EAMCET', 'AP EAMCET', 'KEAM', 'TNEA', 'CUET', 'IPU CET', 'UPSEE', 'Other Exams'].includes(board))
+                            .map(([board, count]) => {
+                            const avgScore = analysisData.scoresByBoard[board] || 0;
+                            return (
+                              <div key={board} className="flex flex-col p-4 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border hover:border-primary/50 transition-colors">
+                                <span className="font-medium text-sm text-muted-foreground">{board}</span>
+                                <div className="flex items-baseline gap-2 mt-2">
+                                  <span className="text-2xl font-bold text-primary">{avgScore.toFixed(1)}%</span>
+                                  <span className="text-xs text-muted-foreground">{count} exam{count !== 1 ? 's' : ''}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
 
                 {/* Right Column - Chapter Performance */}

@@ -23,72 +23,72 @@ const BoardsSection = () => {
     {
       name: "CBSE",
       description: "Comprehensive collection of CBSE math papers with solutions.",
-      link: "/boards/cbse",
+      link: "/boards/cbse/papers",
     },
     {
       name: "ICSE",
       description: "Access ICSE board papers from the past 10 years organized by chapters.",
-      link: "/boards/icse",
+      link: "/boards/icse/papers",
     },
     {
       name: "Maharashtra State Board",
       description: "Complete Maharashtra SSC and HSC math papers with detailed solutions.",
-      link: "/boards/maharashtra",
+      link: "/boards/maharashtra/papers",
     },
     {
       name: "Tamil Nadu State Board",
       description: "Tamil Nadu board math papers for all standards with chapter-wise practice.",
-      link: "/boards/tamil-nadu",
+      link: "/boards/tamil-nadu/papers",
     },
     {
       name: "Karnataka State Board",
       description: "KSEEB math papers and resources for SSLC and PUC students.",
-      link: "/boards/karnataka",
+      link: "/boards/karnataka/papers",
     },
     {
       name: "Kerala State Board",
       description: "Kerala SSLC and Plus One/Two math papers with comprehensive solutions.",
-      link: "/boards/kerala",
+      link: "/boards/kerala/papers",
     },
     {
       name: "Uttar Pradesh Board",
       description: "UP Board math papers for high school and intermediate students.",
-      link: "/boards/uttar-pradesh",
+      link: "/boards/uttar-pradesh/papers",
     },
     {
       name: "Rajasthan Board",
       description: "RBSE math papers with solutions for secondary and senior secondary.",
-      link: "/boards/rajasthan",
+      link: "/boards/rajasthan/papers",
     },
     {
       name: "Madhya Pradesh Board",
       description: "MP Board math papers for classes 10th and 12th with detailed explanations.",
-      link: "/boards/madhya-pradesh",
+      link: "/boards/madhya-pradesh/papers",
     },
     {
       name: "Gujarat State Board",
       description: "GSEB math papers for SSC and HSC with chapter-wise practice tests.",
-      link: "/boards/gujarat",
+      link: "/boards/gujarat/papers",
     },
     {
       name: "Bihar Board",
       description: "Bihar Board math papers for matriculation and intermediate exams.",
-      link: "/boards/bihar",
+      link: "/boards/bihar/papers",
     },
     {
       name: "West Bengal Board",
       description: "WBBSE and WBCHSE math papers sorted by year and chapter.",
-      link: "/boards/west-bengal",
+      link: "/boards/west-bengal/papers",
     },
     {
       name: "Andhra Pradesh Board",
       description: "AP Board math papers for SSC and intermediate with solutions.",
-      link: "/boards/andhra-pradesh",
+      link: "/boards/andhra-pradesh/papers",
     },
     {
       name: "Telangana Board",
       description: "TS Board math papers for SSC and intermediate students.",
-      link: "/boards/telangana",
+      link: "/boards/telangana/papers",
     }
   ];
 

@@ -29,6 +29,61 @@ const boardsInfo = {
     name: "West Bengal Board",
     description: "The West Bengal Board of Secondary Education conducts the Madhyamik Pariksha (Secondary Examination) for students in West Bengal.",
     image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
+  },
+  "maharashtra": {
+    name: "Maharashtra State Board",
+    description: "The Maharashtra State Board of Secondary and Higher Secondary Education conducts examinations for SSC and HSC students.",
+    image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+  },
+  "tamil-nadu": {
+    name: "Tamil Nadu State Board",
+    description: "The Tamil Nadu State Board provides quality education through standardized examinations for students across Tamil Nadu.",
+    image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
+  },
+  "karnataka": {
+    name: "Karnataka State Board",
+    description: "The Karnataka Secondary Education Examination Board (KSEEB) conducts SSLC and PUC examinations.",
+    image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
+  },
+  "kerala": {
+    name: "Kerala State Board",
+    description: "The Kerala State Board conducts SSLC and Higher Secondary examinations for students in Kerala.",
+    image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+  },
+  "uttar-pradesh": {
+    name: "Uttar Pradesh Board",
+    description: "The UP Board of High School and Intermediate Education conducts examinations for high school and intermediate students.",
+    image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
+  },
+  "rajasthan": {
+    name: "Rajasthan Board",
+    description: "The Board of Secondary Education Rajasthan (RBSE) conducts examinations for secondary and senior secondary students.",
+    image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
+  },
+  "madhya-pradesh": {
+    name: "Madhya Pradesh Board",
+    description: "The MP Board of Secondary Education conducts examinations for 10th and 12th standard students.",
+    image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+  },
+  "gujarat": {
+    name: "Gujarat State Board",
+    description: "The Gujarat Secondary and Higher Secondary Education Board (GSEB) conducts SSC and HSC examinations.",
+    image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
+  },
+  "bihar": {
+    name: "Bihar Board",
+    description: "The Bihar School Examination Board conducts matriculation and intermediate examinations.",
+    image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
+  },
+  "andhra-pradesh": {
+    name: "Andhra Pradesh Board",
+    description: "The AP Board of Secondary Education conducts SSC and intermediate examinations for students in Andhra Pradesh.",
+    image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+  },
+  "telangana": {
+    name: "Telangana Board",
+    description: "The Telangana State Board of Secondary Education conducts SSC and intermediate examinations.",
+    image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
   }
 };
 

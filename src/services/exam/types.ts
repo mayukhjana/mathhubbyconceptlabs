@@ -37,7 +37,15 @@ export const BOARD_OPTIONS = [
   'West Bengal Board',
   'Maharashtra Board',
   'Tamil Nadu Board',
-  'Karnataka Board'
+  'Karnataka Board',
+  'Kerala Board',
+  'Uttar Pradesh Board',
+  'Rajasthan Board',
+  'Madhya Pradesh Board',
+  'Gujarat Board',
+  'Bihar Board',
+  'Andhra Pradesh Board',
+  'Telangana Board'
 ];
 
 export const ENTRANCE_OPTIONS = [
@@ -46,6 +54,18 @@ export const ENTRANCE_OPTIONS = [
   'JEE Advanced', 
   'SSC CGL',
   'BITSAT',
+  'VITEEE',
+  'SRMJEEE',
+  'KCET',
+  'MHT CET',
+  'COMEDK',
+  'TS EAMCET',
+  'AP EAMCET',
+  'KEAM',
+  'TNEA',
+  'CUET',
+  'IPU CET',
+  'UPSEE',
   'Other Exams'
 ];
 

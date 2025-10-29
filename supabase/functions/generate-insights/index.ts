@@ -11,31 +11,60 @@ serve(async (req) => {
   }
 
   try {
-    const { examId, score, totalQuestions, correctAnswers, incorrectAnswers, unattempted } = await req.json();
+    const { results } = await req.json();
+    
+    if (!results || results.length === 0) {
+      return new Response(
+        JSON.stringify({ analysis: 'No results available to analyze yet.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const prompt = `You are an expert education analyst. Analyze this exam performance and provide personalized insights.
+    // Prepare performance summary
+    const totalExams = results.length;
+    const avgScore = (results.reduce((acc: number, r: any) => acc + r.score, 0) / totalExams).toFixed(1);
+    const bestScore = Math.max(...results.map((r: any) => r.score));
+    const recentScore = results[results.length - 1]?.score || 0;
     
-Exam Performance:
-- Score: ${score}%
-- Total Questions: ${totalQuestions}
-- Correct Answers: ${correctAnswers}
-- Incorrect Answers: ${incorrectAnswers}
-- Unattempted: ${unattempted}
+    // Group by board/exam type
+    const examsByType: Record<string, number> = {};
+    const scoresByType: Record<string, number[]> = {};
+    
+    results.forEach((result: any) => {
+      const examType = result.exams?.board || 'Unknown';
+      examsByType[examType] = (examsByType[examType] || 0) + 1;
+      if (!scoresByType[examType]) scoresByType[examType] = [];
+      scoresByType[examType].push(result.score);
+    });
 
-Please provide:
-1. A brief performance summary (2-3 sentences)
-2. Key strengths
-3. Areas that need improvement
-4. Two specific, actionable recommendations
+    const prompt = `You are an expert education analyst. Analyze this student's exam performance and provide personalized insights.
 
-Keep it concise, encouraging, and actionable. Format as plain text with clear sections.`;
+Performance Summary:
+- Total Exams Taken: ${totalExams}
+- Average Score: ${avgScore}%
+- Best Score: ${bestScore}%
+- Recent Score: ${recentScore}%
 
-    console.log("Generating AI insights for exam:", examId);
+Exam Distribution:
+${Object.entries(examsByType).map(([type, count]) => {
+  const avgTypeScore = (scoresByType[type].reduce((a: number, b: number) => a + b, 0) / scoresByType[type].length).toFixed(1);
+  return `- ${type}: ${count} exam(s), Avg: ${avgTypeScore}%`;
+}).join('\n')}
+
+Provide a concise analysis (150-200 words) covering:
+1. Overall performance assessment
+2. Strongest areas
+3. Areas needing improvement
+4. 2-3 specific actionable recommendations
+
+Use a supportive and motivating tone. Format with clear sections using markdown.`;
+
+    console.log("Generating AI insights for student performance");
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -46,7 +75,7 @@ Keep it concise, encouraging, and actionable. Format as plain text with clear se
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are an expert education analyst providing personalized exam feedback.' },
+          { role: 'system', content: 'You are an expert education analyst providing personalized exam performance feedback.' },
           { role: 'user', content: prompt }
         ],
       }),
@@ -74,12 +103,12 @@ Keep it concise, encouraging, and actionable. Format as plain text with clear se
     }
 
     const data = await response.json();
-    const insights = data.choices?.[0]?.message?.content || 'Keep practicing to improve!';
+    const analysis = data.choices?.[0]?.message?.content || 'Keep practicing to improve!';
 
     console.log("AI insights generated successfully");
 
     return new Response(
-      JSON.stringify({ insights }),
+      JSON.stringify({ analysis }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -87,7 +116,7 @@ Keep it concise, encouraging, and actionable. Format as plain text with clear se
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Failed to generate insights',
-        insights: 'Unable to generate insights at this time. Keep practicing and review your mistakes!' 
+        analysis: 'Unable to generate insights at this time. Keep practicing and review your mistakes!' 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
