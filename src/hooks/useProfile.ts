@@ -9,6 +9,9 @@ export interface ProfileData {
   displayName: string;
   username: string;
   avatarUrl: string | null;
+  schoolName: string;
+  board: string;
+  class: string;
 }
 
 export const useProfile = () => {
@@ -16,6 +19,9 @@ export const useProfile = () => {
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState<string>('');
   const [username, setUsername] = useState<string>('');
+  const [schoolName, setSchoolName] = useState<string>('');
+  const [board, setBoard] = useState<string>('');
+  const [classValue, setClassValue] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState<boolean>(false);
@@ -27,7 +33,7 @@ export const useProfile = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, username, avatar_url')
+          .select('full_name, username, avatar_url, school_name, board, class')
           .eq('id', user.id)
           .single();
           
@@ -39,6 +45,9 @@ export const useProfile = () => {
         if (data) {
           setDisplayName(data.full_name || '');
           setUsername(data.username || '');
+          setSchoolName(data.school_name || '');
+          setBoard(data.board || '');
+          setClassValue(data.class || '');
           
           if (data.avatar_url) {
             const timestamp = new Date().getTime();
@@ -90,6 +99,9 @@ export const useProfile = () => {
         .update({
           full_name: displayName,
           username: username,
+          school_name: schoolName,
+          board: board,
+          class: classValue,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -110,6 +122,12 @@ export const useProfile = () => {
     setDisplayName,
     username,
     setUsername,
+    schoolName,
+    setSchoolName,
+    board,
+    setBoard,
+    classValue,
+    setClassValue,
     loading,
     avatarUrl,
     uploadingAvatar,

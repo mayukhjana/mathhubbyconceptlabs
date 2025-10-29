@@ -16,6 +16,12 @@ const ProfilePage = () => {
     setDisplayName,
     username,
     setUsername,
+    schoolName,
+    setSchoolName,
+    board,
+    setBoard,
+    classValue,
+    setClassValue,
     loading,
     avatarUrl,
     uploadingAvatar,
@@ -50,6 +56,11 @@ const ProfilePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <AvatarSection 
             avatarUrl={avatarUrl}
+            displayName={displayName}
+            username={username}
+            schoolName={schoolName}
+            board={board}
+            classValue={classValue}
             uploadingAvatar={uploadingAvatar}
             setUploadingAvatar={setUploadingAvatar}
           />
@@ -57,9 +68,15 @@ const ProfilePage = () => {
           <ProfileForm
             displayName={displayName}
             username={username}
+            schoolName={schoolName}
+            board={board}
+            classValue={classValue}
             loading={loading}
             onDisplayNameChange={setDisplayName}
             onUsernameChange={setUsername}
+            onSchoolNameChange={setSchoolName}
+            onBoardChange={setBoard}
+            onClassChange={setClassValue}
             onSignOut={handleSignOut}
             onSubmit={handleSubmit}
           />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit } from "lucide-react";
+import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
 import { useTheme } from "@/components/ThemeProvider";
@@ -72,6 +72,12 @@ const Navbar = () => {
                 <span>MathHub AI</span>
               </Button>
             </Link>}
+          <Link to="/mentorships">
+            <Button variant={isActive("/mentorships") ? "default" : "ghost"} className="flex items-center gap-2">
+              <Users size={18} />
+              <span>Mentorships</span>
+            </Button>
+          </Link>
           <Link to="/premium">
             <Button variant={isActive("/premium") ? "default" : "ghost"} className="flex items-center gap-2">
               <Award size={18} />
@@ -149,6 +155,12 @@ const Navbar = () => {
                   MathHub AI
                 </Button>
               </Link>}
+            <Link to="/mentorships" onClick={closeMenu}>
+              <Button variant={isActive("/mentorships") ? "default" : "ghost"} className="w-full justify-start text-lg">
+                <Users className="mr-3" size={20} />
+                Mentorships
+              </Button>
+            </Link>
             <Link to="/premium" onClick={closeMenu}>
               <Button variant={isActive("/premium") ? "default" : "ghost"} className="w-full justify-start text-lg">
                 <Award className="mr-3" size={20} />

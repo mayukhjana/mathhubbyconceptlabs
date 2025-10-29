@@ -31,6 +31,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import StudyMaterialsPage from "./pages/StudyMaterialsPage";
 import PracticeSetsPage from "./pages/PracticeSetsPage";
 import VideoTutorialsPage from "./pages/VideoTutorialsPage";
+import MentorshipsPage from "./pages/MentorshipsPage";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
                   <Route path="/resources/study-materials" element={<StudyMaterialsPage />} />
                   <Route path="/resources/practice-sets" element={<PracticeSetsPage />} />
                   <Route path="/resources/video-tutorials" element={<VideoTutorialsPage />} />
+                  <Route path="/mentorships" element={<MentorshipsPage />} />
                   <Route path="/results" element={
                     <AuthGuard>
                       <ResultsPage />

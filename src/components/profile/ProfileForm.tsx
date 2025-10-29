@@ -9,9 +9,15 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ProfileFormProps {
   displayName: string;
   username: string;
+  schoolName: string;
+  board: string;
+  classValue: string;
   loading: boolean;
   onDisplayNameChange: (value: string) => void;
   onUsernameChange: (value: string) => void;
+  onSchoolNameChange: (value: string) => void;
+  onBoardChange: (value: string) => void;
+  onClassChange: (value: string) => void;
   onSignOut: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
@@ -19,9 +25,15 @@ interface ProfileFormProps {
 export const ProfileForm = ({
   displayName,
   username,
+  schoolName,
+  board,
+  classValue,
   loading,
   onDisplayNameChange,
   onUsernameChange,
+  onSchoolNameChange,
+  onBoardChange,
+  onClassChange,
   onSignOut,
   onSubmit
 }: ProfileFormProps) => {
@@ -59,6 +71,36 @@ export const ProfileForm = ({
               value={username}
               onChange={(e) => onUsernameChange(e.target.value)}
               placeholder="Your username"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="schoolName">School Name</Label>
+            <Input
+              id="schoolName"
+              value={schoolName}
+              onChange={(e) => onSchoolNameChange(e.target.value)}
+              placeholder="Your school name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="board">Board</Label>
+            <Input
+              id="board"
+              value={board}
+              onChange={(e) => onBoardChange(e.target.value)}
+              placeholder="e.g., CBSE, ICSE, State Board"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="class">Class</Label>
+            <Input
+              id="class"
+              value={classValue}
+              onChange={(e) => onClassChange(e.target.value)}
+              placeholder="e.g., 10th, 12th"
             />
           </div>
           

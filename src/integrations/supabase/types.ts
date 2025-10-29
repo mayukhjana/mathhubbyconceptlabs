@@ -160,25 +160,34 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          board: string | null
+          class: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          school_name: string | null
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          board?: string | null
+          class?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
+          school_name?: string | null
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          board?: string | null
+          class?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          school_name?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -277,6 +286,74 @@ export type Database = {
           message?: string
           status?: string | null
           subject?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      teacher_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          rating: number
+          student_id: string
+          teacher_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating: number
+          student_id: string
+          teacher_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number
+          student_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          experience_years: number | null
+          hourly_rate: number
+          id: string
+          specialization: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          experience_years?: number | null
+          hourly_rate: number
+          id?: string
+          specialization: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          experience_years?: number | null
+          hourly_rate?: number
+          id?: string
+          specialization?: string
           updated_at?: string | null
           user_id?: string
         }
