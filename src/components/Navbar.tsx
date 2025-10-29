@@ -135,9 +135,24 @@ const Navbar = () => {
             </>}
         </div>
         
-        <Button variant="ghost" size="icon" className="lg:hidden" onClick={toggleMenu}>
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </Button>
+        {/* Mobile auth buttons and menu */}
+        <div className="lg:hidden flex items-center gap-2">
+          {!isAuthenticated && (
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/auth">
+                  <LogIn size={16} />
+                </Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/auth?tab=register">Sign Up</Link>
+              </Button>
+            </>
+          )}
+          <Button variant="ghost" size="icon" onClick={toggleMenu}>
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </Button>
+        </div>
       </div>
       
       {/* Mobile/Tablet menu */}

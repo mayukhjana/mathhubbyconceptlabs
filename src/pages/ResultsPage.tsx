@@ -196,13 +196,13 @@ const ResultsPage = () => {
       
       <main className="flex-grow py-8 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Your Exam Results</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-bold">Your Exam Results</h1>
+              <p className="text-sm text-muted-foreground">
                 View and track your performance across all exams
               </p>
             </div>
@@ -237,78 +237,78 @@ const ResultsPage = () => {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-medium">Total Exams</CardTitle>
-                      <div className="p-2 rounded-lg bg-blue-500/10">
-                        <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <CardHeader className="pb-1 sm:pb-2 p-3 sm:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-base font-medium">Total Exams</CardTitle>
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10">
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{analysisData.totalExams}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Exams completed</p>
+                  <CardContent className="p-3 sm:p-6 pt-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-300">{analysisData.totalExams}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Completed</p>
                   </CardContent>
                 </Card>
                 
                 <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-medium">Average Score</CardTitle>
-                      <div className="p-2 rounded-lg bg-green-500/10">
-                        <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <CardHeader className="pb-1 sm:pb-2 p-3 sm:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-base font-medium">Average</CardTitle>
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/10">
+                        <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+                  <CardContent className="p-3 sm:p-6 pt-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-300">
                       {analysisData.averageScore}%
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Across all exams</p>
+                    <p className="text-xs text-muted-foreground mt-1">All exams</p>
                   </CardContent>
                 </Card>
                 
                 <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-medium">Best Score</CardTitle>
-                      <div className="p-2 rounded-lg bg-purple-500/10">
-                        <Award className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <CardHeader className="pb-1 sm:pb-2 p-3 sm:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-base font-medium">Best</CardTitle>
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-purple-500/10">
+                        <Award className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600 dark:text-purple-400" />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+                  <CardContent className="p-3 sm:p-6 pt-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-purple-700 dark:text-purple-300">
                       {analysisData.bestScore}%
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Your highest achievement</p>
+                    <p className="text-xs text-muted-foreground mt-1">Highest</p>
                   </CardContent>
                 </Card>
                 
                 <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-medium">Improvement</CardTitle>
-                      <div className="p-2 rounded-lg bg-orange-500/10">
-                        <TrendingUp className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  <CardHeader className="pb-1 sm:pb-2 p-3 sm:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-base font-medium">Growth</CardTitle>
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-orange-500/10">
+                        <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600 dark:text-orange-400" />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">
+                  <CardContent className="p-3 sm:p-6 pt-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-orange-700 dark:text-orange-300">
                       {analysisData.progressOverTime.length > 1 
                         ? `+${(analysisData.progressOverTime[analysisData.progressOverTime.length - 1].score - analysisData.progressOverTime[0].score).toFixed(1)}%`
                         : 'N/A'}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Since first exam</p>
+                    <p className="text-xs text-muted-foreground mt-1">Since first</p>
                   </CardContent>
                 </Card>
               </div>
               
               {/* Main Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 {/* Left Column - AI Insights & Progress */}
                 <div className="lg:col-span-2 space-y-6">
                   {/* AI Insights Section */}
