@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Exam } from "@/services/exam/types";
 import { fetchEntranceExams, fetchBoardExams } from "@/services/exam/queries";
-import { deleteWBJEEExams, deleteExamById } from "@/services/exam/management";
+import { deleteEntranceExams, deleteExamById } from "@/services/exam/management";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useExamManagement = () => {
@@ -51,23 +51,20 @@ export const useExamManagement = () => {
 
   const handleDeleteBoard = async (board: string) => {
     try {
-      if (board === 'WBJEE') {
-        const result = await deleteWBJEEExams();
+      const result = await deleteEntranceExams(board);
+      
+      // Update the local state immediately to reflect the deletion
+      if (result.success) {
+        setEntranceExams(prev => prev.filter(exam => exam.board !== board));
+        toast({
+          title: "Success",
+          description: `All ${board} exams deleted successfully`
+        });
         
-        // Update the local state immediately to reflect the deletion
-        if (result.success) {
-          setEntranceExams(prev => prev.filter(exam => exam.board !== 'WBJEE'));
-          toast({
-            title: "Success",
-            description: `All WBJEE exams deleted successfully`
-          });
-          
-          // Force reload to ensure UI is up to date
-          await loadExams(false);
-        }
-        return result;
+        // Force reload to ensure UI is up to date
+        await loadExams(false);
       }
-      throw new Error(`Deletion not implemented for board: ${board}`);
+      return result;
     } catch (error) {
       console.error(`Error deleting ${board} exams:`, error);
       toast({
