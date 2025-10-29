@@ -1,88 +1,103 @@
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import useEmblaCarousel from "embla-carousel-react";
+import { useCallback } from "react";
 
 const EntranceExamsSection = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'start',
+    slidesToScroll: 1,
+  });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
   const entranceExams = [
     {
       name: "JEE Main",
       description: "Joint Entrance Examination for admission to NITs, IIITs, and other engineering colleges.",
-      link: "/boards/jee-main",
+      link: "/entrance-exams",
     },
     {
       name: "JEE Advanced",
       description: "Advanced level entrance exam for admission to IITs across India.",
-      link: "/boards/jee-advanced",
+      link: "/entrance-exams",
     },
     {
       name: "BITSAT",
       description: "Birla Institute of Technology and Science Admission Test for BITS Pilani campuses.",
-      link: "/boards/bitsat",
+      link: "/entrance-exams",
     },
     {
       name: "VITEEE",
       description: "VIT Engineering Entrance Examination for admission to VIT campuses.",
-      link: "/boards/viteee",
+      link: "/entrance-exams",
     },
     {
       name: "SRMJEEE",
       description: "SRM Joint Engineering Entrance Examination for SRM Institute of Science and Technology.",
-      link: "/boards/srmjeee",
+      link: "/entrance-exams",
     },
     {
       name: "KCET",
       description: "Karnataka Common Entrance Test for engineering, medical, and other professional courses.",
-      link: "/boards/kcet",
+      link: "/entrance-exams",
     },
     {
       name: "MHT CET",
       description: "Maharashtra Common Entrance Test for engineering and pharmacy admissions.",
-      link: "/boards/mht-cet",
+      link: "/entrance-exams",
     },
     {
       name: "COMEDK",
       description: "Consortium of Medical, Engineering and Dental Colleges of Karnataka entrance exam.",
-      link: "/boards/comedk",
+      link: "/entrance-exams",
     },
     {
       name: "TS EAMCET",
       description: "Telangana State Engineering, Agriculture & Medical Common Entrance Test.",
-      link: "/boards/ts-eamcet",
+      link: "/entrance-exams",
     },
     {
       name: "AP EAMCET",
       description: "Andhra Pradesh Engineering, Agriculture & Medical Common Entrance Test.",
-      link: "/boards/ap-eamcet",
+      link: "/entrance-exams",
     },
     {
       name: "WBJEE",
       description: "West Bengal Joint Entrance Examination for engineering and medical admissions.",
-      link: "/boards/wbjee",
+      link: "/entrance-exams",
     },
     {
       name: "KEAM",
       description: "Kerala Engineering Architecture Medical entrance examination.",
-      link: "/boards/keam",
+      link: "/entrance-exams",
     },
     {
       name: "TNEA",
       description: "Tamil Nadu Engineering Admissions for admission to engineering colleges.",
-      link: "/boards/tnea",
+      link: "/entrance-exams",
     },
     {
       name: "CUET",
       description: "Common University Entrance Test for admission to central universities.",
-      link: "/boards/cuet",
+      link: "/entrance-exams",
     },
     {
       name: "IPU CET",
       description: "Guru Gobind Singh Indraprastha University Common Entrance Test.",
-      link: "/boards/ipu-cet",
+      link: "/entrance-exams",
     },
     {
       name: "UPSEE",
       description: "Uttar Pradesh State Entrance Examination for engineering admissions.",
-      link: "/boards/upsee",
+      link: "/entrance-exams",
     }
   ];
 
@@ -104,27 +119,51 @@ const EntranceExamsSection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {entranceExams.map((exam, index) => (
-            <div key={exam.name} className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300">
-              <div className={`h-32 bg-gradient-to-br ${
-                index % 3 === 0 ? "from-mathaccent via-mathprimary to-mathsecondary" :
-                index % 3 === 1 ? "from-mathprimary via-mathsecondary to-mathaccent" :
-                "from-mathsecondary via-mathaccent to-mathprimary"
-              } flex items-center justify-center relative overflow-hidden`}>
-                <div className="absolute inset-0 bg-white/5"></div>
-                <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2">{exam.name}</h3>
-              </div>
-              <div className="p-4">
-                <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
-                  {exam.description}
-                </p>
-                <Button asChild size="sm" className="w-full bg-gradient-to-r from-mathaccent to-mathprimary hover:shadow-lg hover:scale-105 transition-all duration-300">
-                  <Link to={exam.link}>View Papers</Link>
-                </Button>
-              </div>
+        <div className="relative">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex gap-6">
+              {entranceExams.map((exam, index) => (
+                <div key={exam.name} className="flex-[0_0_calc(33.333%-1rem)] min-w-0">
+                  <div className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 h-full">
+                    <div className={`h-32 bg-gradient-to-br ${
+                      index % 3 === 0 ? "from-mathaccent via-mathprimary to-mathsecondary" :
+                      index % 3 === 1 ? "from-mathprimary via-mathsecondary to-mathaccent" :
+                      "from-mathsecondary via-mathaccent to-mathprimary"
+                    } flex items-center justify-center relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-white/5"></div>
+                      <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2">{exam.name}</h3>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
+                        {exam.description}
+                      </p>
+                      <Button asChild size="sm" className="w-full bg-gradient-to-r from-mathaccent to-mathprimary hover:shadow-lg hover:scale-105 transition-all duration-300">
+                        <Link to={exam.link}>View Papers</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-background/95 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform z-10"
+            onClick={scrollPrev}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-background/95 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform z-10"
+            onClick={scrollNext}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </section>

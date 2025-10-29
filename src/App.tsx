@@ -13,6 +13,7 @@ import BoardsPage from "./pages/BoardsPage";
 import BoardDetail from "./pages/BoardDetail";
 import ExamPage from "./pages/ExamPage";
 import ExamPapersPage from "./pages/ExamPapersPage";
+import EntranceExamsPage from "./pages/EntranceExamsPage";
 import ResultsPage from "./pages/ResultsPage";
 import PremiumPage from "./pages/PremiumPage";
 import PremiumSuccessPage from "./pages/PremiumSuccessPage";
@@ -49,6 +50,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/boards" element={<BoardsPage />} />
                   <Route path="/boards/:boardId/*" element={<BoardDetail />} />
+                  <Route path="/entrance-exams" element={<EntranceExamsPage />} />
                   <Route path="/exams/:examId" element={<ExamPage />} />
                   <Route path="/exam-papers" element={<ExamPapersPage />} />
                   <Route path="/resources" element={<ResourcesPage />} />

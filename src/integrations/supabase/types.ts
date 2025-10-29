@@ -85,6 +85,7 @@ export type Database = {
       exams: {
         Row: {
           board: string
+          category: string | null
           chapter: string | null
           class: string
           created_at: string | null
@@ -98,6 +99,7 @@ export type Database = {
         }
         Insert: {
           board: string
+          category?: string | null
           chapter?: string | null
           class: string
           created_at?: string | null
@@ -111,6 +113,7 @@ export type Database = {
         }
         Update: {
           board?: string
+          category?: string | null
           chapter?: string | null
           class?: string
           created_at?: string | null
