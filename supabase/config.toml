@@ -4,7 +4,7 @@ project_id = "vhhysrbupmctklmmextr"
 verify_jwt = true
 
 [functions.translate-question]
-verify_jwt = false
+verify_jwt = true
 
 [functions.validate-answers]
 verify_jwt = true

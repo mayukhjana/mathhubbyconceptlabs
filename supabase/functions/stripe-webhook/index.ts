@@ -71,15 +71,18 @@ serve(async (req) => {
         // Calculate subscription end date
         const periodEnd = new Date(subscription.current_period_end * 1000);
 
+        // Determine subscription type from price
+        const priceId = subscription.items.data[0].price.id;
+        const subscriptionType = priceId === Deno.env.get("STRIPE_ANNUAL_PRICE_ID") ? "annual" : "monthly";
+        
         // Insert or update premium status
         await supabaseClient
-          .from("user_premium")
+          .from("premium_subscriptions")
           .upsert({
             user_id: user.id,
-            payment_id: subscriptionId,
-            payment_provider: 'stripe',
-            is_active: true,
-            starts_at: new Date().toISOString(),
+            stripe_subscription_id: subscriptionId,
+            subscription_type: subscriptionType,
+            status: 'active',
             expires_at: periodEnd.toISOString(),
           });
       }
@@ -103,24 +106,26 @@ serve(async (req) => {
       // Check subscription status
       if (subscription.status === 'active') {
         const periodEnd = new Date(subscription.current_period_end * 1000);
+        const priceId = subscription.items.data[0].price.id;
+        const subscriptionType = priceId === Deno.env.get("STRIPE_ANNUAL_PRICE_ID") ? "annual" : "monthly";
         
         // Update premium status
         await supabaseClient
-          .from("user_premium")
+          .from("premium_subscriptions")
           .upsert({
             user_id: user.id,
-            payment_id: subscription.id,
-            payment_provider: 'stripe',
-            is_active: true,
+            stripe_subscription_id: subscription.id,
+            subscription_type: subscriptionType,
+            status: 'active',
             expires_at: periodEnd.toISOString(),
           });
       } else if (subscription.status === 'canceled') {
         // Handle cancellation
         await supabaseClient
-          .from("user_premium")
-          .update({ is_active: false })
+          .from("premium_subscriptions")
+          .update({ status: 'canceled' })
           .eq('user_id', user.id)
-          .eq('payment_id', subscription.id);
+          .eq('stripe_subscription_id', subscription.id);
       }
     }
     

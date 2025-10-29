@@ -47,6 +47,10 @@ serve(async (req) => {
       ? Deno.env.get("STRIPE_ANNUAL_PRICE_ID") 
       : Deno.env.get("STRIPE_MONTHLY_PRICE_ID");
 
+    if (!priceId) {
+      throw new Error(`Missing Stripe price ID for ${subscriptionType} subscription. Please configure STRIPE_MONTHLY_PRICE_ID and STRIPE_ANNUAL_PRICE_ID in secrets.`);
+    }
+
     // Create a subscription session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
