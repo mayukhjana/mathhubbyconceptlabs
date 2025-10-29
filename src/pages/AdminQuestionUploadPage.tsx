@@ -152,16 +152,18 @@ const AdminQuestionUploadPage = () => {
         // Insert all questions
         const questionsToInsert = questions.map(q => ({
           exam_id: examId,
-          question_text: q.question_text,
+          question_text: q.is_image_question && !q.question_text ? 'See image below' : q.question_text,
           option_a: q.option_a,
           option_b: q.option_b,
           option_c: q.option_c,
           option_d: q.option_d,
           correct_answer: Array.isArray(q.correct_answer) ? q.correct_answer.join(',') : q.correct_answer,
           order_number: q.order_number,
-          marks: q.marks || 1, // Ensure marks is never null
+          marks: q.marks || 1,
           negative_marks: q.negative_marks || 0,
-          is_multi_correct: q.is_multi_correct || false
+          is_multi_correct: q.is_multi_correct || false,
+          is_image_question: q.is_image_question || false,
+          image_url: q.image_url || null
         }));
         
         const { error } = await supabase
