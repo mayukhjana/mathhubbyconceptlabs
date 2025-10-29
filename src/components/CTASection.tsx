@@ -22,7 +22,7 @@ const CTASection = () => {
           <Button size="lg" className="bg-white text-mathprimary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-xl h-14 px-8" asChild>
             <Link to="/boards">Browse Papers</Link>
           </Button>
-          <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/20 backdrop-blur-sm h-14 px-8" asChild>
+          <Button size="lg" className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm h-14 px-8" asChild>
             <Link to="/premium">Get Premium</Link>
           </Button>
         </div>
