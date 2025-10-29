@@ -6,8 +6,8 @@ const CTASection = () => {
   return (
     <section className="relative py-20 overflow-hidden">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-primary"></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-primary"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent"></div>
       
       {/* Decorative Elements */}
       <div className="absolute top-10 right-10 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
