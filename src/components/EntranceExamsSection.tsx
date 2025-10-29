@@ -35,6 +35,11 @@ const EntranceExamsSection = () => {
       link: "/entrance-exams",
     },
     {
+      name: "SSC CGL",
+      description: "Staff Selection Commission Combined Graduate Level Examination for various government posts.",
+      link: "/entrance-exams",
+    },
+    {
       name: "VITEEE",
       description: "VIT Engineering Entrance Examination for admission to VIT campuses.",
       link: "/entrance-exams",

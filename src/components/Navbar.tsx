@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,9 +39,7 @@ const Navbar = () => {
   return <header className="sticky top-0 w-full bg-background/95 backdrop-blur-sm border-b z-40">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mathprimary to-mathsecondary flex items-center justify-center text-white">
-            <GraduationCap size={24} />
-          </div>
+          <img src={logo} alt="MathHub Logo" className="w-10 h-10 rounded-lg" />
           <div className="flex flex-col">
             <span className="text-xl font-display font-bold">MathHub</span>
             <span className="text-xs text-muted-foreground">By ConceptLabs</span>
