@@ -41,6 +41,47 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_leaderboards: {
+        Row: {
+          created_at: string | null
+          exam_id: string
+          id: string
+          obtained_marks: number | null
+          rank: number | null
+          score: number
+          total_marks: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          exam_id: string
+          id?: string
+          obtained_marks?: number | null
+          rank?: number | null
+          score: number
+          total_marks?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          exam_id?: string
+          id?: string
+          obtained_marks?: number | null
+          rank?: number | null
+          score?: number
+          total_marks?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_leaderboards_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exams: {
         Row: {
           board: string
@@ -49,6 +90,7 @@ export type Database = {
           created_at: string | null
           duration: number
           id: string
+          instructions_pdf_url: string | null
           is_premium: boolean | null
           title: string
           updated_at: string | null
@@ -61,6 +103,7 @@ export type Database = {
           created_at?: string | null
           duration: number
           id?: string
+          instructions_pdf_url?: string | null
           is_premium?: boolean | null
           title: string
           updated_at?: string | null
@@ -73,6 +116,7 @@ export type Database = {
           created_at?: string | null
           duration?: number
           id?: string
+          instructions_pdf_url?: string | null
           is_premium?: boolean | null
           title?: string
           updated_at?: string | null
