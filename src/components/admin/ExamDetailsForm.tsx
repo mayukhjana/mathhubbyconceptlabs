@@ -219,7 +219,9 @@ const ExamDetailsForm = ({
 
       <div className="space-y-2">
         <Label>Instructions PDF (Optional)</Label>
-        <InstructionsPdfUpload examId={examTitle} />
+        <p className="text-sm text-muted-foreground">
+          Instructions PDF can be uploaded after creating the exam
+        </p>
       </div>
     </div>
   );

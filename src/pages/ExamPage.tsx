@@ -12,6 +12,7 @@ import { ExamNavigation } from "@/components/exam/ExamNavigation";
 import { ExamResults } from "@/components/exam/ExamResults";
 import { ExamSidebar } from "@/components/exam/ExamSidebar";
 import { Progress } from "@/components/ui/progress";
+import { InstructionsDialogWithCheckbox } from "@/components/exam/InstructionsDialogWithCheckbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +56,8 @@ const ExamPage = () => {
   const [totalPossibleMarks, setTotalPossibleMarks] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [questionsWithResults, setQuestionsWithResults] = useState<any[]>([]);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [examStarted, setExamStarted] = useState(false);
   
   // Detect if using tablet
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
@@ -116,7 +119,9 @@ const ExamPage = () => {
         });
         
         setTimeRemaining(examData.duration * 60);
-        setStartTime(new Date());
+        
+        // Show instructions dialog first, don't start timer yet
+        setShowInstructions(true);
         
         setLoading(false);
       } catch (error) {
@@ -130,7 +135,8 @@ const ExamPage = () => {
   }, [examId, user]);
   
   useEffect(() => {
-    if (!timeRemaining || timeRemaining <= 0 || examCompleted) return;
+    // Only start timer after exam has started
+    if (!timeRemaining || timeRemaining <= 0 || examCompleted || !examStarted) return;
     
     const timer = setTimeout(() => {
       setTimeRemaining(timeRemaining - 1);
@@ -141,7 +147,7 @@ const ExamPage = () => {
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [timeRemaining, examCompleted]);
+  }, [timeRemaining, examCompleted, examStarted]);
   
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -173,16 +179,16 @@ const ExamPage = () => {
     }
   };
 
-  // Enter fullscreen when exam loads
+  // Enter fullscreen when exam starts (after instructions)
   useEffect(() => {
-    if (exam && !examCompleted) {
+    if (exam && !examCompleted && examStarted) {
       enterFullscreen();
     }
-  }, [exam]);
+  }, [exam, examStarted]);
 
   // Prevent tab switching, screenshots, and enforce fullscreen
   useEffect(() => {
-    if (!exam || examCompleted) return;
+    if (!exam || examCompleted || !examStarted) return;
 
     // Detect tab switching
     const handleVisibilityChange = () => {
@@ -231,7 +237,13 @@ const ExamPage = () => {
       document.removeEventListener('contextmenu', preventContextMenu);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, [exam, examCompleted, tabSwitchCount]);
+  }, [exam, examCompleted, tabSwitchCount, examStarted]);
+
+  const handleStartExam = () => {
+    setExamStarted(true);
+    setStartTime(new Date());
+    setShowInstructions(false);
+  };
   
   const handleAnswer = (questionId: string, selectedOption: string) => {
     setUserAnswers(prev => ({
@@ -566,6 +578,13 @@ const ExamPage = () => {
       </div>
       
       <Footer />
+      
+      <InstructionsDialogWithCheckbox
+        open={showInstructions}
+        onOpenChange={setShowInstructions}
+        examId={exam.id}
+        onStartExam={handleStartExam}
+      />
       
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>

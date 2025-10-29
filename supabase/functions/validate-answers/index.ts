@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     }
 
     // Validate answers and calculate score
-    let score = 0;
+    let correctCount = 0;
     let obtainedMarks = 0;
     let totalMarks = 0;
     const results: Record<string, boolean> = {};
@@ -104,19 +104,24 @@ Deno.serve(async (req) => {
       results[question.id] = isCorrect;
 
       if (isCorrect) {
-        score++;
+        correctCount++;
         obtainedMarks += Number(question.marks);
       } else {
         obtainedMarks -= Number(question.negative_marks || 0);
       }
     }
 
+    // Calculate percentage score
+    const finalObtainedMarks = Math.max(0, obtainedMarks);
+    const percentageScore = totalMarks > 0 ? (finalObtainedMarks / totalMarks) * 100 : 0;
+
     return new Response(
       JSON.stringify({
-        score,
+        score: Math.round(percentageScore * 100) / 100, // Percentage with 2 decimal places
         totalMarks,
-        obtainedMarks: Math.max(0, obtainedMarks),
+        obtainedMarks: finalObtainedMarks,
         totalQuestions: questions.length,
+        correctCount,
         results,
         correctAnswers: correctAnswersMap
       }),

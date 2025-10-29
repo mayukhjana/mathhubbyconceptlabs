@@ -28,6 +28,7 @@ export interface Exam {
   duration: number;
   is_premium: boolean;
   isAttempted?: boolean; // Add this property for ExamPapersPage.tsx
+  instructions_pdf_url?: string | null;
 }
 
 export const BOARD_OPTIONS = [

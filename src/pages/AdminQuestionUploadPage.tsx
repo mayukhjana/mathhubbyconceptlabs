@@ -20,6 +20,7 @@ import LoadingAnimation from "@/components/LoadingAnimation";
 import QuestionForm from "@/components/QuestionForm";
 import { Question } from "@/services/exam/types";
 import { toast as sonnerToast } from "sonner";
+import { InstructionsPdfUpload } from "@/components/admin/InstructionsPdfUpload";
 
 const AdminQuestionUploadPage = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -245,6 +246,13 @@ const AdminQuestionUploadPage = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="mb-8">
+            <InstructionsPdfUpload 
+              examId={examId || null} 
+              currentInstructionsUrl={exam?.instructions_pdf_url} 
+            />
           </div>
           
           <div className="space-y-6 mb-6">

@@ -179,7 +179,7 @@ export const ExamResults = ({
   };
   
   return <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8 text-center">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-6xl mx-auto w-full">
         <div className="w-24 h-24 bg-mathprimary/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
           <Trophy className="w-12 h-12 text-mathprimary dark:text-blue-400" />
         </div>
