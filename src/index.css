@@ -4,60 +4,70 @@
 
 @layer base {
   :root {
-    /* Soothing light mode - soft blues and warm neutrals */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 27%;
+    /* Deep blue theme - light mode */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
-    --primary: 210 60% 55%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 200 25% 92%;
-    --secondary-foreground: 215 25% 27%;
-    --muted: 210 20% 95%;
-    --muted-foreground: 215 15% 50%;
-    --accent: 175 40% 88%;
-    --accent-foreground: 215 25% 27%;
-    --destructive: 0 70% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 210 60% 55%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 217 91% 35%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 80% 50%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 35%;
     --radius: 0.75rem;
     
-    /* Soothing gradient colors */
-    --gradient-start: 210 60% 60%;
-    --gradient-mid: 195 55% 58%;
-    --gradient-end: 180 50% 62%;
+    /* Deep blue gradient colors */
+    --gradient-start: 217 91% 35%;
+    --gradient-mid: 217 80% 50%;
+    --gradient-end: 217 91% 60%;
+    --mathprimary: 217 91% 35%;
+    --mathsecondary: 217 80% 50%;
+    --mathaccent: 217 91% 60%;
+    --mathlight: 217 91% 95%;
+    --mathdark: 217 91% 20%;
   }
 
   .dark {
-    /* Soothing dark mode - deep blues with warm undertones */
-    --background: 220 20% 12%;
-    --foreground: 210 25% 92%;
-    --card: 220 18% 16%;
-    --card-foreground: 210 25% 92%;
-    --popover: 220 18% 16%;
-    --popover-foreground: 210 25% 92%;
-    --primary: 210 70% 60%;
-    --primary-foreground: 220 20% 12%;
-    --secondary: 220 15% 22%;
-    --secondary-foreground: 210 25% 92%;
-    --muted: 220 15% 22%;
-    --muted-foreground: 215 15% 60%;
-    --accent: 180 30% 28%;
-    --accent-foreground: 210 25% 92%;
-    --destructive: 0 60% 50%;
-    --destructive-foreground: 210 25% 92%;
-    --border: 220 15% 24%;
-    --input: 220 15% 24%;
-    --ring: 210 70% 60%;
+    /* Deep blue theme - dark mode */
+    --background: 217 91% 8%;
+    --foreground: 210 40% 98%;
+    --card: 217 84% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 217 84% 12%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217 80% 50%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217 91% 35%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 32.6% 20%;
+    --input: 217 32.6% 20%;
+    --ring: 217 91% 60%;
     
-    /* Soothing gradient colors for dark mode */
-    --gradient-start: 220 50% 30%;
-    --gradient-mid: 210 45% 28%;
-    --gradient-end: 200 40% 32%;
+    /* Deep blue gradient colors for dark mode */
+    --gradient-start: 217 91% 35%;
+    --gradient-mid: 217 80% 50%;
+    --gradient-end: 217 91% 60%;
+    --mathprimary: 217 91% 35%;
+    --mathsecondary: 217 80% 50%;
+    --mathaccent: 217 91% 60%;
+    --mathlight: 217 91% 20%;
+    --mathdark: 217 91% 95%;
   }
 }
 

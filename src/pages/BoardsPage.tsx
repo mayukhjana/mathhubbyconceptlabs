@@ -1,40 +1,57 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BoardCard from "@/components/BoardCard";
 import { Input } from "@/components/ui/input";
 import LoadingAnimation from "@/components/LoadingAnimation";
-
-const boardsData = [
-  {
-    id: "icse",
-    title: "ICSE Board",
-    description: "Access previous year math papers for Indian Certificate of Secondary Education board.",
-    image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
-    paperCount: 120
-  },
-  {
-    id: "cbse",
-    title: "CBSE Board",
-    description: "Access previous year math papers for Central Board of Secondary Education.",
-    image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
-    paperCount: 150
-  },
-  {
-    id: "west-bengal",
-    title: "West Bengal Board",
-    description: "Access previous year math papers for West Bengal Board of Secondary Education.",
-    image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
-    paperCount: 95
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const BoardsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [boards, setBoards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBoards = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('exams')
+          .select('board')
+          .eq('category', 'board');
+
+        if (error) throw error;
+
+        // Get unique boards and count papers for each
+        const boardCounts = data.reduce((acc: any, exam: any) => {
+          if (!acc[exam.board]) {
+            acc[exam.board] = { count: 0, board: exam.board };
+          }
+          acc[exam.board].count++;
+          return acc;
+        }, {});
+
+        const boardsData = Object.values(boardCounts).map((item: any) => ({
+          id: item.board.toLowerCase().replace(/\s+/g, '-'),
+          title: item.board,
+          description: `Access previous year math papers for ${item.board}.`,
+          image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+          paperCount: item.count
+        }));
+
+        setBoards(boardsData);
+      } catch (error) {
+        console.error('Error fetching boards:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBoards();
+  }, []);
   
-  const filteredBoards = boardsData.filter(board => 
+  const filteredBoards = boards.filter(board => 
     board.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
@@ -64,18 +81,22 @@ const BoardsPage = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredBoards.map((board) => (
-                <BoardCard
-                  key={board.id}
-                  id={board.id}
-                  title={board.title}
-                  description={board.description}
-                  image={board.image}
-                  paperCount={board.paperCount}
-                />
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8">Loading boards...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredBoards.map((board) => (
+                  <BoardCard
+                    key={board.id}
+                    id={board.id}
+                    title={board.title}
+                    description={board.description}
+                    image={board.image}
+                    paperCount={board.paperCount}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>

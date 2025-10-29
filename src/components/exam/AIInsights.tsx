@@ -86,8 +86,8 @@ export const AIInsights = ({ score, questions, userAnswers, examId }: AIInsights
         </div>
         <h3 className="text-lg font-semibold">AI-Powered Insights</h3>
       </div>
-      <div className="prose prose-sm dark:prose-invert max-w-none">
-        <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">{insights}</p>
+      <div className="prose prose-sm dark:prose-invert max-w-none text-left">
+        <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap text-left">{insights}</p>
       </div>
     </Card>
   );
