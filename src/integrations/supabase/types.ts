@@ -91,7 +91,6 @@ export type Database = {
           created_at: string | null
           duration: number
           id: string
-          image_url: string | null
           instructions_pdf_url: string | null
           is_premium: boolean | null
           title: string
@@ -106,7 +105,6 @@ export type Database = {
           created_at?: string | null
           duration: number
           id?: string
-          image_url?: string | null
           instructions_pdf_url?: string | null
           is_premium?: boolean | null
           title: string
@@ -121,7 +119,6 @@ export type Database = {
           created_at?: string | null
           duration?: number
           id?: string
-          image_url?: string | null
           instructions_pdf_url?: string | null
           is_premium?: boolean | null
           title?: string

@@ -4,8 +4,14 @@ interface SchoolLogo {
 }
 
 const schoolLogos: SchoolLogo[] = [{
-  name: "West Bengal Board",
-  logoUrl: "/wbbse-logo.png"
+  name: "St. Xavier's College",
+  logoUrl: "/stxaviers-logo.png"
+}, {
+  name: "La Martiniere",
+  logoUrl: "/lamartiniere-logo.png"
+}, {
+  name: "Modern High School",
+  logoUrl: "/modernhigh-logo.png"
 }];
 
 const SchoolLogosMarquee = () => {

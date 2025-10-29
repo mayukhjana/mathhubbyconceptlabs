@@ -2,8 +2,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCallback } from "react";
 
 const BoardsSection = () => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
@@ -20,126 +19,78 @@ const BoardsSection = () => {
     if (emblaApi) emblaApi.scrollNext();
   }, [emblaApi]);
 
-  const [boards, setBoards] = useState([
+  const boards = [
     {
       name: "CBSE",
       description: "Comprehensive collection of CBSE math papers with solutions.",
       link: "/boards/cbse/papers",
-      image: null as string | null,
     },
     {
       name: "ICSE",
       description: "Access ICSE board papers from the past 10 years organized by chapters.",
       link: "/boards/icse/papers",
-      image: null as string | null,
     },
     {
       name: "Maharashtra State Board",
       description: "Complete Maharashtra SSC and HSC math papers with detailed solutions.",
       link: "/boards/maharashtra/papers",
-      image: null as string | null,
     },
     {
       name: "Tamil Nadu State Board",
       description: "Tamil Nadu board math papers for all standards with chapter-wise practice.",
       link: "/boards/tamil-nadu/papers",
-      image: null as string | null,
     },
     {
       name: "Karnataka State Board",
       description: "KSEEB math papers and resources for SSLC and PUC students.",
       link: "/boards/karnataka/papers",
-      image: null as string | null,
     },
     {
       name: "Kerala State Board",
       description: "Kerala SSLC and Plus One/Two math papers with comprehensive solutions.",
       link: "/boards/kerala/papers",
-      image: null as string | null,
     },
     {
       name: "Uttar Pradesh Board",
       description: "UP Board math papers for high school and intermediate students.",
       link: "/boards/uttar-pradesh/papers",
-      image: null as string | null,
     },
     {
       name: "Rajasthan Board",
       description: "RBSE math papers with solutions for secondary and senior secondary.",
       link: "/boards/rajasthan/papers",
-      image: null as string | null,
     },
     {
       name: "Madhya Pradesh Board",
       description: "MP Board math papers for classes 10th and 12th with detailed explanations.",
       link: "/boards/madhya-pradesh/papers",
-      image: null as string | null,
     },
     {
       name: "Gujarat State Board",
       description: "GSEB math papers for SSC and HSC with chapter-wise practice tests.",
       link: "/boards/gujarat/papers",
-      image: null as string | null,
     },
     {
       name: "Bihar Board",
       description: "Bihar Board math papers for matriculation and intermediate exams.",
       link: "/boards/bihar/papers",
-      image: null as string | null,
     },
     {
       name: "West Bengal Board",
       description: "WBBSE and WBCHSE math papers sorted by year and chapter.",
       link: "/boards/west-bengal/papers",
-      image: null as string | null,
     },
     {
       name: "Andhra Pradesh Board",
       description: "AP Board math papers for SSC and intermediate with solutions.",
       link: "/boards/andhra-pradesh/papers",
-      image: null as string | null,
     },
     {
       name: "Telangana Board",
       description: "TS Board math papers for SSC and intermediate students.",
       link: "/boards/telangana/papers",
-      image: null as string | null,
     }
-  ]);
-
-  useEffect(() => {
-    const fetchBoardImages = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('exams')
-          .select('board, image_url')
-          .eq('category', 'board')
-          .not('image_url', 'is', null);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          // Create a map of board names to image URLs
-          const boardImageMap = data.reduce((acc: any, exam: any) => {
-            if (exam.image_url && !acc[exam.board.toLowerCase()]) {
-              acc[exam.board.toLowerCase()] = exam.image_url;
-            }
-            return acc;
-          }, {});
-
-          // Update boards with fetched images
-          setBoards(prevBoards => prevBoards.map(board => ({
-            ...board,
-            image: boardImageMap[board.name.toLowerCase()] || board.image
-          })));
-        }
-      } catch (error) {
-        console.error('Error fetching board images:', error);
-      }
-    };
-
-    fetchBoardImages();
-  }, []);
+  ];
 
   return (
     <section className="py-20 bg-accent/5 relative overflow-hidden">
@@ -165,31 +116,13 @@ const BoardsSection = () => {
               {boards.map((board, index) => (
                 <div key={board.name} className="flex-[0_0_calc(33.333%-1rem)] min-w-0">
                   <div className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 h-full">
-                    <div className={`h-32 ${
-                      board.image 
-                        ? 'relative' 
-                        : `bg-gradient-to-br ${
-                            index % 3 === 0 ? "from-mathprimary via-mathsecondary to-mathaccent" :
-                            index % 3 === 1 ? "from-mathsecondary via-mathaccent to-mathprimary" :
-                            "from-mathaccent via-mathprimary to-mathsecondary"
-                          }`
-                    } flex items-center justify-center overflow-hidden`}>
-                      {board.image ? (
-                        <>
-                          <img 
-                            src={board.image} 
-                            alt={board.name} 
-                            className="absolute inset-0 w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-br from-mathprimary/20 via-mathsecondary/20 to-mathaccent/20"></div>
-                          <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2 drop-shadow-lg">{board.name}</h3>
-                        </>
-                      ) : (
-                        <>
-                          <div className="absolute inset-0 bg-white/5"></div>
-                          <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2">{board.name}</h3>
-                        </>
-                      )}
+                    <div className={`h-32 bg-gradient-to-br ${
+                      index % 3 === 0 ? "from-mathprimary via-mathsecondary to-mathaccent" :
+                      index % 3 === 1 ? "from-mathsecondary via-mathaccent to-mathprimary" :
+                      "from-mathaccent via-mathprimary to-mathsecondary"
+                    } flex items-center justify-center relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-white/5"></div>
+                      <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2">{board.name}</h3>
                     </div>
                     <div className="p-4">
                       <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">

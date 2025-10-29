@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Upload, X } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { InstructionsPdfUpload } from "./InstructionsPdfUpload";
 
@@ -16,14 +16,12 @@ interface ExamDetailsFormProps {
   selectedYear: string;
   examDuration: number;
   isPremium: boolean;
-  boardImage: File | null;
   onExamTitleChange: (value: string) => void;
   onClassChange: (value: string) => void;
   onChapterChange: (value: string) => void;
   onYearChange: (value: string) => void;
   onDurationChange: (value: number) => void;
   onPremiumChange: (value: boolean) => void;
-  onBoardImageChange: (file: File | null) => void;
 }
 
 const ExamDetailsForm = ({
@@ -33,14 +31,12 @@ const ExamDetailsForm = ({
   selectedYear,
   examDuration,
   isPremium,
-  boardImage,
   onExamTitleChange,
   onClassChange,
   onChapterChange,
   onYearChange,
   onDurationChange,
   onPremiumChange,
-  onBoardImageChange,
 }: ExamDetailsFormProps) => {
   const [newChapter, setNewChapter] = useState("");
   const [isAddingChapter, setIsAddingChapter] = useState(false);
@@ -226,48 +222,6 @@ const ExamDetailsForm = ({
         <p className="text-sm text-muted-foreground">
           Instructions PDF can be uploaded after creating the exam
         </p>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="board-image">Board Card Image (Optional)</Label>
-        <p className="text-sm text-muted-foreground mb-2">
-          Upload a custom image for this board's card display on the home page and boards page
-        </p>
-        <div className="flex items-center gap-4">
-          <Input
-            id="board-image"
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                onBoardImageChange(file);
-              }
-            }}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => document.getElementById('board-image')?.click()}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Choose Image
-          </Button>
-          {boardImage && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{boardImage.name}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onBoardImageChange(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

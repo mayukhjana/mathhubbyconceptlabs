@@ -187,64 +187,6 @@ export const uploadUserAvatar = async (file: File, userId: string): Promise<stri
 };
 
 /**
- * Uploads a board image to storage
- */
-export const uploadBoardImage = async (file: File, boardName: string): Promise<string | null> => {
-  try {
-    // Ensure it's an image file
-    if (!file.type.startsWith('image/')) {
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
-      if (!['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(fileExt || '')) {
-        throw new Error('Only image files are allowed for board images');
-      }
-    }
-    
-    // Process file to ensure correct content type
-    const processedFile = await forceCorrectContentType(file);
-    
-    // Generate filename based on board name
-    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const sanitizedBoardName = boardName.toLowerCase().replace(/\s+/g, '-');
-    const fileName = `board_${sanitizedBoardName}.${fileExt}`;
-    
-    // Get proper content type
-    const contentType = getContentTypeFromFile(processedFile);
-    console.log(`Uploading board image with content type: ${contentType}`);
-    
-    // Create a blob with the correct content type
-    const fileArrayBuffer = await processedFile.arrayBuffer();
-    const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
-    
-    // Ensure questions bucket exists (we'll use this for board images too)
-    await ensureQuestionsBucket();
-    
-    // Upload image with the correct content type
-    const { data, error } = await supabase.storage
-      .from('questions')
-      .upload(fileName, fileBlob, {
-        contentType: contentType,
-        upsert: true,
-        cacheControl: '3600'
-      });
-    
-    if (error) {
-      console.error("Error uploading board image:", error);
-      throw error;
-    }
-    
-    // Get public URL with cache-busting parameter
-    const timestamp = new Date().getTime();
-    const publicUrl = `${supabase.storage.from('questions').getPublicUrl(fileName).data.publicUrl}?t=${timestamp}`;
-    console.log("Board image uploaded successfully:", publicUrl);
-    
-    return publicUrl;
-  } catch (error: any) {
-    console.error("Board image upload failed:", error);
-    throw error;
-  }
-};
-
-/**
  * Uploads a question image to storage
  */
 export const uploadQuestionImage = async (file: File): Promise<string | null> => {

@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { createExam, createQuestions, fetchEntranceExams } from "@/services/exam";
-import { uploadExamFile, ensureStorageBuckets, uploadBoardImage } from "@/services/exam/storage";
+import { uploadExamFile, ensureStorageBuckets } from "@/services/exam/storage";
 import ExamTypeSelector from "@/components/admin/ExamTypeSelector";
 import RecentUploads from "@/components/admin/RecentUploads";
 import ExamDetailsForm from "@/components/admin/ExamDetailsForm";
@@ -32,7 +32,6 @@ const AdminUploadPage = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [solutionFile, setSolutionFile] = useState<File | null>(null);
-  const [boardImage, setBoardImage] = useState<File | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -77,7 +76,6 @@ const AdminUploadPage = () => {
     setIsPremium(false);
     setUploadedFile(null);
     setSolutionFile(null);
-    setBoardImage(null);
     setQuestions([]);
     setError(null);
   };
@@ -209,17 +207,6 @@ const AdminUploadPage = () => {
     try {
       const finalChapter = selectedChapter === "none" ? null : selectedChapter;
       
-      let boardImageUrl = null;
-      if (boardImage) {
-        try {
-          boardImageUrl = await uploadBoardImage(boardImage, selectedBoard);
-          setUploadProgress(20);
-        } catch (err: any) {
-          console.error("Error uploading board image:", err);
-          toast.error(`Failed to upload board image: ${err.message}`);
-        }
-      }
-      
       const examPayload = {
         title: examTitle || `${selectedBoard} Mathematics ${selectedYear}`,
         board: selectedBoard,
@@ -227,8 +214,7 @@ const AdminUploadPage = () => {
         chapter: finalChapter,
         year: selectedYear,
         duration: examDuration,
-        is_premium: isPremium,
-        image_url: boardImageUrl
+        is_premium: isPremium
       };
       
       const insertedExam = await createExam(examPayload);
@@ -365,14 +351,12 @@ const AdminUploadPage = () => {
                         selectedYear={selectedYear}
                         examDuration={examDuration}
                         isPremium={isPremium}
-                        boardImage={boardImage}
                         onExamTitleChange={setExamTitle}
                         onClassChange={setSelectedClass}
                         onChapterChange={setSelectedChapter}
                         onYearChange={setSelectedYear}
                         onDurationChange={setExamDuration}
                         onPremiumChange={setIsPremium}
-                        onBoardImageChange={setBoardImage}
                       />
                     </div>
                     
