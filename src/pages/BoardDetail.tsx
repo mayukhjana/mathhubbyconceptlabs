@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import BoardNavigation from "@/components/BoardNavigation";
 import { fetchBoardExams, fetchBoardChapters } from "@/services/exam/queries";
-import { Exam } from "@/services/exam/types";
+import { Exam, BOARD_OPTIONS } from "@/services/exam/types";
 import { getFileDownloadUrl } from "@/services/exam/storage";
 
 const boardsInfo = {
@@ -26,62 +26,62 @@ const boardsInfo = {
     description: "The Central Board of Secondary Education (CBSE) is a national level board of education in India for public and private schools.",
     image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
   },
-  "west-bengal": {
+  "west-bengal-board": {
     name: "West Bengal Board",
     description: "The West Bengal Board of Secondary Education conducts the Madhyamik Pariksha (Secondary Examination) for students in West Bengal.",
     image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
   },
-  "maharashtra": {
+  "maharashtra-board": {
     name: "Maharashtra State Board",
     description: "The Maharashtra State Board of Secondary and Higher Secondary Education conducts examinations for SSC and HSC students.",
     image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
   },
-  "tamil-nadu": {
+  "tamil-nadu-board": {
     name: "Tamil Nadu State Board",
     description: "The Tamil Nadu State Board provides quality education through standardized examinations for students across Tamil Nadu.",
     image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
   },
-  "karnataka": {
+  "karnataka-board": {
     name: "Karnataka State Board",
     description: "The Karnataka Secondary Education Examination Board (KSEEB) conducts SSLC and PUC examinations.",
     image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
   },
-  "kerala": {
+  "kerala-board": {
     name: "Kerala State Board",
     description: "The Kerala State Board conducts SSLC and Higher Secondary examinations for students in Kerala.",
     image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
   },
-  "uttar-pradesh": {
+  "uttar-pradesh-board": {
     name: "Uttar Pradesh Board",
     description: "The UP Board of High School and Intermediate Education conducts examinations for high school and intermediate students.",
     image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
   },
-  "rajasthan": {
+  "rajasthan-board": {
     name: "Rajasthan Board",
     description: "The Board of Secondary Education Rajasthan (RBSE) conducts examinations for secondary and senior secondary students.",
     image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
   },
-  "madhya-pradesh": {
+  "madhya-pradesh-board": {
     name: "Madhya Pradesh Board",
     description: "The MP Board of Secondary Education conducts examinations for 10th and 12th standard students.",
     image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
   },
-  "gujarat": {
+  "gujarat-board": {
     name: "Gujarat State Board",
     description: "The Gujarat Secondary and Higher Secondary Education Board (GSEB) conducts SSC and HSC examinations.",
     image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
   },
-  "bihar": {
+  "bihar-board": {
     name: "Bihar Board",
     description: "The Bihar School Examination Board conducts matriculation and intermediate examinations.",
     image: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2672&auto=format&fit=crop",
   },
-  "andhra-pradesh": {
+  "andhra-pradesh-board": {
     name: "Andhra Pradesh Board",
     description: "The AP Board of Secondary Education conducts SSC and intermediate examinations for students in Andhra Pradesh.",
     image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
   },
-  "telangana": {
+  "telangana-board": {
     name: "Telangana Board",
     description: "The Telangana State Board of Secondary Education conducts SSC and intermediate examinations.",
     image: "https://images.unsplash.com/photo-1635372722656-389f87a941b7?q=80&w=2670&auto=format&fit=crop",
@@ -97,25 +97,37 @@ const BoardDetail = () => {
   const [chapterExams, setChapterExams] = useState<Record<string, Chapter[]>>({});
   const navigate = useNavigate();
   
-  const formattedBoardId = boardId ? boardId.toUpperCase() : "";
+  const slugify = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
+  const canonicalBoard = boardId
+    ? (
+        BOARD_OPTIONS.find(opt => slugify(opt) === boardId) ||
+        (['icse', 'cbse'].includes(boardId) ? boardId.toUpperCase() : boardId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))
+      )
+    : "";
   
-  const boardInfo = boardId ? boardsInfo[boardId as keyof typeof boardsInfo] : null;
+  const boardInfo = boardId ? (
+    (boardsInfo as Record<string, { name: string; description: string; image: string }>)[boardId] || {
+      name: canonicalBoard,
+      description: `Access full mock tests and chapter-wise practice for ${canonicalBoard}.`,
+      image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+    }
+  ) : null;
   
   const handleGetPremium = () => {
     window.location.href = "/premium";
   };
 
   const loadBoardData = async () => {
-    if (!formattedBoardId) return;
+    if (!canonicalBoard) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      console.log(`Fetching exams for board: ${formattedBoardId}`);
+      console.log(`Fetching exams for board: ${canonicalBoard}`);
       
-      const class10MockExams = await fetchBoardExams(formattedBoardId, "full-mock", "10");
-      const class12MockExams = await fetchBoardExams(formattedBoardId, "full-mock", "12");
+      const class10MockExams = await fetchBoardExams(canonicalBoard, "full-mock", "10");
+      const class12MockExams = await fetchBoardExams(canonicalBoard, "full-mock", "12");
       
       console.log(`Retrieved ${class10MockExams.length} Class 10 mock exams and ${class12MockExams.length} Class 12 mock exams`);
       
@@ -124,15 +136,15 @@ const BoardDetail = () => {
         class12: class12MockExams
       });
       
-      const chapters = await fetchBoardChapters(formattedBoardId);
-      console.log(`Retrieved ${chapters.length} chapters for ${formattedBoardId}:`, chapters);
+      const chapters = await fetchBoardChapters(canonicalBoard);
+      console.log(`Retrieved ${chapters.length} chapters for ${canonicalBoard}:`, chapters);
       
       const class10Chapters: Chapter[] = [];
       const class12Chapters: Chapter[] = [];
       
       for (const chapter of chapters) {
-        const class10ChapterExams = await fetchBoardExams(formattedBoardId, chapter, "10");
-        const class12ChapterExams = await fetchBoardExams(formattedBoardId, chapter, "12");
+        const class10ChapterExams = await fetchBoardExams(canonicalBoard, chapter, "10");
+        const class12ChapterExams = await fetchBoardExams(canonicalBoard, chapter, "12");
         
         console.log(`Retrieved ${class10ChapterExams.length} Class 10 exams and ${class12ChapterExams.length} Class 12 exams for chapter ${chapter}`);
         
