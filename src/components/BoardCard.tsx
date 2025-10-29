@@ -17,7 +17,7 @@ const BoardCard = ({ id, title, description, image, paperCount }: BoardCardProps
     <Card className="overflow-hidden h-full flex flex-col hover:shadow-lg transition-all duration-300 group">
       <div className="h-48 overflow-hidden">
         <img 
-          src={image} 
+          src="/wbbse-logo.png" 
           alt={title} 
           className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
