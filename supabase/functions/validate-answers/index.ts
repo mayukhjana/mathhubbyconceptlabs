@@ -61,10 +61,29 @@ Deno.serve(async (req) => {
     let obtainedMarks = 0;
     let totalMarks = 0;
     const results: Record<string, boolean> = {};
+    const correctAnswersMap: Record<string, string> = {};
 
     for (const question of questions) {
       totalMarks += Number(question.marks);
       const userAnswer = userAnswers[question.id];
+
+      // Normalize correct answer (always as sorted comma-separated string)
+      let normalizedCorrect = '';
+
+      if (question.is_multi_correct) {
+        const correctAnswers = typeof question.correct_answer === 'string'
+          ? question.correct_answer.split(',').map((a: string) => a.trim()).sort()
+          : question.correct_answer;
+        normalizedCorrect = (correctAnswers || []).join(',');
+      } else {
+        normalizedCorrect = typeof question.correct_answer === 'string'
+          ? question.correct_answer
+          : Array.isArray(question.correct_answer) && question.correct_answer.length > 0
+            ? String(question.correct_answer[0])
+            : '';
+      }
+
+      correctAnswersMap[question.id] = normalizedCorrect;
 
       if (!userAnswer) {
         results[question.id] = false;
@@ -75,14 +94,11 @@ Deno.serve(async (req) => {
 
       if (question.is_multi_correct) {
         // Handle multi-correct questions
-        const correctAnswers = typeof question.correct_answer === 'string'
-          ? question.correct_answer.split(',').sort()
-          : question.correct_answer;
-        const userAnswersSorted = userAnswer.split(',').sort();
-        isCorrect = JSON.stringify(correctAnswers) === JSON.stringify(userAnswersSorted);
+        const userAnswersSorted = userAnswer.split(',').map((a: string) => a.trim()).sort();
+        isCorrect = JSON.stringify(normalizedCorrect.split(',')) === JSON.stringify(userAnswersSorted);
       } else {
         // Handle single correct questions
-        isCorrect = userAnswer === question.correct_answer;
+        isCorrect = userAnswer === normalizedCorrect;
       }
 
       results[question.id] = isCorrect;
@@ -101,7 +117,8 @@ Deno.serve(async (req) => {
         totalMarks,
         obtainedMarks: Math.max(0, obtainedMarks),
         totalQuestions: questions.length,
-        results
+        results,
+        correctAnswers: correctAnswersMap
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
