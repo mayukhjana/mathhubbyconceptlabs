@@ -3,6 +3,9 @@ project_id = "vhhysrbupmctklmmextr"
 [functions.mathhub-ai]
 verify_jwt = true
 
+[functions.translate-question]
+verify_jwt = false
+
 [functions.validate-answers]
 verify_jwt = true
 

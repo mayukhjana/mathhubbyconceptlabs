@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
 import { Image } from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import GoogleTranslateButton from "./GoogleTranslateButton";
+import LanguageSelector from "./LanguageSelector";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface QuestionCardProps {
   question: {
@@ -45,6 +46,10 @@ const QuestionCard = ({
   const [cacheBustUrl, setCacheBustUrl] = useState<string | undefined>(question.image_url);
   const [examType, setExamType] = useState<string | null>(null);
   const { examId } = useParams<{ examId: string }>();
+  const [translatedQuestion, setTranslatedQuestion] = useState<string>(question.text);
+  const [translatedOptions, setTranslatedOptions] = useState<Record<string, string>>({});
+  const [currentLanguage, setCurrentLanguage] = useState<string>('English');
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Fetch exam details to determine if it's a WBJEE paper
   useEffect(() => {
@@ -175,6 +180,56 @@ const QuestionCard = ({
     return `${question.text}\n\nOptions:\nA: ${question.options[0].text}\nB: ${question.options[1].text}\nC: ${question.options[2].text}\nD: ${question.options[3].text}`;
   };
 
+  const handleLanguageSelect = async (langCode: string, langName: string) => {
+    if (langCode === 'en') {
+      setTranslatedQuestion(question.text);
+      setTranslatedOptions({});
+      setCurrentLanguage('English');
+      return;
+    }
+
+    setIsTranslating(true);
+    toast.info(`Translating to ${langName}...`);
+
+    try {
+      // Translate question text
+      const { data: questionData, error: questionError } = await supabase.functions.invoke('translate-question', {
+        body: {
+          text: question.text,
+          targetLanguage: langCode,
+          targetLanguageName: langName
+        }
+      });
+
+      if (questionError) throw questionError;
+
+      // Translate all options
+      const optionTranslations: Record<string, string> = {};
+      for (const option of question.options) {
+        const { data: optionData, error: optionError } = await supabase.functions.invoke('translate-question', {
+          body: {
+            text: option.text,
+            targetLanguage: langCode,
+            targetLanguageName: langName
+          }
+        });
+
+        if (optionError) throw optionError;
+        optionTranslations[option.id] = optionData.translatedText;
+      }
+
+      setTranslatedQuestion(questionData.translatedText);
+      setTranslatedOptions(optionTranslations);
+      setCurrentLanguage(langName);
+      toast.success(`Translated to ${langName}`);
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast.error('Translation failed. Please try again.');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   // Determine if this is a WBJEE paper to set Bengali as target language
   const isWBJEE = examType === 'WBJEE';
   const targetLanguage = isWBJEE ? 'bn' : undefined; // 'bn' is the language code for Bengali
@@ -190,9 +245,9 @@ const QuestionCard = ({
         <CardTitle className="flex justify-between items-start">
           <span className="text-sm text-muted-foreground font-normal">Question {questionNumber}</span>
           <div className="flex items-center gap-2">
-            <GoogleTranslateButton 
-              text={getAllQuestionText()} 
-              targetLanguage={targetLanguage}
+            <LanguageSelector 
+              onLanguageSelect={handleLanguageSelect}
+              currentLanguage={currentLanguage}
             />
             <span className="text-xs text-muted-foreground">
               {question.marks} marks {question.negative_marks > 0 && `(-${question.negative_marks} negative)`}
@@ -227,7 +282,7 @@ const QuestionCard = ({
               )}
             </div>
           ) : (
-            <p className="font-bold text-foreground text-base">{renderWithLatex(question.text)}</p>
+            <p className="font-bold text-foreground text-base">{renderWithLatex(translatedQuestion)}</p>
           )}
         </CardDescription>
       </CardHeader>
@@ -260,7 +315,7 @@ const QuestionCard = ({
                   htmlFor={`question-${question.id}-option-${option.id}`}
                   className="cursor-pointer"
                 >
-                  {renderWithLatex(option.text)}
+                  {renderWithLatex(translatedOptions[option.id] || option.text)}
                 </Label>
               </div>
             ))}
@@ -276,7 +331,7 @@ const QuestionCard = ({
                 >
                   <RadioGroupItem value={option.id} id={option.id} />
                   <Label htmlFor={option.id}>
-                    {renderWithLatex(option.text)}
+                    {renderWithLatex(translatedOptions[option.id] || option.text)}
                   </Label>
                 </div>
               ))}

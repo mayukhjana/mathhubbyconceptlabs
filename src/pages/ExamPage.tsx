@@ -284,132 +284,114 @@ const ExamPage = () => {
   const finishExam = async () => {
     if (!exam) return;
     
-    let correctAnswers = 0;
-    let calculatedObtainedMarks = 0;
-    let calculatedPossibleMarks = 0;
-    
-    const updatedQuestionsWithResults = exam.questions.map(question => {
-      const userAnswer = userAnswers[question.id];
-      if (!userAnswer) {
-        calculatedPossibleMarks += question.marks;
+    try {
+      // Validate answers securely on the backend (also returns correct answers)
+      const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-answers', {
+        body: { examId: exam.id, userAnswers }
+      });
+
+      if (validationError) {
+        console.error('Validation error:', validationError);
+        throw validationError;
+      }
+      if (!validationData) {
+        throw new Error('No validation data returned');
+      }
+
+      const { score: validatedScore, totalMarks, obtainedMarks, results, correctAnswers: correctAnswersMap } = validationData as any;
+
+      // Build enriched questions list with correctness and correct answers
+      const updatedQuestionsWithResults = exam.questions.map((question) => {
+        const isAttempted = !!userAnswers[question.id];
+        const isCorrect = !!(results?.[question.id]);
+        const correctedAnswer = (correctAnswersMap?.[question.id] ?? '') as string;
         return {
           ...question,
-          isCorrect: false,
-          isAttempted: false
-        };
-      }
+          isCorrect,
+          isAttempted,
+          // Inject correct answer so UI can display it without exposing during exam
+          correct_answer: correctedAnswer,
+        } as any;
+      });
       
-      let isCorrect = false;
+      setQuestionsWithResults(updatedQuestionsWithResults);
+      setScore(validatedScore);
+      setTotalObtainedMarks(obtainedMarks);
+      setTotalPossibleMarks(totalMarks);
       
-      if (question.is_multi_correct) {
-        const correctAnswerArray = Array.isArray(question.correct_answer) 
-          ? question.correct_answer 
-          : question.correct_answer.split(',').map(a => a.trim());
-        
-        const userAnswerArray = userAnswer.split(',').map(a => a.trim());
-        
-        isCorrect = correctAnswerArray.length === userAnswerArray.length && 
-          correctAnswerArray.every(a => userAnswerArray.includes(a));
-      } else {
-        isCorrect = userAnswer === (
-          Array.isArray(question.correct_answer) 
-            ? question.correct_answer[0] 
-            : question.correct_answer
-        );
-      }
+      const endTime = new Date();
+      const timeTakenSeconds = startTime 
+        ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) 
+        : (exam.duration || 0) * 60 - (timeRemaining || 0);
       
-      if (isCorrect) {
-        correctAnswers++;
-        calculatedObtainedMarks += question.marks;
-      } else if (userAnswer) {
-        calculatedObtainedMarks -= question.negative_marks;
-      }
+      setTimeTaken(timeTakenSeconds);
+      setExamCompleted(true);
       
-      calculatedPossibleMarks += question.marks;
+      // Exit fullscreen when exam completes
+      exitFullscreen();
       
-      return {
-        ...question,
-        isCorrect,
-        isAttempted: true
-      };
-    });
-    
-    setQuestionsWithResults(updatedQuestionsWithResults);
-    
-    const calculatedScore = Math.round((correctAnswers / (exam.questions.length || 1)) * 100);
-    setScore(calculatedScore);
-    setTotalObtainedMarks(calculatedObtainedMarks);
-    setTotalPossibleMarks(calculatedPossibleMarks);
-    
-    const endTime = new Date();
-    const timeTakenSeconds = startTime 
-      ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) 
-      : (exam.duration || 0) * 60 - (timeRemaining || 0);
-    
-    setTimeTaken(timeTakenSeconds);
-    setExamCompleted(true);
-    
-    // Exit fullscreen when exam completes
-    exitFullscreen();
-    
-    if (user && examId) {
-      try {
-        console.log("Saving result to database", {
-          user_id: user.id,
-          exam_id: examId,
-          score: calculatedScore,
-          total_questions: exam.questions.length || 0,
-          time_taken: timeTakenSeconds,
-          total_marks: calculatedPossibleMarks,
-          obtained_marks: calculatedObtainedMarks
-        });
-
-        // Save to user_results
-        const { error } = await supabase
-          .from('user_results')
-          .insert({
+      if (user && examId) {
+        try {
+          console.log("Saving result to database", {
             user_id: user.id,
             exam_id: examId,
-            score: calculatedScore,
+            score: validatedScore,
             total_questions: exam.questions.length || 0,
             time_taken: timeTakenSeconds,
-            total_marks: calculatedPossibleMarks,
-            obtained_marks: calculatedObtainedMarks
+            total_marks: totalMarks,
+            obtained_marks: obtainedMarks
           });
+
+          // Save to user_results
+          const { error } = await supabase
+            .from('user_results')
+            .insert({
+              user_id: user.id,
+              exam_id: examId,
+              score: validatedScore,
+              total_questions: exam.questions.length || 0,
+              time_taken: timeTakenSeconds,
+              total_marks: totalMarks,
+              obtained_marks: obtainedMarks
+            });
+            
+          if (error) {
+            throw error;
+          }
+
+          // Save to leaderboard
+          const { error: leaderboardError } = await supabase
+            .from('exam_leaderboards')
+            .upsert({
+              exam_id: examId,
+              user_id: user.id,
+              score: validatedScore,
+              obtained_marks: obtainedMarks,
+              total_marks: totalMarks
+            }, {
+              onConflict: 'exam_id,user_id'
+            });
+
+          if (leaderboardError) {
+            console.error('Error saving to leaderboard:', leaderboardError);
+          }
           
-        if (error) {
-          throw error;
+          console.log("Result saved successfully");
+          setResultSaved(true);
+          toast.success(`Exam completed! Your score: ${validatedScore}% (${obtainedMarks}/${totalMarks} marks)`);
+        } catch (error: any) {
+          console.error('Error saving exam result:', error);
+          toast.error(`Failed to save your result: ${error.message}`);
         }
-
-        // Save to leaderboard
-        const { error: leaderboardError } = await supabase
-          .from('exam_leaderboards')
-          .upsert({
-            exam_id: examId,
-            user_id: user.id,
-            score: calculatedScore,
-            obtained_marks: calculatedObtainedMarks,
-            total_marks: calculatedPossibleMarks
-          }, {
-            onConflict: 'exam_id,user_id'
-          });
-
-        if (leaderboardError) {
-          console.error('Error saving to leaderboard:', leaderboardError);
+      } else {
+        toast.success(`Exam completed! Your score: ${validatedScore}% (${obtainedMarks}/${totalMarks} marks)`);
+        if (!user) {
+          toast.info("Sign in to save your results and track your progress!");
         }
-        
-        console.log("Result saved successfully");
-        setResultSaved(true);
-        toast.success(`Exam completed! Your score: ${calculatedScore}% (${calculatedObtainedMarks}/${calculatedPossibleMarks} marks)`);
-      } catch (error: any) {
-        console.error('Error saving exam result:', error);
-        toast.error(`Failed to save your result: ${error.message}`);
       }
-    } else {
-      toast.success(`Exam completed! Your score: ${calculatedScore}% (${calculatedObtainedMarks}/${calculatedPossibleMarks} marks)`);
-      if (!user) {
-        toast.info("Sign in to save your results and track your progress!");
-      }
+    } catch (error: any) {
+      console.error('Failed to validate answers via backend:', error);
+      toast.error('Could not validate answers. Please try again.');
     }
   };
   

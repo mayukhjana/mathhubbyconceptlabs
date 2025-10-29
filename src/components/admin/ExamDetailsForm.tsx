@@ -216,6 +216,11 @@ const ExamDetailsForm = ({
         />
         <Label htmlFor="premium">Mark as Premium Content</Label>
       </div>
+
+      <div className="space-y-2">
+        <Label>Instructions PDF (Optional)</Label>
+        <InstructionsPdfUpload examId={examTitle} />
+      </div>
     </div>
   );
 };
