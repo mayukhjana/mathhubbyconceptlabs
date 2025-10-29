@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, Users } from "lucide-react";
+import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, Users, MoreHorizontal, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
 import { useTheme } from "@/components/ThemeProvider";
 import { Toggle } from "@/components/ui/toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -60,12 +66,6 @@ const Navbar = () => {
               <span>Entrance Exams</span>
             </Button>
           </Link>
-          <Link to="/results">
-            <Button variant={isActive("/results") ? "default" : "ghost"} className="flex items-center gap-2">
-              <BarChart3 size={18} />
-              <span>Results</span>
-            </Button>
-          </Link>
           {isAuthenticated && <Link to="/mathhub-ai">
               <Button variant={isActive("/mathhub-ai") ? "default" : "ghost"} className="flex items-center gap-2">
                 <BrainCircuit size={18} />
@@ -84,19 +84,43 @@ const Navbar = () => {
               <span>Premium</span>
             </Button>
           </Link>
-          <Link to="/resources">
-            <Button variant={isActive("/resources") ? "default" : "ghost"} className="flex items-center gap-2">
-              <FileText size={18} />
-              <span>Resources</span>
-            </Button>
-          </Link>
 
-          <Button variant="outline" className="flex items-center gap-2" asChild>
-            <a href="https://form.typeform.com/to/xxxxx" target="_blank" rel="noopener noreferrer">
-              <BookOpen size={18} />
-              <span>Become a Tutor</span>
-            </a>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2">
+                <MoreHorizontal size={18} />
+                <span>More</span>
+                <ChevronDown size={16} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to="/resources" className="flex items-center gap-2 cursor-pointer">
+                  <FileText size={18} />
+                  <span>Resources</span>
+                </Link>
+              </DropdownMenuItem>
+              {isAuthenticated && (
+                <DropdownMenuItem asChild>
+                  <Link to="/results" className="flex items-center gap-2 cursor-pointer">
+                    <BarChart3 size={18} />
+                    <span>Results</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem asChild>
+                <a 
+                  href="https://form.typeform.com/to/xxxxx" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <BookOpen size={18} />
+                  <span>Become a Tutor</span>
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
         
         <div className="hidden lg:flex items-center space-x-2">
@@ -143,12 +167,6 @@ const Navbar = () => {
                 Entrance Exams
               </Button>
             </Link>
-            <Link to="/results" onClick={closeMenu}>
-              <Button variant={isActive("/results") ? "default" : "ghost"} className="w-full justify-start text-lg">
-                <BarChart3 className="mr-3" size={20} />
-                Results
-              </Button>
-            </Link>
             {isAuthenticated && <Link to="/mathhub-ai" onClick={closeMenu}>
                 <Button variant={isActive("/mathhub-ai") ? "default" : "ghost"} className="w-full justify-start text-lg">
                   <BrainCircuit className="mr-3" size={20} />
@@ -167,20 +185,33 @@ const Navbar = () => {
                 Premium
               </Button>
             </Link>
-            
-            <Link to="/resources" onClick={closeMenu}>
-              <Button variant={isActive("/resources") ? "default" : "ghost"} className="w-full justify-start text-lg">
-                <FileText className="mr-3" size={20} />
-                Resources
-              </Button>
-            </Link>
 
-            <Button variant="outline" className="w-full justify-start text-lg" asChild>
-              <a href="https://form.typeform.com/to/xxxxx" target="_blank" rel="noopener noreferrer">
-                <BookOpen className="mr-3" size={20} />
-                Become a Tutor
-              </a>
-            </Button>
+            <div className="border-t border-border pt-4 mt-4">
+              <p className="text-sm font-semibold text-muted-foreground px-4 mb-2">More</p>
+              
+              <Link to="/resources" onClick={closeMenu}>
+                <Button variant={isActive("/resources") ? "default" : "ghost"} className="w-full justify-start text-lg">
+                  <FileText className="mr-3" size={20} />
+                  Resources
+                </Button>
+              </Link>
+
+              {isAuthenticated && (
+                <Link to="/results" onClick={closeMenu}>
+                  <Button variant={isActive("/results") ? "default" : "ghost"} className="w-full justify-start text-lg">
+                    <BarChart3 className="mr-3" size={20} />
+                    Results
+                  </Button>
+                </Link>
+              )}
+
+              <Button variant="outline" className="w-full justify-start text-lg mt-2" asChild>
+                <a href="https://form.typeform.com/to/xxxxx" target="_blank" rel="noopener noreferrer" onClick={closeMenu}>
+                  <BookOpen className="mr-3" size={20} />
+                  Become a Tutor
+                </a>
+              </Button>
+            </div>
 
             <div className="flex items-center justify-between border-t border-border pt-4 mt-2">
               <span>Dark Mode</span>
