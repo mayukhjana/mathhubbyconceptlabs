@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -20,12 +20,50 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const UserProfileMenu = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [userIsPremium, setUserIsPremium] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<any>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
   useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('avatar_url, full_name, username, school_name, board, class')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) {
+          setProfileData(data);
+          if (data.avatar_url) {
+            setAvatarUrl(data.avatar_url);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfileData();
+    
     // In a real app, this would fetch premium status from a subscription service
     setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
+
+    // Listen for avatar updates
+    const handleAvatarUpdated = (event: CustomEvent) => {
+      if (event.detail?.url) {
+        setAvatarUrl(event.detail.url);
+      }
+    };
+    
+    window.addEventListener('avatar-updated', handleAvatarUpdated as EventListener);
+    
+    return () => {
+      window.removeEventListener('avatar-updated', handleAvatarUpdated as EventListener);
+    };
   }, [user]);
   
   if (!isAuthenticated) {
@@ -45,16 +83,67 @@ const UserProfileMenu = () => {
   const handleUpgradeToPremium = () => {
     navigate('/premium');
   };
+
+  // Calculate profile completion
+  const calculateCompletion = () => {
+    if (!profileData) return 0;
+    const fields = [
+      avatarUrl, 
+      profileData.full_name, 
+      profileData.username, 
+      profileData.school_name, 
+      profileData.board, 
+      profileData.class
+    ];
+    const filledFields = fields.filter(field => field && field.trim && field.trim() !== '').length;
+    return Math.round((filledFields / fields.length) * 100);
+  };
+
+  const completionPercentage = calculateCompletion();
+  const radius = 20;
+  const strokeWidth = 2;
+  const normalizedRadius = radius - strokeWidth * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (completionPercentage / 100) * circumference;
   
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10">
-            <AvatarFallback className="bg-mathprimary text-white">
-              {getInitials()}
-            </AvatarFallback>
-          </Avatar>
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+          <div className="relative inline-flex items-center justify-center">
+            <svg
+              height={radius * 2}
+              width={radius * 2}
+              className="absolute"
+            >
+              <circle
+                stroke="hsl(var(--muted))"
+                fill="transparent"
+                strokeWidth={strokeWidth}
+                r={normalizedRadius}
+                cx={radius}
+                cy={radius}
+              />
+              <circle
+                stroke="hsl(var(--primary))"
+                fill="transparent"
+                strokeWidth={strokeWidth}
+                strokeDasharray={circumference + ' ' + circumference}
+                style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s ease' }}
+                strokeLinecap="round"
+                r={normalizedRadius}
+                cx={radius}
+                cy={radius}
+                transform={`rotate(-90 ${radius} ${radius})`}
+              />
+            </svg>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={avatarUrl || undefined} alt={profileData?.full_name || 'User'} />
+              <AvatarFallback className="bg-mathprimary text-white text-xs">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           {userIsPremium && (
             <div className="absolute -top-1 -right-1 bg-yellow-500 text-white rounded-full p-0.5">
               <Crown size={12} />
@@ -68,7 +157,7 @@ const UserProfileMenu = () => {
         <DropdownMenuItem asChild>
           <Link to="/profile" className="flex w-full cursor-pointer items-center">
             <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+            <span>Profile ({completionPercentage}% complete)</span>
           </Link>
         </DropdownMenuItem>
         
