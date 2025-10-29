@@ -67,7 +67,9 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
       order_number: q.order_number,
       marks: q.marks,
       negative_marks: q.negative_marks,
-      is_multi_correct: q.is_multi_correct || false
+      is_multi_correct: q.is_multi_correct || false,
+      is_image_question: q.is_image_question || false,
+      image_url: q.image_url || null
     };
   });
 

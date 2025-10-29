@@ -64,6 +64,8 @@ const AdminQuestionUploadPage = () => {
             marks: q.marks || 1, // Ensure marks is never null
             negative_marks: q.negative_marks || 0,
             is_multi_correct: q.is_multi_correct || false,
+            is_image_question: q.is_image_question || false,
+            image_url: q.image_url || undefined,
             order_number: q.order_number,
             exam_id: q.exam_id
           }));
