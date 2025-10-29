@@ -6,6 +6,7 @@ import QuestionCard from "@/components/QuestionCard";
 import type { Question } from "@/services/exam/types";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AIInsights } from "./AIInsights";
 
 interface ExamResultsProps {
   score: number;
@@ -16,6 +17,7 @@ interface ExamResultsProps {
   userAnswers: Record<string, string>;
   resultSaved: boolean;
   formatTime: (seconds: number) => string;
+  examId: string;
 }
 
 export const ExamResults = ({
@@ -26,7 +28,8 @@ export const ExamResults = ({
   questions,
   userAnswers,
   resultSaved,
-  formatTime
+  formatTime,
+  examId
 }: ExamResultsProps) => {
   const [showQuestionAnalysis, setShowQuestionAnalysis] = useState(false);
   const attemptedCount = Object.keys(userAnswers).length;
@@ -213,6 +216,16 @@ export const ExamResults = ({
                 </span>
               </div>
             </div>}
+        </div>
+
+        {/* AI-Powered Insights */}
+        <div className="mb-8">
+          <AIInsights 
+            score={score}
+            questions={questions}
+            userAnswers={userAnswers}
+            examId={examId}
+          />
         </div>
         
         {/* Advanced Test Feedback Section */}

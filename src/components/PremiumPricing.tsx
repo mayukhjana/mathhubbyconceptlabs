@@ -97,7 +97,7 @@ const PremiumPricing = ({
         {plans.map((plan) => (
           <div 
             key={plan.type} 
-            className={`${plan.color} backdrop-blur-sm rounded-2xl p-8 border border-white/10 relative overflow-hidden shadow-xl w-full ${plan.popular ? 'transform md:-translate-y-4 scale-105' : ''}`}
+            className={`${plan.color} backdrop-blur-sm rounded-2xl p-8 border ${plan.type === 'basic' ? 'border-gray-300 dark:border-gray-700' : 'border-white/10'} relative overflow-hidden shadow-xl w-full ${plan.popular ? 'transform md:-translate-y-4 scale-105' : ''} ${plan.type === 'basic' ? 'text-gray-900 dark:text-gray-100' : 'text-white'}`}
           >
             {plan.popular && (
               <div className="absolute top-0 right-0 bg-mathprimary text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-medium">
@@ -112,10 +112,10 @@ const PremiumPricing = ({
                 {plan.title.toUpperCase()}
               </div>
               <div className="flex items-end gap-2 mt-2">
-                <span className="text-4xl font-bold">
+                <span className={`text-4xl font-bold ${plan.type === 'basic' ? 'text-gray-900 dark:text-white' : 'text-white'}`}>
                   {activeTab === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
                 </span>
-                <span className="text-gray-300 mb-1">/ {activeTab === 'monthly' ? 'month' : 'year'}</span>
+                <span className={`mb-1 ${plan.type === 'basic' ? 'text-gray-600 dark:text-gray-300' : 'text-gray-300'}`}>/ {activeTab === 'monthly' ? 'month' : 'year'}</span>
               </div>
               {activeTab === 'yearly' && (
                 <div className="mt-1 inline-flex items-center text-sm bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
@@ -129,7 +129,7 @@ const PremiumPricing = ({
               {plan.features.map(feature => (
                 <div key={feature} className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-mathprimary dark:text-blue-400 shrink-0" />
-                  <span>{feature}</span>
+                  <span className={plan.type === 'basic' ? 'text-gray-700 dark:text-gray-200' : 'text-white'}>{feature}</span>
                 </div>
               ))}
             </div>

@@ -44,6 +44,8 @@ const ExamPage = () => {
   const [score, setScore] = useState(0);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showTimeupDialog, setShowTimeupDialog] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [timeTaken, setTimeTaken] = useState(0);
   const [resultSaved, setResultSaved] = useState(false);
@@ -146,6 +148,90 @@ const ExamPage = () => {
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
+
+  // Fullscreen management
+  const enterFullscreen = async () => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+        setIsFullscreen(true);
+      }
+    } catch (err) {
+      console.log("Fullscreen not supported or denied");
+    }
+  };
+
+  const exitFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+      setIsFullscreen(false);
+    } catch (err) {
+      console.log("Error exiting fullscreen");
+    }
+  };
+
+  // Enter fullscreen when exam loads
+  useEffect(() => {
+    if (exam && !examCompleted) {
+      enterFullscreen();
+    }
+  }, [exam]);
+
+  // Prevent tab switching, screenshots, and enforce fullscreen
+  useEffect(() => {
+    if (!exam || examCompleted) return;
+
+    // Detect tab switching
+    const handleVisibilityChange = () => {
+      if (document.hidden && !examCompleted) {
+        setTabSwitchCount(prev => prev + 1);
+        toast.warning(`Warning: Tab switching detected! (${tabSwitchCount + 1} times)`);
+      }
+    };
+
+    // Prevent screenshots
+    const preventScreenshot = (e: KeyboardEvent) => {
+      if (
+        (e.key === 'PrintScreen') ||
+        (e.ctrlKey && e.shiftKey && e.key === 'S') ||
+        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5'))
+      ) {
+        e.preventDefault();
+        toast.error("Screenshots are not allowed during the exam!");
+        return false;
+      }
+    };
+
+    // Disable right-click
+    const preventContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast.error("Right-click is disabled during the exam!");
+      return false;
+    };
+
+    // Handle fullscreen exit
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && !examCompleted) {
+        toast.warning("Please stay in fullscreen mode during the exam!");
+        enterFullscreen();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('keydown', preventScreenshot);
+    document.addEventListener('contextmenu', preventContextMenu);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('keydown', preventScreenshot);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [exam, examCompleted, tabSwitchCount]);
   
   const handleAnswer = (questionId: string, selectedOption: string) => {
     setUserAnswers(prev => ({
@@ -262,6 +348,9 @@ const ExamPage = () => {
     
     setTimeTaken(timeTakenSeconds);
     setExamCompleted(true);
+    
+    // Exit fullscreen when exam completes
+    exitFullscreen();
     
     if (user && examId) {
       try {
@@ -457,16 +546,17 @@ const ExamPage = () => {
                 </div>
               </>
             ) : (
-              <ExamResults
-                score={score}
-                timeTaken={timeTaken}
-                totalObtainedMarks={totalObtainedMarks}
-                totalPossibleMarks={totalPossibleMarks}
-                questions={questionsWithResults}
-                userAnswers={userAnswers}
-                resultSaved={resultSaved}
-                formatTime={formatTime}
-              />
+          <ExamResults 
+            score={score}
+            timeTaken={timeTaken}
+            totalObtainedMarks={totalObtainedMarks}
+            totalPossibleMarks={totalPossibleMarks}
+            questions={questionsWithResults}
+            userAnswers={userAnswers}
+            resultSaved={resultSaved}
+            formatTime={formatTime}
+            examId={examId || ""}
+          />
             )}
           </div>
         </main>

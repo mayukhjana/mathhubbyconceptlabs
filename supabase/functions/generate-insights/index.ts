@@ -1,5 +1,3 @@
-
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -7,100 +5,91 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { results } = await req.json();
+    const { examId, score, totalQuestions, correctAnswers, incorrectAnswers, unattempted } = await req.json();
     
-    // Format the results data for the prompt
-    const formattedData = results.map((result: any) => {
-      return `
-        Exam: ${result.exams?.title || 'Unknown'}
-        Board: ${result.exams?.board || 'Unknown'}
-        Score: ${result.score}%
-        Date: ${new Date(result.completed_at).toLocaleDateString()}
-        Questions: ${result.total_questions}
-        Time Taken: ${Math.floor(result.time_taken / 60)} minutes ${result.time_taken % 60} seconds
-      `;
-    }).join('\n');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
 
-    // Create a prompt for Gemini to analyze the results
-    const prompt = `
-      You are an expert education analyst. Analyze these exam results and provide personalized insights and advice.
-      Focus on strengths, weaknesses, trends over time, and specific actionable recommendations for improvement.
-      Also suggest what topics the student should focus on next based on their performance patterns.
-      
-      Results Data:
-      ${formattedData}
-      
-      Please provide:
-      1. A brief overview of the student's performance
-      2. Key strengths identified
-      3. Areas that need improvement
-      4. Performance trends over time (if multiple exams)
-      5. Three specific, actionable recommendations
-      6. Suggested next topics to study
-      
-      Format the response to be encouraging, specific, and clear.
-    `;
+    const prompt = `You are an expert education analyst. Analyze this exam performance and provide personalized insights.
+    
+Exam Performance:
+- Score: ${score}%
+- Total Questions: ${totalQuestions}
+- Correct Answers: ${correctAnswers}
+- Incorrect Answers: ${incorrectAnswers}
+- Unattempted: ${unattempted}
 
-    console.log("Sending prompt to Gemini API:", prompt.substring(0, 100) + "...");
+Please provide:
+1. A brief performance summary (2-3 sentences)
+2. Key strengths
+3. Areas that need improvement
+4. Two specific, actionable recommendations
 
-    // Call Gemini API for analysis
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent', {
+Keep it concise, encouraging, and actionable. Format as plain text with clear sections.`;
+
+    console.log("Generating AI insights for exam:", examId);
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
-        'x-goog-api-key': GEMINI_API_KEY || '',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'You are an expert education analyst providing personalized exam feedback.' },
+          { role: 'user', content: prompt }
+        ],
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API error:", errorText);
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+      console.error('Lovable AI error:', errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI service unavailable. Please contact support.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      throw new Error(`AI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log("Received response from Gemini API");
-    
-    let analysisText = '';
-    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
-      analysisText = data.candidates[0].content.parts[0].text;
-    } else {
-      throw new Error('Invalid response format from Gemini API');
-    }
+    const insights = data.choices?.[0]?.message?.content || 'Keep practicing to improve!';
 
-    // Return the analysis
+    console.log("AI insights generated successfully");
+
     return new Response(
-      JSON.stringify({
-        analysis: analysisText,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ insights }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error("Error generating insights:", error);
+    console.error('Error generating insights:', error);
     return new Response(
-      JSON.stringify({
-        error: error.message || 'Failed to generate insights',
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Failed to generate insights',
+        insights: 'Unable to generate insights at this time. Keep practicing and review your mistakes!' 
       }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
