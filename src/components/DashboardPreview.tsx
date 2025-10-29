@@ -53,7 +53,15 @@ const DashboardPreview = () => {
                 <ChartBar className="w-4 h-4" />
                 Weekly Progress
               </h4>
-              <ProgressLineChart />
+              <ProgressLineChart data={[
+                { date: 'Mon', score: 75 },
+                { date: 'Tue', score: 78 },
+                { date: 'Wed', score: 82 },
+                { date: 'Thu', score: 80 },
+                { date: 'Fri', score: 85 },
+                { date: 'Sat', score: 88 },
+                { date: 'Sun', score: 90 },
+              ]} />
             </div>
             
             <div className="bg-gradient-to-br from-gray-50/80 to-white/50 dark:from-gray-900/80 dark:to-gray-800/50 rounded-lg p-4 border border-gray-100/20 dark:border-gray-700/20 backdrop-blur-sm">

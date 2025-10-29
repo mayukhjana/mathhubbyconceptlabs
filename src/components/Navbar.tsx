@@ -41,7 +41,7 @@ const Navbar = () => {
           </div>
         </Link>
         
-        <nav className="hidden md:flex items-center space-x-1">
+        <nav className="hidden lg:flex items-center space-x-1">
           <Link to="/">
             <Button variant={isActive("/") ? "default" : "ghost"} className="flex items-center gap-2">
               <Home size={18} />
@@ -93,7 +93,7 @@ const Navbar = () => {
           </Button>
         </nav>
         
-        <div className="hidden md:flex items-center space-x-2">
+        <div className="hidden lg:flex items-center space-x-2">
           <Toggle pressed={theme === "dark"} onPressedChange={toggleTheme} aria-label="Toggle theme" className="mr-2">
             {theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
           </Toggle>
@@ -111,13 +111,13 @@ const Navbar = () => {
             </>}
         </div>
         
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMenu}>
+        <Button variant="ghost" size="icon" className="lg:hidden" onClick={toggleMenu}>
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </Button>
       </div>
       
       {/* Mobile menu */}
-      {isMenuOpen && <div className="fixed inset-0 top-16 z-50 bg-background h-[calc(100vh-4rem)]">
+      {isMenuOpen && <div className="md:hidden absolute inset-x-0 top-full z-50 bg-background border-b shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="container mx-auto px-4 py-8 flex flex-col space-y-6">
             <Link to="/" onClick={closeMenu}>
               <Button variant={isActive("/") ? "default" : "ghost"} className="w-full justify-start text-lg">

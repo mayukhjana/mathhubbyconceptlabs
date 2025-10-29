@@ -40,6 +40,9 @@ import ChapterPerformanceChart from "@/components/ChapterPerformanceChart";
 import ExamResultsByType from "@/components/ExamResultsByType";
 import { ExamResult } from "@/services/exam/types";
 import { supabase } from "@/integrations/supabase/client";
+import { ProgressLineChart } from "@/components/charts/ProgressLineChart";
+import { TrendingUp, Brain } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 type AnalysisData = {
   totalExams: number;
@@ -234,141 +237,165 @@ const ResultsPage = () => {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <Card>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base font-medium">Total Exams</CardTitle>
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="p-2 rounded-lg bg-blue-500/10">
+                        <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{analysisData.totalExams}</div>
+                    <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{analysisData.totalExams}</div>
                     <p className="text-xs text-muted-foreground mt-1">Exams completed</p>
                   </CardContent>
                 </Card>
                 
-                <Card>
+                <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base font-medium">Average Score</CardTitle>
-                      <Activity className="h-4 w-4 text-muted-foreground" />
+                      <div className="p-2 rounded-lg bg-green-500/10">
+                        <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">
+                    <div className="text-3xl font-bold text-green-700 dark:text-green-300">
                       {analysisData.averageScore}%
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">Across all exams</p>
                   </CardContent>
                 </Card>
                 
-                <Card>
+                <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base font-medium">Best Score</CardTitle>
-                      <Award className="h-4 w-4 text-muted-foreground" />
+                      <div className="p-2 rounded-lg bg-purple-500/10">
+                        <Award className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">
+                    <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
                       {analysisData.bestScore}%
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">Your highest achievement</p>
                   </CardContent>
                 </Card>
                 
-                <Card>
+                <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-base font-medium">Improvement</CardTitle>
+                      <div className="p-2 rounded-lg bg-orange-500/10">
+                        <TrendingUp className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-base font-medium">
-                      {results[0]?.exams?.title || "No exams"}
+                    <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">
+                      {analysisData.progressOverTime.length > 1 
+                        ? `+${(analysisData.progressOverTime[analysisData.progressOverTime.length - 1].score - analysisData.progressOverTime[0].score).toFixed(1)}%`
+                        : 'N/A'}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {results[0]?.completed_at ? format(new Date(results[0].completed_at), "PPP") : "N/A"}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Since first exam</p>
                   </CardContent>
                 </Card>
               </div>
               
-              {/* AI-Generated Personalized Insights */}
-              {results.length >= 2 && (
-                <Card className="mb-8 overflow-hidden border-mathprimary/20">
-                  <CardHeader className="bg-gradient-to-r from-mathprimary/10 to-mathprimary/5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-mathprimary/20 p-2 rounded-full">
-                          <Sparkles className="h-5 w-5 text-mathprimary" />
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                {/* Left Column - AI Insights & Progress */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* AI Insights Section */}
+                  {results.length >= 2 && (
+                    <Card className="overflow-hidden border-mathprimary/20">
+                      <CardHeader className="bg-gradient-to-r from-mathprimary/10 to-mathprimary/5">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-mathprimary/20 p-2 rounded-full">
+                            <Brain className="h-5 w-5 text-mathprimary" />
+                          </div>
+                          <CardTitle>AI-Powered Insights</CardTitle>
                         </div>
-                        <CardTitle>AI-Powered Personalized Insights</CardTitle>
-                      </div>
-                    </div>
-                    <CardDescription>
-                      Custom analysis based on your exam performance patterns
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {loadingInsights ? (
-                      <div className="flex flex-col items-center justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-mathprimary mb-4" />
-                        <p className="text-muted-foreground">Generating personalized insights...</p>
-                      </div>
-                    ) : aiInsights ? (
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        {aiInsights.split('\n').map((paragraph, index) => {
-                          // Check if the paragraph is a heading
-                          if (paragraph.startsWith('#')) {
-                            return <h3 key={index} className="text-lg font-bold mt-4 mb-2">{paragraph.replace(/^#+ /, '')}</h3>;
-                          }
-                          // Check if the paragraph is a list item
-                          else if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
-                            return <li key={index} className="ml-4">{paragraph.substring(2)}</li>;
-                          }
-                          // Regular paragraph
-                          else if (paragraph.trim()) {
-                            return <p key={index} className="mb-3">{paragraph}</p>;
-                          }
-                          // Empty line
-                          return <br key={index} />;
+                        <CardDescription>
+                          Personalized analysis based on your performance
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        {loadingInsights ? (
+                          <div className="flex flex-col items-center justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-mathprimary mb-4" />
+                            <p className="text-muted-foreground">Generating insights...</p>
+                          </div>
+                        ) : aiInsights ? (
+                          <div className="prose prose-sm max-w-none dark:prose-invert">
+                            <ReactMarkdown>{aiInsights}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <div className="text-center py-6">
+                            <Lightbulb className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                            <p className="text-lg font-medium mb-2">No insights yet</p>
+                            <Button onClick={() => generateAiInsights(results)}>
+                              Generate Insights
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Progress Chart */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Progress Over Time</CardTitle>
+                      <CardDescription>Track your improvement</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ProgressLineChart data={analysisData.progressOverTime} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Board-wise Performance */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Board-wise Performance</CardTitle>
+                      <CardDescription>Your scores across different boards</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {Object.entries(analysisData.examsByBoard).map(([board, count]) => {
+                          const avgScore = analysisData.scoresByBoard[board] || 0;
+                          return (
+                            <div key={board} className="flex flex-col p-4 rounded-lg bg-gradient-to-br from-muted/50 to-muted border hover:border-mathprimary/50 transition-colors">
+                              <span className="font-medium text-sm text-muted-foreground">{board}</span>
+                              <div className="flex items-baseline gap-2 mt-2">
+                                <span className="text-2xl font-bold text-mathprimary">{avgScore.toFixed(1)}%</span>
+                                <span className="text-xs text-muted-foreground">{count} exam{count !== 1 ? 's' : ''}</span>
+                              </div>
+                            </div>
+                          );
                         })}
                       </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <Lightbulb className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-                        <p className="text-lg font-medium mb-2">No insights generated yet</p>
-                        <p className="text-muted-foreground mb-4">Take more exams to get personalized AI recommendations</p>
-                        <Button onClick={() => results.length >= 2 && generateAiInsights(results)}>
-                          Generate Insights
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <Card className="h-full">
-                  <CardHeader>
-                    <CardTitle>Suggested Roadmaps</CardTitle>
-                    <CardDescription>Personalized learning paths</CardDescription>
-                  </CardHeader>
-                  <CardContent className="h-[300px] flex items-center justify-center flex-col">
-                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
-                      <MapPin className="h-8 w-8 text-amber-600" />
-                    </div>
-                    <h3 className="text-xl font-medium mb-2">Coming Soon</h3>
-                    <p className="text-muted-foreground text-center max-w-[250px]">
-                      Personalized study roadmaps based on your performance will be available soon.
-                    </p>
-                  </CardContent>
-                </Card>
-                
-                <ChapterPerformanceChart />
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Right Column - Chapter Performance */}
+                <div className="lg:col-span-1">
+                  <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle>Chapter Performance</CardTitle>
+                      <CardDescription>Your strengths & areas to improve</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChapterPerformanceChart />
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
               
               <ExamResultsByType results={results} loading={false} />
