@@ -22,87 +22,87 @@ const EntranceExamsSection = () => {
     {
       name: "JEE Main",
       description: "Joint Entrance Examination for admission to NITs, IIITs, and other engineering colleges.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "JEE Advanced",
       description: "Advanced level entrance exam for admission to IITs across India.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "BITSAT",
       description: "Birla Institute of Technology and Science Admission Test for BITS Pilani campuses.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "SSC CGL",
       description: "Staff Selection Commission Combined Graduate Level Examination for various government posts.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "VITEEE",
       description: "VIT Engineering Entrance Examination for admission to VIT campuses.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "SRMJEEE",
       description: "SRM Joint Engineering Entrance Examination for SRM Institute of Science and Technology.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "KCET",
       description: "Karnataka Common Entrance Test for engineering, medical, and other professional courses.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "MHT CET",
       description: "Maharashtra Common Entrance Test for engineering and pharmacy admissions.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "COMEDK",
       description: "Consortium of Medical, Engineering and Dental Colleges of Karnataka entrance exam.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "TS EAMCET",
       description: "Telangana State Engineering, Agriculture & Medical Common Entrance Test.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "AP EAMCET",
       description: "Andhra Pradesh Engineering, Agriculture & Medical Common Entrance Test.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "WBJEE",
       description: "West Bengal Joint Entrance Examination for engineering and medical admissions.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "KEAM",
       description: "Kerala Engineering Architecture Medical entrance examination.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "TNEA",
       description: "Tamil Nadu Engineering Admissions for admission to engineering colleges.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "CUET",
       description: "Common University Entrance Test for admission to central universities.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "IPU CET",
       description: "Guru Gobind Singh Indraprastha University Common Entrance Test.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     },
     {
       name: "UPSEE",
       description: "Uttar Pradesh State Entrance Examination for engineering admissions.",
-      link: "/entrance-exams",
+      link: "/exam-papers",
     }
   ];
 
