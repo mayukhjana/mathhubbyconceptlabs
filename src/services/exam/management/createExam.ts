@@ -58,7 +58,7 @@ export const createQuestions = async (questions: Omit<Question, 'id'>[]) => {
 
     return {
       exam_id: q.exam_id,
-      question_text: q.question_text,
+      question_text: q.is_image_question && !q.question_text ? "See image below" : q.question_text,
       option_a: q.option_a,
       option_b: q.option_b,
       option_c: q.option_c,

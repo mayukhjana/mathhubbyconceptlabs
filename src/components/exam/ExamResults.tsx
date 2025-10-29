@@ -407,7 +407,7 @@ export const ExamResults = ({
             <Link to="/results"><BarChart3 size={16} />View All Results</Link>
           </Button>
           <Button className="gap-2" asChild>
-            <Link to="/exams"><ArrowRight size={16} />More Exams</Link>
+            <Link to="/exam-papers"><ArrowRight size={16} />More Exams</Link>
           </Button>
         </div>
       </div>
