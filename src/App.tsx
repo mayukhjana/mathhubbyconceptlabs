@@ -33,6 +33,8 @@ import StudyMaterialsPage from "./pages/StudyMaterialsPage";
 import PracticeSetsPage from "./pages/PracticeSetsPage";
 import VideoTutorialsPage from "./pages/VideoTutorialsPage";
 import MentorshipsPage from "./pages/MentorshipsPage";
+import MentorApplicationPage from "./pages/MentorApplicationPage";
+import AdminMentorVerificationPage from "./pages/AdminMentorVerificationPage";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +60,11 @@ const App = () => (
                   <Route path="/resources/practice-sets" element={<PracticeSetsPage />} />
                   <Route path="/resources/video-tutorials" element={<VideoTutorialsPage />} />
                   <Route path="/mentorships" element={<MentorshipsPage />} />
+                  <Route path="/mentor-application" element={
+                    <AuthGuard>
+                      <MentorApplicationPage />
+                    </AuthGuard>
+                  } />
                   <Route path="/results" element={
                     <AuthGuard>
                       <ResultsPage />
@@ -101,6 +108,11 @@ const App = () => (
                   <Route path="/admin/questions/:examId" element={
                     <AuthGuard requireAdmin>
                       <AdminQuestionUploadPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/admin/mentor-verification" element={
+                    <AuthGuard requireAdmin>
+                      <AdminMentorVerificationPage />
                     </AuthGuard>
                   } />
                   <Route path="/auth" element={<AuthPage />} />

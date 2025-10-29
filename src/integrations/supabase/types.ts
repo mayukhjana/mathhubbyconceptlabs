@@ -333,32 +333,47 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string | null
+          documents_url: string | null
           experience_years: number | null
           hourly_rate: number
           id: string
+          qualification: string | null
+          school_past: string | null
           specialization: string
+          submitted_at: string | null
           updated_at: string | null
           user_id: string
+          verification_status: string | null
         }
         Insert: {
           bio?: string | null
           created_at?: string | null
+          documents_url?: string | null
           experience_years?: number | null
           hourly_rate: number
           id?: string
+          qualification?: string | null
+          school_past?: string | null
           specialization: string
+          submitted_at?: string | null
           updated_at?: string | null
           user_id: string
+          verification_status?: string | null
         }
         Update: {
           bio?: string | null
           created_at?: string | null
+          documents_url?: string | null
           experience_years?: number | null
           hourly_rate?: number
           id?: string
+          qualification?: string | null
+          school_past?: string | null
           specialization?: string
+          submitted_at?: string | null
           updated_at?: string | null
           user_id?: string
+          verification_status?: string | null
         }
         Relationships: []
       }

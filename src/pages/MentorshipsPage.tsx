@@ -37,10 +37,11 @@ const MentorshipsPage = () => {
     try {
       setLoading(true);
       
-      // Fetch teachers
+      // Fetch only approved teachers
       const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
         .select('*')
+        .eq('verification_status', 'approved')
         .order('created_at', { ascending: false });
 
       if (teachersError) throw teachersError;

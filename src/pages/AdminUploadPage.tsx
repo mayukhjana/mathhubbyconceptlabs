@@ -394,6 +394,20 @@ const AdminUploadPage = () => {
               </div>
               
               <div>
+                <Card className="mb-4">
+                  <CardHeader>
+                    <CardTitle>Mentor Verification</CardTitle>
+                    <CardDescription>Review and verify mentor applications</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-mathprimary to-mathsecondary hover:opacity-90"
+                      onClick={() => window.location.href = '/admin/mentor-verification'}
+                    >
+                      View Applications
+                    </Button>
+                  </CardContent>
+                </Card>
                 <RecentUploads uploads={recentUploads} />
                 <div className="mt-4">
                   <UploadInstructions type="unified" />

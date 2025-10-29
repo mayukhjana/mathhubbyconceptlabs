@@ -108,15 +108,10 @@ const Navbar = () => {
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem asChild>
-                <a 
-                  href="https://form.typeform.com/to/xxxxx" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 cursor-pointer"
-                >
+                <Link to="/mentor-application" className="flex items-center gap-2 cursor-pointer">
                   <BookOpen size={18} />
-                  <span>Become a Tutor</span>
-                </a>
+                  <span>Apply to be a Mentor</span>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -204,12 +199,12 @@ const Navbar = () => {
                 </Link>
               )}
 
-              <Button variant="outline" className="w-full justify-start text-lg mt-2" asChild>
-                <a href="https://form.typeform.com/to/xxxxx" target="_blank" rel="noopener noreferrer" onClick={closeMenu}>
+              <Link to="/mentor-application" onClick={closeMenu}>
+                <Button variant="outline" className="w-full justify-start text-lg mt-2">
                   <BookOpen className="mr-3" size={20} />
-                  Become a Tutor
-                </a>
-              </Button>
+                  Apply to be a Mentor
+                </Button>
+              </Link>
             </div>
 
             <div className="flex items-center justify-between border-t border-border pt-4 mt-2">
