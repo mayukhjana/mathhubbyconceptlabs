@@ -5,9 +5,9 @@ import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import BoardsSection from "@/components/BoardsSection";
-import PremiumSection from "@/components/PremiumSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
+import CTASection from "@/components/CTASection";
 
 const Index: React.FC = () => {
   return (
@@ -16,7 +16,7 @@ const Index: React.FC = () => {
       <HeroSection />
       <FeaturesSection />
       <BoardsSection />
-      <PremiumSection />
+      <CTASection />
       <TestimonialsSection />
       <FAQSection />
       <Footer />

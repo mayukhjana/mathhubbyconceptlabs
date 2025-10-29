@@ -1,11 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Download, FileCheck, Lock, Star, Sparkle, Info, Trophy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import AuthWrapper from './AuthWrapper';
 
 interface PaperCardProps {
@@ -46,6 +55,8 @@ const PaperCard = ({
   hasMcqQuestions = false,
   examResult
 }: PaperCardProps) => {
+  const [showAttemptDialog, setShowAttemptDialog] = useState(false);
+  
   // Build badge array
   const badges = [];
   if (year) badges.push({ text: year, variant: 'outline' as const });
@@ -55,6 +66,14 @@ const PaperCard = ({
 
   const canAccessPremium = !isPremium || userIsPremium;
   const canPractice = practiceUrl && hasMcqQuestions;
+  const canDownload = isAttempted && canAccessPremium;
+  
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    if (!isAttempted) {
+      e.preventDefault();
+      setShowAttemptDialog(true);
+    }
+  };
   
   return (
     <Card className={`overflow-hidden transition border ${
@@ -116,7 +135,20 @@ const PaperCard = ({
                       requireAuth={requireAuth}
                       tooltipText="Sign in to download this paper"
                     >
-                      {canAccessPremium ? (
+                      {!canAccessPremium ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                          disabled
+                        >
+                          <Link to="/premium">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Premium
+                          </Link>
+                        </Button>
+                      ) : canDownload ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -136,20 +168,19 @@ const PaperCard = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          asChild
                           className="text-xs"
-                          disabled
+                          onClick={handleDownloadClick}
                         >
-                          <Link to="/premium">
-                            <Lock className="w-3 h-3 mr-1" />
-                            Premium
-                          </Link>
+                          <Lock className="w-3 h-3 mr-1" />
+                          Paper
                         </Button>
                       )}
                     </AuthWrapper>
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>{canAccessPremium ? 'Download question paper' : 'Premium feature'}</TooltipContent>
+                <TooltipContent>
+                  {!canAccessPremium ? 'Premium feature' : !isAttempted ? 'Attempt the paper first to unlock' : 'Download question paper'}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
@@ -163,7 +194,20 @@ const PaperCard = ({
                       requireAuth={requireAuth}
                       tooltipText="Sign in to view solutions"
                     >
-                      {canAccessPremium ? (
+                      {!canAccessPremium ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-xs"
+                          disabled
+                        >
+                          <Link to="/premium">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Premium
+                          </Link>
+                        </Button>
+                      ) : canDownload ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -183,24 +227,40 @@ const PaperCard = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          asChild
                           className="text-xs"
-                          disabled
+                          onClick={handleDownloadClick}
                         >
-                          <Link to="/premium">
-                            <Lock className="w-3 h-3 mr-1" />
-                            Premium
-                          </Link>
+                          <Lock className="w-3 h-3 mr-1" />
+                          Solutions
                         </Button>
                       )}
                     </AuthWrapper>
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>{canAccessPremium ? 'View solutions' : 'Premium feature'}</TooltipContent>
+                <TooltipContent>
+                  {!canAccessPremium ? 'Premium feature' : !isAttempted ? 'Attempt the paper first to unlock' : 'View solutions'}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
         </div>
+        
+        <AlertDialog open={showAttemptDialog} onOpenChange={setShowAttemptDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Attempt the Paper First</AlertDialogTitle>
+              <AlertDialogDescription>
+                You need to attempt this paper before you can access the question paper and solutions. 
+                This helps you practice and evaluate your performance.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setShowAttemptDialog(false)}>
+                Got it
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         
         {isFullMock && !hasMcqQuestions && (
           <div className="mt-3 text-xs flex items-start gap-1 text-muted-foreground">

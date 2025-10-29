@@ -146,8 +146,8 @@ const Navbar = () => {
         </Button>
       </div>
       
-      {/* Mobile menu */}
-      {isMenuOpen && <div className="md:hidden absolute inset-x-0 top-full z-50 bg-background border-b shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
+      {/* Mobile/Tablet menu */}
+      {isMenuOpen && <div className="lg:hidden absolute inset-x-0 top-full z-50 bg-background border-b shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="container mx-auto px-4 py-8 flex flex-col space-y-6">
             <Link to="/" onClick={closeMenu}>
               <Button variant={isActive("/") ? "default" : "ghost"} className="w-full justify-start text-lg">
