@@ -142,7 +142,7 @@ const EntranceExamsSection = () => {
                       <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
                         {exam.description}
                       </p>
-                      <Button asChild size="sm" className="w-full bg-gradient-to-r from-mathaccent to-mathprimary hover:shadow-lg hover:scale-105 transition-all duration-300">
+                      <Button asChild size="sm" className="w-full bg-primary hover:bg-primary/90 hover:shadow-lg hover:scale-105 transition-all duration-300">
                         <Link to={exam.link}>View Papers</Link>
                       </Button>
                     </div>

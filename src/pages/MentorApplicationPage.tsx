@@ -165,7 +165,7 @@ const MentorApplicationPage = () => {
         <main className="flex-1 container mx-auto px-4 py-12">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-mathprimary to-mathsecondary rounded-full mb-4">
+              <div className="inline-flex items-center justify-center p-3 bg-primary rounded-full mb-4">
                 <GraduationCap className="h-8 w-8 text-white" />
               </div>
               <h1 className="text-4xl font-bold mb-4">Apply to be a Mentor</h1>
@@ -312,7 +312,7 @@ const MentorApplicationPage = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-mathprimary to-mathsecondary hover:opacity-90"
+                    className="w-full bg-primary hover:bg-primary/90"
                     disabled={loading}
                   >
                     {loading ? (

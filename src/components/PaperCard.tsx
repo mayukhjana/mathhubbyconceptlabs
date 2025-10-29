@@ -288,7 +288,7 @@ const PaperCard = ({
                 variant="default"
                 size="sm"
                 asChild
-                className="w-full bg-gradient-to-r from-mathprimary to-blue-600 hover:from-mathprimary/90 hover:to-blue-600/90"
+                className="w-full bg-primary hover:bg-primary/90"
               >
                 <Link to={practiceUrl}>Practice Now</Link>
               </Button>

@@ -75,7 +75,7 @@ const DashboardPreview = () => {
           
           <SubjectProgress />
           
-          <Button className="w-full bg-gradient-to-r from-mathprimary via-blue-500 to-mathsecondary hover:from-mathprimary/90 hover:via-blue-500/90 hover:to-mathsecondary/90 dark:from-blue-600 dark:via-blue-500 dark:to-purple-600 dark:hover:from-blue-700 dark:hover:to-purple-700 shadow-lg shadow-mathprimary/20 dark:shadow-blue-900/20 transition-all duration-300" asChild>
+          <Button className="w-full bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300" asChild>
             <Link to="/premium">Upgrade to Premium</Link>
           </Button>
         </div>

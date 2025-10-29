@@ -314,7 +314,7 @@ const ResultsPage = () => {
                   {/* AI Insights Section */}
                   {results.length >= 2 && (
                     <Card className="overflow-hidden border-mathprimary/20">
-                      <CardHeader className="bg-gradient-to-r from-mathprimary/10 to-mathprimary/5">
+                      <CardHeader className="bg-primary/10">
                         <div className="flex items-center gap-2">
                           <div className="bg-mathprimary/20 p-2 rounded-full">
                             <Brain className="h-5 w-5 text-mathprimary" />

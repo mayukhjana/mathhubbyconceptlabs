@@ -128,7 +128,7 @@ const BoardsSection = () => {
                       <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
                         {board.description}
                       </p>
-                      <Button asChild size="sm" className="w-full bg-gradient-to-r from-mathprimary to-mathsecondary hover:shadow-lg hover:scale-105 transition-all duration-300">
+                      <Button asChild size="sm" className="w-full bg-primary hover:bg-primary/90 hover:shadow-lg hover:scale-105 transition-all duration-300">
                         <Link to={board.link}>View Papers</Link>
                       </Button>
                     </div>

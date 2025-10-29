@@ -401,7 +401,7 @@ const AdminUploadPage = () => {
                   </CardHeader>
                   <CardContent>
                     <Button 
-                      className="w-full bg-gradient-to-r from-mathprimary to-mathsecondary hover:opacity-90"
+                      className="w-full bg-primary hover:bg-primary/90"
                       onClick={() => window.location.href = '/admin/mentor-verification'}
                     >
                       View Applications

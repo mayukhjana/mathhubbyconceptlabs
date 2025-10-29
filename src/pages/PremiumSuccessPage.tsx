@@ -22,7 +22,7 @@ const PremiumSuccessPage = () => {
       <main className="flex-grow flex items-center justify-center">
         <div className="container mx-auto px-4 py-16 max-w-3xl">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-mathprimary to-mathprimary/80 p-8 text-white text-center">
+            <div className="bg-primary p-8 text-white text-center">
               <div className="mx-auto bg-white rounded-full w-20 h-20 flex items-center justify-center mb-6">
                 <CheckCircle className="h-12 w-12 text-green-500" />
               </div>
