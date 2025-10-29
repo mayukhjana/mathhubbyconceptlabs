@@ -4,7 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-const adminEmail = "mayukhjana27@gmail.com";
+const adminEmail = Deno.env.get('ADMIN_SUPPORT_EMAIL') || "mayukhjana27@gmail.com";
 
 interface SupportTicket {
   subject: string;
@@ -43,19 +43,36 @@ Deno.serve(async (req) => {
 
     const { subject, message }: SupportTicket = await req.json();
     
+    // Input validation
     if (!subject || !message) {
       return new Response(JSON.stringify({ error: 'Subject and message are required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
+    if (typeof subject !== 'string' || subject.trim().length < 5 || subject.length > 200) {
+      return new Response(JSON.stringify({ error: 'Subject must be between 5 and 200 characters' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (typeof message !== 'string' || message.trim().length < 10 || message.length > 5000) {
+      return new Response(JSON.stringify({ error: 'Message must be between 10 and 5000 characters' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Sanitize inputs
+    const sanitizedSubject = subject.trim();
+    const sanitizedMessage = message.trim();
+
     // Insert ticket into database
     const { data, error } = await supabase
       .from('support_tickets')
       .insert({
         user_id: user.id,
-        subject,
-        message
+        subject: sanitizedSubject,
+        message: sanitizedMessage
       })
       .select();
 
@@ -72,8 +89,8 @@ Deno.serve(async (req) => {
         New Support Ticket Submitted
         
         User Email: ${user.email}
-        Subject: ${subject}
-        Message: ${message}
+        Subject: ${sanitizedSubject}
+        Message: ${sanitizedMessage}
         
         Ticket ID: ${data[0].id}
         Submitted at: ${new Date().toISOString()}

@@ -29,8 +29,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) {
       setIsPremium(false);
       setPremiumExpiresAt(null);
-      // For demo, save to localStorage so PaperCard component can access it
-      localStorage.setItem("userIsPremium", "false");
       return;
     }
 
@@ -45,9 +43,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setIsPremium(premiumResponse.isPremium);
       setPremiumExpiresAt(premiumResponse.expiresAt);
-
-      // For demo, save to localStorage so PaperCard component can access it
-      localStorage.setItem("userIsPremium", premiumResponse.isPremium ? "true" : "false");
     } catch (error) {
       console.error("Failed to check premium status:", error);
       setIsPremium(false);
@@ -69,7 +64,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           } else {
             setIsPremium(false);
             setPremiumExpiresAt(null);
-            localStorage.setItem("userIsPremium", "false");
           }
         }, 0);
       }

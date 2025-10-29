@@ -51,6 +51,44 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Validate question length if provided
+    if (question && (typeof question !== 'string' || question.length > 5000)) {
+      return new Response(
+        JSON.stringify({ error: 'Question must be a string with maximum 5000 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate files
+    if (files.length > 5) {
+      return new Response(
+        JSON.stringify({ error: 'Maximum 5 images allowed per request' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    for (const file of files) {
+      // Validate file type
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        return new Response(
+          JSON.stringify({ error: `Invalid file type: ${file.type}. Allowed types: JPEG, PNG, WebP` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Estimate base64 decoded size (base64 is ~1.33x original size)
+      const decodedSize = (file.content.length * 0.75);
+      if (decodedSize > MAX_FILE_SIZE) {
+        return new Response(
+          JSON.stringify({ error: `File ${file.name} exceeds 5MB limit` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Check and update user quota
     const canProceed = await checkAndUpdateQuota(supabase, user.id);
     if (!canProceed) {

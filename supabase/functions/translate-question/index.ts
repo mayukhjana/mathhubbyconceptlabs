@@ -10,9 +10,34 @@ Deno.serve(async (req) => {
   try {
     const { text, targetLanguage, targetLanguageName } = await req.json();
 
+    // Input validation
     if (!text || !targetLanguage) {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate text length (max 5000 characters)
+    if (typeof text !== 'string' || text.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: 'Text must be a string with maximum 5000 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate language code format
+    if (typeof targetLanguage !== 'string' || !/^[a-z]{2}$/.test(targetLanguage)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid language code format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate language name if provided
+    if (targetLanguageName && (typeof targetLanguageName !== 'string' || targetLanguageName.length > 100)) {
+      return new Response(
+        JSON.stringify({ error: 'Language name must be a string with maximum 100 characters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

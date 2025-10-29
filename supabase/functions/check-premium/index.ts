@@ -36,10 +36,10 @@ serve(async (req) => {
     
     // Check premium status in database
     const { data: premiumData, error: premiumError } = await supabaseClient
-      .from('user_premium')
+      .from('premium_subscriptions')
       .select('*')
       .eq('user_id', userData.user.id)
-      .eq('is_active', true)
+      .eq('status', 'active')
       .maybeSingle();
     
     if (premiumError) {
@@ -48,8 +48,7 @@ serve(async (req) => {
     }
     
     // Check if premium is active and not expired
-    const isPremium = premiumData && 
-      (premiumData.expires_at === null || new Date(premiumData.expires_at) > new Date());
+    const isPremium = premiumData && new Date(premiumData.expires_at) > new Date();
     
     return new Response(
       JSON.stringify({ 
