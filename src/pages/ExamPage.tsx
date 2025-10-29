@@ -58,6 +58,8 @@ const ExamPage = () => {
   const [questionsWithResults, setQuestionsWithResults] = useState<any[]>([]);
   const [showInstructions, setShowInstructions] = useState(false);
   const [examStarted, setExamStarted] = useState(false);
+  const [showFiveMinWarning, setShowFiveMinWarning] = useState(false);
+  const [fiveMinWarningShown, setFiveMinWarningShown] = useState(false);
   
   // Detect if using tablet
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
@@ -141,13 +143,19 @@ const ExamPage = () => {
     const timer = setTimeout(() => {
       setTimeRemaining(timeRemaining - 1);
       
+      // Show 5-minute warning
+      if (timeRemaining === 300 && !fiveMinWarningShown) {
+        setShowFiveMinWarning(true);
+        setFiveMinWarningShown(true);
+      }
+      
       if (timeRemaining === 1) {
         setShowTimeupDialog(true);
       }
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [timeRemaining, examCompleted, examStarted]);
+  }, [timeRemaining, examCompleted, examStarted, fiveMinWarningShown]);
   
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -599,6 +607,26 @@ const ExamPage = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Continue Answering</AlertDialogCancel>
             <AlertDialogAction onClick={finishExam}>Submit Anyway</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog open={showFiveMinWarning} onOpenChange={setShowFiveMinWarning}>
+        <AlertDialogContent className="border-amber-500/50">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-5 w-5" />
+              5 Minutes Remaining!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              You have only <span className="font-bold text-amber-600 dark:text-amber-400">5 minutes</span> left to complete your exam. 
+              Please review your answers and manage your time wisely.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowFiveMinWarning(false)} className="bg-amber-600 hover:bg-amber-700">
+              Got it, Continue
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

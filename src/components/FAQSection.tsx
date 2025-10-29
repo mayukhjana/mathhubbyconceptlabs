@@ -29,14 +29,18 @@ const FAQSection = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4">
+    <section className="py-20 bg-gradient-to-b from-accent/5 to-background relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-mathprimary/5 to-transparent rounded-full blur-3xl"></div>
+      <div className="absolute bottom-20 right-10 w-64 h-64 bg-gradient-to-tl from-mathaccent/5 to-transparent rounded-full blur-3xl"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center bg-mathprimary/10 dark:bg-blue-500/10 rounded-full p-2 mb-4">
-            <HelpCircle className="h-6 w-6 text-mathprimary dark:text-blue-400" />
+          <div className="inline-flex items-center justify-center bg-gradient-to-r from-mathprimary/10 via-mathsecondary/10 to-mathaccent/10 border border-mathprimary/20 rounded-full p-3 mb-4 shadow-sm">
+            <HelpCircle className="h-6 w-6 text-mathprimary" />
           </div>
-          <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Frequently Asked Questions</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             Find answers to common questions about MathHub and how we can help you excel in mathematics.
           </p>
         </div>
@@ -45,7 +49,7 @@ const FAQSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
             {/* Left Column - Questions */}
             <div className="space-y-4">
-              <h3 className="text-2xl font-bold mb-6">FAQs</h3>
+              <h3 className="text-2xl font-bold mb-6 text-foreground">FAQs</h3>
               
               {faqs.map((faq, index) => (
                 <div 
@@ -53,28 +57,28 @@ const FAQSection = () => {
                   onClick={() => setActiveFaq(index)}
                   className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
                     activeFaq === index 
-                      ? "border-mathprimary bg-mathprimary/5"
-                      : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+                      ? "border-mathprimary bg-gradient-to-r from-mathprimary/10 to-mathsecondary/5 shadow-md"
+                      : "border-border hover:border-mathprimary/30 hover:bg-accent/30"
                   }`}
                 >
-                  <p className="font-medium">{faq.question}</p>
+                  <p className="font-medium text-foreground">{faq.question}</p>
                 </div>
               ))}
               
-              <div className="p-4 rounded-xl border border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600 cursor-pointer mt-4">
-                <p className="font-medium">My question isn't listed here (Send us feedback)</p>
+              <div className="p-4 rounded-xl border border-border hover:border-mathprimary/30 hover:bg-accent/30 cursor-pointer mt-4 transition-all duration-200">
+                <p className="font-medium text-foreground">My question isn't listed here (Send us feedback)</p>
               </div>
             </div>
             
             {/* Right Column - Answers */}
             <div>
-              <h3 className="text-2xl font-bold mb-6">Answers</h3>
+              <h3 className="text-2xl font-bold mb-6 text-foreground">Answers</h3>
               
               {activeFaq !== null && (
-                <div className="bg-amber-100 dark:bg-amber-900/20 p-6 rounded-2xl">
-                  <div className="w-3 h-3 rounded-full bg-amber-500 mb-4"></div>
+                <div className="bg-gradient-to-br from-mathaccent/20 via-mathsecondary/10 to-mathprimary/10 border border-mathaccent/30 p-6 rounded-2xl shadow-lg">
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-mathprimary to-mathaccent mb-4"></div>
                   {faqs[activeFaq].answer.split('\n').map((paragraph, i) => (
-                    <p key={i} className={`${i > 0 ? "mt-2" : ""}`}>{paragraph}</p>
+                    <p key={i} className={`text-foreground leading-relaxed ${i > 0 ? "mt-2" : ""}`}>{paragraph}</p>
                   ))}
                 </div>
               )}
