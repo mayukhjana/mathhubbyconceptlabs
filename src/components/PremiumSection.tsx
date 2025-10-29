@@ -9,16 +9,16 @@ const PremiumSection = () => {
   const [activeTab, setActiveTab] = useState<'monthly' | 'yearly'>('monthly');
   
   return (
-    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-gray-900 via-blue-900 to-indigo-900 text-white">
+    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-slate-900 via-blue-950 to-indigo-950 text-white dark:from-slate-950 dark:via-blue-900 dark:to-indigo-900">
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-mathsecondary/20 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-mathprimary/20 blur-3xl"></div>
-        <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] rounded-full bg-purple-500/10 blur-3xl"></div>
-        <div className="hidden md:block absolute -right-20 top-1/3 opacity-10 select-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-blue-500/20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-indigo-500/20 blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] rounded-full bg-purple-500/15 blur-3xl"></div>
+        <div className="hidden md:block absolute -right-20 top-1/3 opacity-10 select-none text-white">
           <div className="text-[200px] font-bold">+</div>
         </div>
-        <div className="hidden md:block absolute -left-20 bottom-1/3 opacity-10 select-none">
+        <div className="hidden md:block absolute -left-20 bottom-1/3 opacity-10 select-none text-white">
           <div className="text-[200px] font-bold">×</div>
         </div>
         <div className="absolute inset-0 bg-grid-white/[0.03]"></div>

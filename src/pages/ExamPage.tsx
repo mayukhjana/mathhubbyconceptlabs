@@ -364,6 +364,7 @@ const ExamPage = () => {
           obtained_marks: calculatedObtainedMarks
         });
 
+        // Save to user_results
         const { error } = await supabase
           .from('user_results')
           .insert({
@@ -378,11 +379,28 @@ const ExamPage = () => {
           
         if (error) {
           throw error;
-        } else {
-          console.log("Result saved successfully");
-          setResultSaved(true);
-          toast.success(`Exam completed! Your score: ${calculatedScore}% (${calculatedObtainedMarks}/${calculatedPossibleMarks} marks)`);
         }
+
+        // Save to leaderboard
+        const { error: leaderboardError } = await supabase
+          .from('exam_leaderboards')
+          .upsert({
+            exam_id: examId,
+            user_id: user.id,
+            score: calculatedScore,
+            obtained_marks: calculatedObtainedMarks,
+            total_marks: calculatedPossibleMarks
+          }, {
+            onConflict: 'exam_id,user_id'
+          });
+
+        if (leaderboardError) {
+          console.error('Error saving to leaderboard:', leaderboardError);
+        }
+        
+        console.log("Result saved successfully");
+        setResultSaved(true);
+        toast.success(`Exam completed! Your score: ${calculatedScore}% (${calculatedObtainedMarks}/${calculatedPossibleMarks} marks)`);
       } catch (error: any) {
         console.error('Error saving exam result:', error);
         toast.error(`Failed to save your result: ${error.message}`);
@@ -463,6 +481,7 @@ const ExamPage = () => {
           showSidebar={true} // Always show sidebar component, but control visibility inside
           examCompleted={examCompleted} // Pass whether exam is completed
           questionsWithResults={questionsWithResults} // Pass questions with results for correct/incorrect answers
+          examId={examId}
         />
         
         {/* Main content */}
@@ -556,6 +575,8 @@ const ExamPage = () => {
             resultSaved={resultSaved}
             formatTime={formatTime}
             examId={examId || ""}
+            examTitle={exam.title}
+            isEntranceExam={exam.board.toLowerCase().includes('jee') || exam.board.toLowerCase().includes('neet') || exam.board.toLowerCase().includes('entrance')}
           />
             )}
           </div>

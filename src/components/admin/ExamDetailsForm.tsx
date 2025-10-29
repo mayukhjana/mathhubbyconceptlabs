@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { InstructionsPdfUpload } from "./InstructionsPdfUpload";
 
 interface ExamDetailsFormProps {
   examTitle: string;

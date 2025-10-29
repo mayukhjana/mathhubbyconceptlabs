@@ -29,3 +29,9 @@ verify_jwt = true
 
 [functions.submit-support-ticket]
 verify_jwt = true
+
+[functions.generate-projected-rank]
+verify_jwt = true
+
+[functions.generate-question-solution]
+verify_jwt = true

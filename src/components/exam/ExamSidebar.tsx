@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, BookOpen, HelpCircle, List } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { Question } from '@/services/exam/types';
+import { InstructionsDialog } from './InstructionsDialog';
 
 interface QuestionStatus {
   isAnswered: boolean;
@@ -23,6 +24,7 @@ interface ExamSidebarProps {
   showSidebar?: boolean; // To control visibility after exam completion
   examCompleted?: boolean; // To show correct/incorrect answers
   questionsWithResults?: any[]; // Questions with results for showing correct/incorrect answers
+  examId?: string; // For fetching instructions
 }
 
 export const ExamSidebar: React.FC<ExamSidebarProps> = ({
@@ -34,9 +36,11 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
   examTitle,
   showSidebar = true,
   examCompleted = false,
-  questionsWithResults = []
+  questionsWithResults = [],
+  examId
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   const isMobile = useIsMobile();
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
 
@@ -207,10 +211,10 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
                       variant="outline" 
                       size="sm" 
                       className={cn(
-                        "h-8 w-8 p-0 flex items-center justify-center font-medium", 
+                        "h-8 w-8 p-0 flex items-center justify-center font-medium dark:text-foreground", 
                         statusColor, 
                         isActive && "ring-2 ring-offset-2 ring-primary"
-                      )} 
+                      )}
                       onClick={() => {
                         onQuestionSelect(questionIndex);
                         if (isMobile || isTablet) {
@@ -227,15 +231,28 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
           ))}
         </div>
         
-        {!examCompleted && (
+        {!examCompleted && examId && (
           <div className="p-4 border-t flex space-x-2">
-            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={toggleSidebar}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 text-xs" 
+              onClick={() => setShowInstructions(true)}
+            >
               <HelpCircle className="w-4 h-4 mr-1" />
               Instructions
             </Button>
           </div>
         )}
       </div>
+
+      {examId && (
+        <InstructionsDialog
+          open={showInstructions}
+          onOpenChange={setShowInstructions}
+          examId={examId}
+        />
+      )}
     </>
   );
 };

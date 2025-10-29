@@ -7,6 +7,8 @@ import type { Question } from "@/services/exam/types";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AIInsights } from "./AIInsights";
+import { ExamLeaderboard } from "./ExamLeaderboard";
+import { QuestionSolution } from "./QuestionSolution";
 
 interface ExamResultsProps {
   score: number;
@@ -18,18 +20,22 @@ interface ExamResultsProps {
   resultSaved: boolean;
   formatTime: (seconds: number) => string;
   examId: string;
+  examTitle?: string;
+  isEntranceExam?: boolean;
 }
 
-export const ExamResults = ({
-  score,
-  timeTaken,
-  totalObtainedMarks,
-  totalPossibleMarks,
-  questions,
-  userAnswers,
-  resultSaved,
+export const ExamResults = ({ 
+  score, 
+  timeTaken, 
+  totalObtainedMarks, 
+  totalPossibleMarks, 
+  questions, 
+  userAnswers, 
+  resultSaved, 
   formatTime,
-  examId
+  examId,
+  examTitle = "Exam",
+  isEntranceExam = false
 }: ExamResultsProps) => {
   const [showQuestionAnalysis, setShowQuestionAnalysis] = useState(false);
   const attemptedCount = Object.keys(userAnswers).length;
@@ -374,19 +380,34 @@ export const ExamResults = ({
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* Question Solutions */}
+        <div className="space-y-4 mt-8">
+          <h3 className="text-lg font-semibold">Detailed Solutions</h3>
+          {questions.map((question, index) => (
+            <div key={question.id} className="border rounded-lg p-4">
+              <div className="flex items-start justify-between mb-3">
+                <h4 className="font-medium">Question {index + 1}</h4>
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                  userAnswers[question.id] === question.correct_answer 
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' 
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                }`}>
+                  {userAnswers[question.id] === question.correct_answer ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                </div>
+              </div>
+              <QuestionSolution question={question} userAnswer={userAnswers[question.id]} questionNumber={index + 1} />
+            </div>
+          ))}
+        </div>
+
+        <ExamLeaderboard examId={examId} examTitle={examTitle} isEntranceExam={isEntranceExam} userScore={score} userObtainedMarks={totalObtainedMarks} />
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Button variant="outline" className="gap-2" asChild>
-            <Link to="/results">
-              <BarChart3 size={16} />
-              View All Results
-            </Link>
+            <Link to="/results"><BarChart3 size={16} />View All Results</Link>
           </Button>
-          
           <Button className="gap-2" asChild>
-            <Link to="/exams">
-              <ArrowRight size={16} />
-              More Exams
-            </Link>
+            <Link to="/exams"><ArrowRight size={16} />More Exams</Link>
           </Button>
         </div>
       </div>
