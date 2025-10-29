@@ -18,30 +18,38 @@ const BoardsPage = () => {
       try {
         const { data, error } = await supabase
           .from('exams')
-          .select('board')
+          .select('board, image_url')
           .eq('category', 'board');
 
         if (error) throw error;
 
-        // Get unique boards and count papers for each
-        const boardCounts = data.reduce((acc: any, exam: any) => {
+        // Get unique boards with their images and count papers for each
+        const boardData = data.reduce((acc: any, exam: any) => {
           if (!acc[exam.board]) {
-            acc[exam.board] = { count: 0, board: exam.board };
+            acc[exam.board] = { 
+              count: 0, 
+              board: exam.board,
+              image_url: exam.image_url // Take the first image URL found
+            };
           }
           acc[exam.board].count++;
+          // Update image if a newer one is found
+          if (exam.image_url && !acc[exam.board].image_url) {
+            acc[exam.board].image_url = exam.image_url;
+          }
           return acc;
         }, {});
 
         // Filter out entrance exams (JEE, WBJEE) - they are not boards
         const excludedBoards = ['jee main', 'jee advanced', 'wbjee'];
         
-        const boardsData = Object.values(boardCounts)
+        const boardsData = Object.values(boardData)
           .filter((item: any) => !excludedBoards.includes(item.board.toLowerCase()))
           .map((item: any) => ({
             id: item.board.toLowerCase().replace(/\s+/g, '-'),
             title: item.board,
             description: `Access previous year math papers for ${item.board}.`,
-            image: "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+            image: item.image_url || "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
             paperCount: item.count
           }));
 
