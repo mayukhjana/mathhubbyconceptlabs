@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,33 +8,38 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { HelmetProvider } from "react-helmet-async";
+import LoadingAnimation from "@/components/LoadingAnimation";
+
+// Eager load only the landing page for fast initial render
 import Index from "./pages/Index";
-import BoardsPage from "./pages/BoardsPage";
-import BoardDetail from "./pages/BoardDetail";
-import ExamPage from "./pages/ExamPage";
-import ExamPapersPage from "./pages/ExamPapersPage";
-import EntranceExamsPage from "./pages/EntranceExamsPage";
-import ResultsPage from "./pages/ResultsPage";
-import PremiumPage from "./pages/PremiumPage";
-import PremiumSuccessPage from "./pages/PremiumSuccessPage";
-import ProfilePage from "./pages/ProfilePage";
-import SupportPage from "./pages/SupportPage";
-import AdminUploadPage from "./pages/AdminUploadPage";
-import AdminExamUploadPage from "./pages/AdminExamUploadPage";
-import AdminQuestionUploadPage from "./pages/AdminQuestionUploadPage";
-import AuthPage from "./pages/AuthPage";
-import MathHubAIPage from "./pages/MathHubAIPage";
-import ResourcesPage from "./pages/ResourcesPage";
-import NotFound from "./pages/NotFound";
-import RefundPolicy from "./pages/RefundPolicy";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsAndConditions from "./pages/TermsAndConditions";
-import StudyMaterialsPage from "./pages/StudyMaterialsPage";
-import PracticeSetsPage from "./pages/PracticeSetsPage";
-import VideoTutorialsPage from "./pages/VideoTutorialsPage";
-import MentorshipsPage from "./pages/MentorshipsPage";
-import MentorApplicationPage from "./pages/MentorApplicationPage";
-import AdminMentorVerificationPage from "./pages/AdminMentorVerificationPage";
+
+// Lazy load all other routes to reduce initial bundle size
+const BoardsPage = lazy(() => import("./pages/BoardsPage"));
+const BoardDetail = lazy(() => import("./pages/BoardDetail"));
+const ExamPage = lazy(() => import("./pages/ExamPage"));
+const ExamPapersPage = lazy(() => import("./pages/ExamPapersPage"));
+const EntranceExamsPage = lazy(() => import("./pages/EntranceExamsPage"));
+const ResultsPage = lazy(() => import("./pages/ResultsPage"));
+const PremiumPage = lazy(() => import("./pages/PremiumPage"));
+const PremiumSuccessPage = lazy(() => import("./pages/PremiumSuccessPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SupportPage = lazy(() => import("./pages/SupportPage"));
+const AdminUploadPage = lazy(() => import("./pages/AdminUploadPage"));
+const AdminExamUploadPage = lazy(() => import("./pages/AdminExamUploadPage"));
+const AdminQuestionUploadPage = lazy(() => import("./pages/AdminQuestionUploadPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const MathHubAIPage = lazy(() => import("./pages/MathHubAIPage"));
+const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const StudyMaterialsPage = lazy(() => import("./pages/StudyMaterialsPage"));
+const PracticeSetsPage = lazy(() => import("./pages/PracticeSetsPage"));
+const VideoTutorialsPage = lazy(() => import("./pages/VideoTutorialsPage"));
+const MentorshipsPage = lazy(() => import("./pages/MentorshipsPage"));
+const MentorApplicationPage = lazy(() => import("./pages/MentorApplicationPage"));
+const AdminMentorVerificationPage = lazy(() => import("./pages/AdminMentorVerificationPage"));
 
 const queryClient = new QueryClient();
 
@@ -48,79 +53,81 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/boards" element={<BoardsPage />} />
-                  <Route path="/boards/:boardId/*" element={<BoardDetail />} />
-                  <Route path="/entrance-exams" element={<EntranceExamsPage />} />
-                  <Route path="/exams/:examId" element={<ExamPage />} />
-                  <Route path="/exam-papers" element={<ExamPapersPage />} />
-                  <Route path="/resources" element={<ResourcesPage />} />
-                  <Route path="/resources/study-materials" element={<StudyMaterialsPage />} />
-                  <Route path="/resources/practice-sets" element={<PracticeSetsPage />} />
-                  <Route path="/resources/video-tutorials" element={<VideoTutorialsPage />} />
-                  <Route path="/mentorships" element={<MentorshipsPage />} />
-                  <Route path="/mentor-application" element={
-                    <AuthGuard>
-                      <MentorApplicationPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/results" element={
-                    <AuthGuard>
-                      <ResultsPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/premium" element={
-                    <AuthGuard>
-                      <PremiumPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/premium-success" element={
-                    <AuthGuard>
-                      <PremiumSuccessPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/profile" element={
-                    <AuthGuard>
-                      <ProfilePage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/support" element={
-                    <AuthGuard>
-                      <SupportPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/mathhub-ai" element={
-                    <AuthGuard>
-                      <MathHubAIPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/admin/upload" element={
-                    <AuthGuard requireAdmin>
-                      <AdminUploadPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/admin/exam-upload" element={
-                    <AuthGuard requireAdmin>
-                      <AdminExamUploadPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/admin/questions/:examId" element={
-                    <AuthGuard requireAdmin>
-                      <AdminQuestionUploadPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/admin/mentor-verification" element={
-                    <AuthGuard requireAdmin>
-                      <AdminMentorVerificationPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-                  <Route path="/refund-policy" element={<RefundPolicy />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <Suspense fallback={<LoadingAnimation />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/boards" element={<BoardsPage />} />
+                    <Route path="/boards/:boardId/*" element={<BoardDetail />} />
+                    <Route path="/entrance-exams" element={<EntranceExamsPage />} />
+                    <Route path="/exams/:examId" element={<ExamPage />} />
+                    <Route path="/exam-papers" element={<ExamPapersPage />} />
+                    <Route path="/resources" element={<ResourcesPage />} />
+                    <Route path="/resources/study-materials" element={<StudyMaterialsPage />} />
+                    <Route path="/resources/practice-sets" element={<PracticeSetsPage />} />
+                    <Route path="/resources/video-tutorials" element={<VideoTutorialsPage />} />
+                    <Route path="/mentorships" element={<MentorshipsPage />} />
+                    <Route path="/mentor-application" element={
+                      <AuthGuard>
+                        <MentorApplicationPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/results" element={
+                      <AuthGuard>
+                        <ResultsPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/premium" element={
+                      <AuthGuard>
+                        <PremiumPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/premium-success" element={
+                      <AuthGuard>
+                        <PremiumSuccessPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/profile" element={
+                      <AuthGuard>
+                        <ProfilePage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/support" element={
+                      <AuthGuard>
+                        <SupportPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/mathhub-ai" element={
+                      <AuthGuard>
+                        <MathHubAIPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/admin/upload" element={
+                      <AuthGuard requireAdmin>
+                        <AdminUploadPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/admin/exam-upload" element={
+                      <AuthGuard requireAdmin>
+                        <AdminExamUploadPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/admin/questions/:examId" element={
+                      <AuthGuard requireAdmin>
+                        <AdminQuestionUploadPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/admin/mentor-verification" element={
+                      <AuthGuard requireAdmin>
+                        <AdminMentorVerificationPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                    <Route path="/refund-policy" element={<RefundPolicy />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
               </BrowserRouter>
             </TooltipProvider>
           </AuthProvider>
