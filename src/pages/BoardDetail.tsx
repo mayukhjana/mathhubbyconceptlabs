@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Routes, Route } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChapterAccordion, { Chapter } from "@/components/ChapterAccordion";
@@ -89,7 +90,7 @@ const boardsInfo = {
 
 const BoardDetail = () => {
   const { boardId } = useParams<{ boardId: string }>();
-  const [userIsPremium, setUserIsPremium] = useState(false);
+  const { isPremium } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fullMockExams, setFullMockExams] = useState<Record<string, Exam[]>>({});
@@ -103,10 +104,6 @@ const BoardDetail = () => {
   const handleGetPremium = () => {
     window.location.href = "/premium";
   };
-  
-  useEffect(() => {
-    setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
-  }, []);
 
   const loadBoardData = async () => {
     if (!formattedBoardId) return;
@@ -242,7 +239,7 @@ const BoardDetail = () => {
           </div>
         </div>
         
-        {!userIsPremium && (
+        {!isPremium && (
           <div className="bg-mathprimary/10 border-y border-mathprimary/20">
             <div className="container mx-auto px-4 py-3">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -288,10 +285,10 @@ const BoardDetail = () => {
               element={
                 <PapersList 
                   boardId={boardId} 
-                  userIsPremium={userIsPremium}
+                  userIsPremium={isPremium}
                   fullMockExams={fullMockExams}
                 />
-              } 
+              }
             />
             <Route 
               path="chapters" 
@@ -299,9 +296,9 @@ const BoardDetail = () => {
                 <ChaptersList 
                   boardId={boardId}
                   chapters={chapterExams}
-                  userIsPremium={userIsPremium}
+                  userIsPremium={isPremium}
                 />
-              } 
+              }
             />
           </Routes>
         </div>

@@ -18,8 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const UserProfileMenu = () => {
-  const { user, signOut, isAuthenticated } = useAuth();
-  const [userIsPremium, setUserIsPremium] = useState(false);
+  const { user, signOut, isAuthenticated, isPremium } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>(null);
   const navigate = useNavigate();
@@ -48,9 +47,6 @@ const UserProfileMenu = () => {
     };
 
     fetchProfileData();
-    
-    // In a real app, this would fetch premium status from a subscription service
-    setUserIsPremium(localStorage.getItem("userIsPremium") === "true");
 
     // Listen for avatar updates
     const handleAvatarUpdated = (event: CustomEvent) => {
@@ -144,7 +140,7 @@ const UserProfileMenu = () => {
               </AvatarFallback>
             </Avatar>
           </div>
-          {userIsPremium && (
+          {isPremium && (
             <div className="absolute -top-1 -right-1 bg-yellow-500 text-white rounded-full p-0.5">
               <Crown size={12} />
             </div>
@@ -161,7 +157,7 @@ const UserProfileMenu = () => {
           </Link>
         </DropdownMenuItem>
         
-        {!userIsPremium && (
+        {!isPremium && (
           <DropdownMenuItem onClick={handleUpgradeToPremium} className="flex cursor-pointer items-center">
             <Crown className="mr-2 h-4 w-4 text-yellow-500" />
             <span>Upgrade to Premium</span>

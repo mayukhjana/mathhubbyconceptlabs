@@ -23,8 +23,7 @@ const ExamPapersPage = () => {
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState<Exam[]>([]);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
-  const { user } = useAuth();
-  const [userIsPremium, setUserIsPremium] = useState(false);
+  const { user, isPremium } = useAuth();
   const { toast } = useToast();
   
   const loadExams = useCallback(async () => {
@@ -69,9 +68,6 @@ const ExamPapersPage = () => {
   }, [user, toast]);
   
   useEffect(() => {
-    const isPremium = localStorage.getItem("userIsPremium") === "true";
-    setUserIsPremium(isPremium);
-    
     loadExams();
     
     const handleVisibilityChange = () => {
@@ -166,7 +162,7 @@ const ExamPapersPage = () => {
           <div className="mt-6">
             <ExamsList 
               exams={filteredExams} 
-              userIsPremium={userIsPremium}
+              userIsPremium={isPremium}
               searchQuery={searchQuery}
               lastRefresh={lastRefresh}
             />
