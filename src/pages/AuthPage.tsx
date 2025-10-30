@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, LogIn, UserPlus, Mail } from 'lucide-react';
+import { Loader2, LogIn, UserPlus, Mail, Phone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 const AuthPage = () => {
   const { signIn, signUp, isAuthenticated } = useAuth();
@@ -26,6 +27,10 @@ const AuthPage = () => {
   const [username, setUsername] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
 
   if (isAuthenticated) {
     navigate('/');
@@ -101,6 +106,52 @@ const AuthPage = () => {
     }
   };
 
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: phoneNumber,
+      });
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("OTP sent to your phone!");
+        setOtpSent(true);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        phone: phoneNumber,
+        token: otp,
+        type: 'sms'
+      });
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Logged in successfully!");
+        navigate('/');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to verify OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -115,8 +166,9 @@ const AuthPage = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsTrigger value="login">Email</TabsTrigger>
+                  <TabsTrigger value="phone">Phone</TabsTrigger>
                   <TabsTrigger value="register">Register</TabsTrigger>
                 </TabsList>
                 
@@ -202,6 +254,81 @@ const AuthPage = () => {
                         onClick={() => setIsResettingPassword(true)}
                       >
                         Forgot Password?
+                      </Button>
+                    </form>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="phone">
+                  {!otpSent ? (
+                    <form onSubmit={handleSendOtp} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input 
+                          id="phone" 
+                          type="tel" 
+                          placeholder="+91 1234567890" 
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          required
+                        />
+                        <p className="text-xs text-muted-foreground">Enter with country code (e.g., +91)</p>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending OTP...
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="mr-2 h-4 w-4" />
+                            Send OTP
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyOtp} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="otp">Enter OTP</Label>
+                        <div className="flex justify-center">
+                          <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">OTP sent to {phoneNumber}</p>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading || otp.length !== 6}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          <>
+                            <LogIn className="mr-2 h-4 w-4" />
+                            Verify & Login
+                          </>
+                        )}
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        className="w-full"
+                        onClick={() => {
+                          setOtpSent(false);
+                          setOtp('');
+                        }}
+                      >
+                        Change Phone Number
                       </Button>
                     </form>
                   )}
