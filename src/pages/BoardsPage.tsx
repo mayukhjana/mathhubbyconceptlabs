@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SearchIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -7,6 +6,26 @@ import BoardCard from "@/components/BoardCard";
 import { Input } from "@/components/ui/input";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { supabase } from "@/integrations/supabase/client";
+import cbseImage from "@/assets/boards/cbse.jpg";
+import icseImage from "@/assets/boards/icse.jpg";
+import westBengalImage from "@/assets/boards/west-bengal.jpg";
+import maharashtraImage from "@/assets/boards/maharashtra.jpg";
+import tamilNaduImage from "@/assets/boards/tamil-nadu.jpg";
+import karnatakaImage from "@/assets/boards/karnataka.jpg";
+import defaultImage from "@/assets/boards/default.jpg";
+
+const getBoardImage = (boardName: string): string => {
+  const lowerBoard = boardName.toLowerCase();
+  
+  if (lowerBoard.includes('cbse')) return cbseImage;
+  if (lowerBoard.includes('icse')) return icseImage;
+  if (lowerBoard.includes('west bengal')) return westBengalImage;
+  if (lowerBoard.includes('maharashtra')) return maharashtraImage;
+  if (lowerBoard.includes('tamil nadu')) return tamilNaduImage;
+  if (lowerBoard.includes('karnataka')) return karnatakaImage;
+  
+  return defaultImage;
+};
 
 const BoardsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,7 +68,7 @@ const BoardsPage = () => {
             id: item.board.toLowerCase().replace(/\s+/g, '-'),
             title: item.board,
             description: `Access previous year math papers for ${item.board}.`,
-            image: item.image_url || "https://images.unsplash.com/photo-1613909207039-6b173b755cc1?q=80&w=2676&auto=format&fit=crop",
+            image: getBoardImage(item.board),
             paperCount: item.count
           }));
 
