@@ -140,8 +140,9 @@ const Navbar = () => {
           {!isAuthenticated && (
             <>
               <Button variant="outline" size="sm" asChild>
-                <Link to="/auth">
+                <Link to="/auth" className="flex items-center gap-1">
                   <LogIn size={16} />
+                  <span>Sign In</span>
                 </Link>
               </Button>
               <Button size="sm" asChild>
