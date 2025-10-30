@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, Users, MoreHorizontal, ChevronDown } from "lucide-react";
+import { BookOpen, GraduationCap, Menu, X, Home, FileText, Award, LogIn, Book, BarChart3, Sun, Moon, BrainCircuit, Users, MoreHorizontal, ChevronDown, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserProfileMenu from "@/components/UserProfileMenu";
 import { useTheme } from "@/components/ThemeProvider";
@@ -13,18 +13,42 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.png";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isVerifiedMentor, setIsVerifiedMentor] = useState(false);
   const location = useLocation();
   const {
     isAuthenticated,
-    signOut
+    signOut,
+    user
   } = useAuth();
   const {
     theme,
     setTheme
   } = useTheme();
+
+  useEffect(() => {
+    if (user) {
+      checkMentorStatus();
+    }
+  }, [user]);
+
+  const checkMentorStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('verification_status')
+        .eq('user_id', user?.id)
+        .eq('verification_status', 'approved')
+        .single();
+
+      setIsVerifiedMentor(!!data && !error);
+    } catch (error) {
+      setIsVerifiedMentor(false);
+    }
+  };
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -108,12 +132,21 @@ const Navbar = () => {
                   </Link>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem asChild>
-                <Link to="/mentor-application" className="flex items-center gap-2 cursor-pointer">
-                  <BookOpen size={18} />
-                  <span>Apply to be a Mentor</span>
-                </Link>
-              </DropdownMenuItem>
+              {isVerifiedMentor ? (
+                <DropdownMenuItem asChild>
+                  <Link to="/mentor-dashboard" className="flex items-center gap-2 cursor-pointer">
+                    <LayoutDashboard size={18} />
+                    <span>Mentor Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link to="/mentor-application" className="flex items-center gap-2 cursor-pointer">
+                    <BookOpen size={18} />
+                    <span>Apply to be a Mentor</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>
@@ -213,12 +246,21 @@ const Navbar = () => {
                 </Link>
               )}
 
-              <Link to="/mentor-application" onClick={closeMenu}>
-                <Button variant="outline" className="w-full justify-start text-lg mt-2">
-                  <BookOpen className="mr-3" size={20} />
-                  Apply to be a Mentor
-                </Button>
-              </Link>
+              {isVerifiedMentor ? (
+                <Link to="/mentor-dashboard" onClick={closeMenu}>
+                  <Button variant="outline" className="w-full justify-start text-lg mt-2">
+                    <LayoutDashboard className="mr-3" size={20} />
+                    Mentor Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/mentor-application" onClick={closeMenu}>
+                  <Button variant="outline" className="w-full justify-start text-lg mt-2">
+                    <BookOpen className="mr-3" size={20} />
+                    Apply to be a Mentor
+                  </Button>
+                </Link>
+              )}
             </div>
 
             <div className="flex items-center justify-between border-t border-border pt-4 mt-2">

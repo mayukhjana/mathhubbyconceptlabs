@@ -40,6 +40,7 @@ const VideoTutorialsPage = lazy(() => import("./pages/VideoTutorialsPage"));
 const MentorshipsPage = lazy(() => import("./pages/MentorshipsPage"));
 const MentorApplicationPage = lazy(() => import("./pages/MentorApplicationPage"));
 const MentorProfilePage = lazy(() => import("./pages/MentorProfilePage"));
+const MentorDashboardPage = lazy(() => import("./pages/MentorDashboardPage"));
 const AdminMentorVerificationPage = lazy(() => import("./pages/AdminMentorVerificationPage"));
 
 const queryClient = new QueryClient();
@@ -71,6 +72,11 @@ const App = () => (
                     <Route path="/mentor-application" element={
                       <AuthGuard>
                         <MentorApplicationPage />
+                      </AuthGuard>
+                    } />
+                    <Route path="/mentor-dashboard" element={
+                      <AuthGuard>
+                        <MentorDashboardPage />
                       </AuthGuard>
                     } />
                     <Route path="/results" element={

@@ -90,13 +90,15 @@ export const TeacherCard = ({ teacher }: TeacherCardProps) => {
             {teacher.qualification && (
               <div className="flex items-center gap-2 text-sm">
                 <GraduationCap className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-muted-foreground">{teacher.qualification}</span>
+                <span className="text-muted-foreground lg:hidden font-semibold">{teacher.qualification}</span>
+                <span className="text-muted-foreground hidden lg:inline">{teacher.qualification}</span>
               </div>
             )}
             {teacher.current_company && (
               <div className="flex items-center gap-2 text-sm">
                 <Briefcase className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-muted-foreground">{teacher.current_company}</span>
+                <span className="text-muted-foreground lg:hidden font-semibold">{teacher.current_company}</span>
+                <span className="text-muted-foreground hidden lg:inline">{teacher.current_company}</span>
               </div>
             )}
           </div>

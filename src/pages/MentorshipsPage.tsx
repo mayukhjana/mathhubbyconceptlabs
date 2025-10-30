@@ -197,15 +197,12 @@ const MentorshipsPage = () => {
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="relative">
-                            <Avatar className="h-16 w-16 border-2 border-primary/10">
-                              <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/10">
-                                <User className="h-8 w-8 text-primary" />
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
-                          </div>
+                          <Avatar className="h-16 w-16 border-2 border-primary/10">
+                            <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
+                            <AvatarFallback className="bg-primary/10">
+                              <User className="h-8 w-8 text-primary" />
+                            </AvatarFallback>
+                          </Avatar>
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
@@ -248,14 +245,13 @@ const MentorshipsPage = () => {
                       <CardContent className="p-6">
                         {/* Profile Header */}
                         <div className="flex flex-col md:flex-row gap-6 mb-6">
-                          <div className="relative flex-shrink-0">
+                          <div className="flex-shrink-0">
                             <Avatar className="h-32 w-32 border-4 border-primary/10">
                               <AvatarImage src={selectedTeacher.profiles?.avatar_url || undefined} />
                               <AvatarFallback className="bg-primary/10">
                                 <User className="h-16 w-16 text-primary" />
                               </AvatarFallback>
                             </Avatar>
-                            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-background" />
                           </div>
                           
                           <div className="flex-1">
@@ -327,7 +323,7 @@ const MentorshipsPage = () => {
                                   </a>
                                 </Button>
                               )}
-                              <Button className="ml-auto" onClick={() => window.location.href = `/mentor/${selectedTeacher.id}`}>
+                              <Button className="ml-auto lg:hidden" onClick={() => window.location.href = `/mentor/${selectedTeacher.id}`}>
                                 View Profile
                               </Button>
                             </div>

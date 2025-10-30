@@ -130,6 +130,50 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_bookings: {
+        Row: {
+          amount: number
+          booking_date: string
+          created_at: string
+          duration: number
+          id: string
+          status: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_date: string
+          created_at?: string
+          duration: number
+          id?: string
+          status?: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_date?: string
+          created_at?: string
+          duration?: number
+          id?: string
+          status?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_bookings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       premium_subscriptions: {
         Row: {
           created_at: string | null
