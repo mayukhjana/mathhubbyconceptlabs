@@ -297,6 +297,88 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_education: {
+        Row: {
+          created_at: string | null
+          degree: string
+          end_year: number | null
+          field_of_study: string | null
+          id: string
+          institution_name: string
+          start_year: number | null
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          degree: string
+          end_year?: number | null
+          field_of_study?: string | null
+          id?: string
+          institution_name: string
+          start_year?: number | null
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string | null
+          degree?: string
+          end_year?: number | null
+          field_of_study?: string | null
+          id?: string
+          institution_name?: string
+          start_year?: number | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_education_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_experience: {
+        Row: {
+          company_name: string
+          created_at: string | null
+          end_date: string | null
+          id: string
+          is_current: boolean | null
+          position: string
+          start_date: string
+          teacher_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean | null
+          position: string
+          start_date: string
+          teacher_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean | null
+          position?: string
+          start_date?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_experience_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_reviews: {
         Row: {
           comment: string | null
@@ -334,55 +416,73 @@ export type Database = {
       }
       teachers: {
         Row: {
+          about_mentor: string | null
           achievements: string | null
           bio: string | null
           created_at: string | null
           current_company: string | null
           documents_url: string | null
           experience_years: number | null
+          facebook_url: string | null
           hourly_rate: number
           id: string
+          instagram_url: string | null
+          languages: string[] | null
           linkedin_url: string | null
           qualification: string | null
           school_past: string | null
           specialization: string
           submitted_at: string | null
+          topics: string[] | null
+          twitter_url: string | null
           updated_at: string | null
           user_id: string
           verification_status: string | null
         }
         Insert: {
+          about_mentor?: string | null
           achievements?: string | null
           bio?: string | null
           created_at?: string | null
           current_company?: string | null
           documents_url?: string | null
           experience_years?: number | null
+          facebook_url?: string | null
           hourly_rate: number
           id?: string
+          instagram_url?: string | null
+          languages?: string[] | null
           linkedin_url?: string | null
           qualification?: string | null
           school_past?: string | null
           specialization: string
           submitted_at?: string | null
+          topics?: string[] | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_id: string
           verification_status?: string | null
         }
         Update: {
+          about_mentor?: string | null
           achievements?: string | null
           bio?: string | null
           created_at?: string | null
           current_company?: string | null
           documents_url?: string | null
           experience_years?: number | null
+          facebook_url?: string | null
           hourly_rate?: number
           id?: string
+          instagram_url?: string | null
+          languages?: string[] | null
           linkedin_url?: string | null
           qualification?: string | null
           school_past?: string | null
           specialization?: string
           submitted_at?: string | null
+          topics?: string[] | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_id?: string
           verification_status?: string | null

@@ -18,7 +18,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const {
-    isAuthenticated
+    isAuthenticated,
+    signOut
   } = useAuth();
   const {
     theme,
@@ -135,22 +136,19 @@ const Navbar = () => {
             </>}
         </div>
         
-        {/* Mobile auth buttons and menu */}
+        {/* Mobile/Tablet auth buttons and menu */}
         <div className="lg:hidden flex items-center gap-2">
           {!isAuthenticated && (
-            <>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/auth" className="flex items-center gap-1">
-                  <LogIn size={16} />
-                  <span>Sign In</span>
-                </Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/auth?tab=register">Sign Up</Link>
-              </Button>
-            </>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/auth" className="flex items-center gap-1">
+                <LogIn size={16} />
+                <span className="hidden sm:inline">Sign In</span>
+                <span className="sm:hidden">Sign In</span>
+              </Link>
+            </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={toggleMenu}>
+          {isAuthenticated && <UserProfileMenu />}
+          <Button variant="ghost" size="icon" onClick={toggleMenu} className="lg:hidden">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </Button>
         </div>
@@ -230,24 +228,31 @@ const Navbar = () => {
               </Toggle>
             </div>
             
-            <div className="pt-6 flex flex-col space-y-4">
-              {isAuthenticated ? <Button variant="destructive" className="w-full" onClick={() => {
-            const {
-              signOut
-            } = useAuth();
-            signOut();
-            closeMenu();
-          }}>
+            {!isAuthenticated && (
+              <div className="pt-6 flex flex-col space-y-4 border-t">
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/auth" onClick={closeMenu}>Sign In</Link>
+                </Button>
+                <Button className="w-full" asChild>
+                  <Link to="/auth?tab=register" onClick={closeMenu}>Get Started</Link>
+                </Button>
+              </div>
+            )}
+            
+            {isAuthenticated && (
+              <div className="pt-6 border-t">
+                <Button 
+                  variant="destructive" 
+                  className="w-full" 
+                  onClick={() => {
+                    signOut();
+                    closeMenu();
+                  }}
+                >
                   Sign Out
-                </Button> : <>
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link to="/auth" onClick={closeMenu}>Sign In</Link>
-                  </Button>
-                  <Button className="w-full" asChild>
-                    <Link to="/auth?tab=register" onClick={closeMenu}>Get Started</Link>
-                  </Button>
-                </>}
-            </div>
+                </Button>
+              </div>
+            )}
           </div>
         </div>}
     </header>;

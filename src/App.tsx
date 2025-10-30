@@ -39,6 +39,7 @@ const PracticeSetsPage = lazy(() => import("./pages/PracticeSetsPage"));
 const VideoTutorialsPage = lazy(() => import("./pages/VideoTutorialsPage"));
 const MentorshipsPage = lazy(() => import("./pages/MentorshipsPage"));
 const MentorApplicationPage = lazy(() => import("./pages/MentorApplicationPage"));
+const MentorProfilePage = lazy(() => import("./pages/MentorProfilePage"));
 const AdminMentorVerificationPage = lazy(() => import("./pages/AdminMentorVerificationPage"));
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
                     <Route path="/resources/practice-sets" element={<PracticeSetsPage />} />
                     <Route path="/resources/video-tutorials" element={<VideoTutorialsPage />} />
                     <Route path="/mentorships" element={<MentorshipsPage />} />
+                    <Route path="/mentor/:id" element={<MentorProfilePage />} />
                     <Route path="/mentor-application" element={
                       <AuthGuard>
                         <MentorApplicationPage />

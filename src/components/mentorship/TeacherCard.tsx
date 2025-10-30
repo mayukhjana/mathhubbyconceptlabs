@@ -114,9 +114,9 @@ export const TeacherCard = ({ teacher }: TeacherCardProps) => {
             <span className="text-sm text-muted-foreground">/hour</span>
           </div>
 
-          <Button className="w-full bg-primary hover:bg-primary/90 font-semibold" size="lg">
-            Book Now
-          </Button>
+        <Button className="w-full bg-primary hover:bg-primary/90 font-semibold" size="lg" onClick={() => window.location.href = `/mentor/${teacher.id}`}>
+          View Profile
+        </Button>
         </div>
       </CardContent>
     </Card>
