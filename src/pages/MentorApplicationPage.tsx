@@ -415,6 +415,7 @@ const MentorApplicationPage = () => {
                           placeholder="e.g., Algebra, Calculus"
                           required
                         />
+                        {errors.specialization && <p className="text-sm text-destructive">{errors.specialization}</p>}
                       </div>
                     </div>
 
@@ -429,6 +430,7 @@ const MentorApplicationPage = () => {
                           min="0"
                           required
                         />
+                        {errors.experience && <p className="text-sm text-destructive">{errors.experience}</p>}
                       </div>
 
                       <div className="space-y-2">
@@ -442,6 +444,7 @@ const MentorApplicationPage = () => {
                           placeholder="500"
                           required
                         />
+                        {errors.hourlyRate && <p className="text-sm text-destructive">{errors.hourlyRate}</p>}
                       </div>
                     </div>
                   </div>
@@ -650,6 +653,7 @@ const MentorApplicationPage = () => {
                         rows={6}
                         required
                       />
+                      {errors.aboutMentor && <p className="text-sm text-destructive">{errors.aboutMentor}</p>}
                       <p className="text-xs text-muted-foreground">{formData.aboutMentor.length}/2000 characters</p>
                     </div>
 
@@ -663,6 +667,7 @@ const MentorApplicationPage = () => {
                         rows={3}
                         required
                       />
+                      {errors.bio && <p className="text-sm text-destructive">{errors.bio}</p>}
                       <p className="text-xs text-muted-foreground">{formData.bio.length}/1000 characters</p>
                     </div>
 
@@ -692,6 +697,7 @@ const MentorApplicationPage = () => {
                           onChange={(e) => handleInputChange('linkedIn', e.target.value)}
                           placeholder="https://linkedin.com/in/yourprofile"
                         />
+                        {errors.linkedIn && <p className="text-sm text-destructive">{errors.linkedIn}</p>}
                       </div>
                       
                       <div className="space-y-2">
@@ -703,6 +709,7 @@ const MentorApplicationPage = () => {
                           onChange={(e) => handleInputChange('facebook', e.target.value)}
                           placeholder="https://facebook.com/yourprofile"
                         />
+                        {errors.facebook && <p className="text-sm text-destructive">{errors.facebook}</p>}
                       </div>
 
                       <div className="space-y-2">
@@ -714,6 +721,7 @@ const MentorApplicationPage = () => {
                           onChange={(e) => handleInputChange('instagram', e.target.value)}
                           placeholder="https://instagram.com/yourprofile"
                         />
+                        {errors.instagram && <p className="text-sm text-destructive">{errors.instagram}</p>}
                       </div>
 
                       <div className="space-y-2">
@@ -725,6 +733,7 @@ const MentorApplicationPage = () => {
                           onChange={(e) => handleInputChange('twitter', e.target.value)}
                           placeholder="https://twitter.com/yourprofile"
                         />
+                        {errors.twitter && <p className="text-sm text-destructive">{errors.twitter}</p>}
                       </div>
                     </div>
                   </div>
