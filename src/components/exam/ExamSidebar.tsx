@@ -39,19 +39,20 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
   questionsWithResults = [],
   examId
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // Start open
   const [showInstructions, setShowInstructions] = useState(false);
   const isMobile = useIsMobile();
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+  const isDesktop = !isMobile && !isTablet;
 
-  // Default to open on desktop but only if not in exam completed state
+  // Desktop sidebar is always open and non-collapsible
   useEffect(() => {
-    if (!isMobile && !isTablet && !examCompleted) {
-      setIsOpen(true);
-    } else {
-      setIsOpen(false); // Default to closed on mobile, tablet, and after exam completion
+    if (isDesktop) {
+      setIsOpen(true); // Always open on desktop
+    } else if (!examCompleted) {
+      setIsOpen(false); // Start closed on mobile/tablet during exam
     }
-  }, [isMobile, isTablet, examCompleted]);
+  }, [isMobile, isTablet, isDesktop, examCompleted]);
 
   const getQuestionStatus = (questionId: string): QuestionStatus => {
     const isAnswered = userAnswers[questionId] !== undefined;
@@ -120,17 +121,19 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
 
   return (
     <>
-      {/* Mobile/tablet/desktop button to toggle sidebar */}
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className={cn(
-          "fixed z-40 p-1 h-8 w-8 rounded-r-md border-l-0 top-16 left-0"
-        )} 
-        onClick={toggleSidebar}
-      >
-        {isOpen ? <ChevronLeft size={16} /> : examCompleted ? <List size={16} /> : <ChevronRight size={16} />}
-      </Button>
+      {/* Mobile/tablet button to toggle sidebar - hidden on desktop */}
+      {!isDesktop && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={cn(
+            "fixed z-40 p-1 h-8 w-8 rounded-r-md border-l-0 top-16 left-0"
+          )} 
+          onClick={toggleSidebar}
+        >
+          {isOpen ? <ChevronLeft size={16} /> : examCompleted ? <List size={16} /> : <ChevronRight size={16} />}
+        </Button>
+      )}
       
       <div 
         className={cn(
@@ -144,9 +147,12 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
           <h2 className="font-semibold text-sm truncate">
             {examCompleted ? "Questions Overview" : examTitle}
           </h2>
-          {isOpen && <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={toggleSidebar}>
-            <ChevronLeft size={16} />
-          </Button>}
+          {/* Only show close button on mobile/tablet */}
+          {isOpen && !isDesktop && (
+            <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={toggleSidebar}>
+              <ChevronLeft size={16} />
+            </Button>
+          )}
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6">

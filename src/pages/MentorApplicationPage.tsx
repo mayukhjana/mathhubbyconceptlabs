@@ -18,10 +18,13 @@ const mentorSchema = z.object({
   fullName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name must be less than 100 characters'),
   qualification: z.string().trim().min(5, 'Qualification must be at least 5 characters').max(200, 'Qualification must be less than 200 characters'),
   schoolPast: z.string().trim().min(10, 'Please provide detailed information about your educational background').max(500, 'This field must be less than 500 characters'),
+  currentCompany: z.string().trim().max(200, 'Company name must be less than 200 characters').optional(),
   specialization: z.string().trim().min(3, 'Specialization must be at least 3 characters').max(100, 'Specialization must be less than 100 characters'),
   hourlyRate: z.number().min(100, 'Hourly rate must be at least ₹100').max(10000, 'Hourly rate must be less than ₹10,000'),
   experience: z.number().min(0, 'Experience cannot be negative').max(50, 'Experience must be less than 50 years'),
   bio: z.string().trim().min(50, 'Bio must be at least 50 characters').max(1000, 'Bio must be less than 1000 characters'),
+  linkedIn: z.string().trim().url('Please enter a valid LinkedIn URL').optional().or(z.literal('')),
+  achievements: z.string().trim().max(500, 'Achievements must be less than 500 characters').optional(),
 });
 
 const MentorApplicationPage = () => {
@@ -33,10 +36,13 @@ const MentorApplicationPage = () => {
     fullName: '',
     qualification: '',
     schoolPast: '',
+    currentCompany: '',
     specialization: '',
     hourlyRate: '',
     experience: '',
     bio: '',
+    linkedIn: '',
+    achievements: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -83,10 +89,13 @@ const MentorApplicationPage = () => {
         fullName: formData.fullName,
         qualification: formData.qualification,
         schoolPast: formData.schoolPast,
+        currentCompany: formData.currentCompany || undefined,
         specialization: formData.specialization,
         hourlyRate: parseFloat(formData.hourlyRate),
         experience: parseInt(formData.experience),
         bio: formData.bio,
+        linkedIn: formData.linkedIn || undefined,
+        achievements: formData.achievements || undefined,
       });
 
       setLoading(true);
@@ -125,6 +134,9 @@ const MentorApplicationPage = () => {
           experience_years: validated.experience,
           qualification: validated.qualification,
           school_past: validated.schoolPast,
+          current_company: validated.currentCompany || null,
+          linkedin_url: validated.linkedIn || null,
+          achievements: validated.achievements || null,
           documents_url: publicUrl,
           verification_status: 'pending',
         });
@@ -221,6 +233,18 @@ const MentorApplicationPage = () => {
                     {errors.schoolPast && <p className="text-sm text-destructive">{errors.schoolPast}</p>}
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="currentCompany">Current Company/Institution (Optional)</Label>
+                    <Input
+                      id="currentCompany"
+                      value={formData.currentCompany}
+                      onChange={(e) => handleInputChange('currentCompany', e.target.value)}
+                      placeholder="e.g., ABC School, XYZ Coaching Institute"
+                      maxLength={200}
+                    />
+                    {errors.currentCompany && <p className="text-sm text-destructive">{errors.currentCompany}</p>}
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="specialization">Specialization</Label>
@@ -279,6 +303,31 @@ const MentorApplicationPage = () => {
                     />
                     {errors.bio && <p className="text-sm text-destructive">{errors.bio}</p>}
                     <p className="text-xs text-muted-foreground">{formData.bio.length}/1000 characters</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="linkedIn">LinkedIn Profile (Optional)</Label>
+                    <Input
+                      id="linkedIn"
+                      type="url"
+                      value={formData.linkedIn}
+                      onChange={(e) => handleInputChange('linkedIn', e.target.value)}
+                      placeholder="https://www.linkedin.com/in/yourprofile"
+                    />
+                    {errors.linkedIn && <p className="text-sm text-destructive">{errors.linkedIn}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="achievements">Achievements & Awards (Optional)</Label>
+                    <Textarea
+                      id="achievements"
+                      value={formData.achievements}
+                      onChange={(e) => handleInputChange('achievements', e.target.value)}
+                      placeholder="List any awards, certifications, or notable achievements..."
+                      maxLength={500}
+                      rows={3}
+                    />
+                    {errors.achievements && <p className="text-sm text-destructive">{errors.achievements}</p>}
                   </div>
 
                   <div className="space-y-2">
