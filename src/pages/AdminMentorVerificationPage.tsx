@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, CheckCircle, XCircle, FileText, ExternalLink, Clock, Edit2, Save, X } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, FileText, ExternalLink, Clock, Edit2, Save, X, Trash2 } from 'lucide-react';
 
 interface MentorApplication {
   id: string;
@@ -142,6 +142,32 @@ const AdminMentorVerificationPage = () => {
     } catch (error: any) {
       console.error('Error updating application:', error);
       toast.error('Failed to update application');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDelete = async (applicationId: string) => {
+    if (!confirm('Are you sure you want to delete this mentor application? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      
+      const { error } = await supabase
+        .from('teachers')
+        .delete()
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      toast.success('Application deleted successfully');
+      setSelectedApplication(null);
+      fetchApplications();
+    } catch (error: any) {
+      console.error('Error deleting application:', error);
+      toast.error('Failed to delete application');
     } finally {
       setProcessing(false);
     }
@@ -431,27 +457,38 @@ const AdminMentorVerificationPage = () => {
                   </Button>
                 </div>
               ) : (
-                selectedApplication.verification_status === 'pending' && (
-                  <div className="flex gap-4 pt-4 border-t">
-                    <Button
-                      onClick={() => handleVerification(selectedApplication.id, 'approved')}
-                      className="flex-1 bg-green-500 hover:bg-green-600"
-                      disabled={processing}
-                    >
-                      {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                      Approve
-                    </Button>
-                    <Button
-                      onClick={() => handleVerification(selectedApplication.id, 'rejected')}
-                      variant="destructive"
-                      className="flex-1"
-                      disabled={processing}
-                    >
-                      {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
-                      Reject
-                    </Button>
-                  </div>
-                )
+                <div className="space-y-4 pt-4 border-t">
+                  {selectedApplication.verification_status === 'pending' && (
+                    <div className="flex gap-4">
+                      <Button
+                        onClick={() => handleVerification(selectedApplication.id, 'approved')}
+                        className="flex-1 bg-green-500 hover:bg-green-600"
+                        disabled={processing}
+                      >
+                        {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={() => handleVerification(selectedApplication.id, 'rejected')}
+                        variant="destructive"
+                        className="flex-1"
+                        disabled={processing}
+                      >
+                        {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                  <Button
+                    onClick={() => handleDelete(selectedApplication.id)}
+                    variant="outline"
+                    className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    disabled={processing}
+                  >
+                    {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                    Delete Application
+                  </Button>
+                </div>
               )}
             </div>
           )}
