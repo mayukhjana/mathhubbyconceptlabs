@@ -62,12 +62,12 @@ const Navbar = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
   return <header className="sticky top-0 w-full bg-background/95 backdrop-blur-sm border-b z-40">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <img src={logo} alt="MathHub Logo" className="w-10 h-10 rounded-lg" />
+      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center space-x-1 sm:space-x-2">
+          <img src={logo} alt="MathHub Logo" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg" />
           <div className="flex flex-col">
-            <span className="text-xl font-display font-bold">MathHub</span>
-            <span className="text-xs text-muted-foreground">By ConceptLabs</span>
+            <span className="text-base sm:text-xl font-display font-bold">MathHub</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">By ConceptLabs</span>
           </div>
         </Link>
         
@@ -170,19 +170,20 @@ const Navbar = () => {
         </div>
         
         {/* Mobile/Tablet auth buttons and menu */}
-        <div className="lg:hidden flex items-center gap-2">
+        <div className="lg:hidden flex items-center gap-1 sm:gap-2">
           {!isAuthenticated && (
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm px-2 sm:px-3">
               <Link to="/auth" className="flex items-center gap-1">
-                <LogIn size={16} />
-                <span className="hidden sm:inline">Sign In</span>
-                <span className="sm:hidden">Sign In</span>
+                <LogIn size={14} className="sm:hidden" />
+                <LogIn size={16} className="hidden sm:block" />
+                <span>Sign In</span>
               </Link>
             </Button>
           )}
           {isAuthenticated && <UserProfileMenu />}
-          <Button variant="ghost" size="icon" onClick={toggleMenu} className="lg:hidden">
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <Button variant="ghost" size="icon" onClick={toggleMenu} className="lg:hidden h-8 w-8 sm:h-10 sm:w-10">
+            {isMenuOpen ? <X size={20} className="sm:hidden" /> : <Menu size={20} className="sm:hidden" />}
+            {isMenuOpen ? <X size={24} className="hidden sm:block" /> : <Menu size={24} className="hidden sm:block" />}
           </Button>
         </div>
       </div>
