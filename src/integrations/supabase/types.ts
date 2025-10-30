@@ -334,12 +334,15 @@ export type Database = {
       }
       teachers: {
         Row: {
+          achievements: string | null
           bio: string | null
           created_at: string | null
+          current_company: string | null
           documents_url: string | null
           experience_years: number | null
           hourly_rate: number
           id: string
+          linkedin_url: string | null
           qualification: string | null
           school_past: string | null
           specialization: string
@@ -349,12 +352,15 @@ export type Database = {
           verification_status: string | null
         }
         Insert: {
+          achievements?: string | null
           bio?: string | null
           created_at?: string | null
+          current_company?: string | null
           documents_url?: string | null
           experience_years?: number | null
           hourly_rate: number
           id?: string
+          linkedin_url?: string | null
           qualification?: string | null
           school_past?: string | null
           specialization: string
@@ -364,12 +370,15 @@ export type Database = {
           verification_status?: string | null
         }
         Update: {
+          achievements?: string | null
           bio?: string | null
           created_at?: string | null
+          current_company?: string | null
           documents_url?: string | null
           experience_years?: number | null
           hourly_rate?: number
           id?: string
+          linkedin_url?: string | null
           qualification?: string | null
           school_past?: string | null
           specialization?: string
