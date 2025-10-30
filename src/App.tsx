@@ -42,6 +42,7 @@ const MentorApplicationPage = lazy(() => import("./pages/MentorApplicationPage")
 const MentorProfilePage = lazy(() => import("./pages/MentorProfilePage"));
 const MentorDashboardPage = lazy(() => import("./pages/MentorDashboardPage"));
 const AdminMentorVerificationPage = lazy(() => import("./pages/AdminMentorVerificationPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ const App = () => (
                       </AuthGuard>
                     } />
                     <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                     <Route path="/refund-policy" element={<RefundPolicy />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
