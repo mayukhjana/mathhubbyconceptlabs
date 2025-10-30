@@ -23,6 +23,7 @@ const AuthPage = () => {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [registerPhone, setRegisterPhone] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
@@ -167,8 +168,8 @@ const AuthPage = () => {
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="login">Email</TabsTrigger>
-                  <TabsTrigger value="phone">Phone</TabsTrigger>
+                  <TabsTrigger value="login">Email Login</TabsTrigger>
+                  <TabsTrigger value="phone">Phone Login</TabsTrigger>
                   <TabsTrigger value="register">Register</TabsTrigger>
                 </TabsList>
                 
@@ -368,6 +369,18 @@ const AuthPage = () => {
                         onChange={(e) => setRegisterEmail(e.target.value)}
                         required
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="regPhone">Phone Number</Label>
+                      <Input 
+                        id="regPhone" 
+                        type="tel" 
+                        placeholder="+91 1234567890" 
+                        value={registerPhone}
+                        onChange={(e) => setRegisterPhone(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">Enter with country code (e.g., +91)</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="regPassword">Password</Label>
