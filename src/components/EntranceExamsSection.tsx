@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 const EntranceExamsSection = () => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
@@ -10,6 +10,17 @@ const EntranceExamsSection = () => {
     align: 'start',
     slidesToScroll: 1,
   });
+
+  // Auto-scroll every 5 seconds
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    const intervalId = setInterval(() => {
+      emblaApi.scrollNext();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [emblaApi]);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -126,23 +137,22 @@ const EntranceExamsSection = () => {
         
         <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex gap-6">
+            <div className="flex gap-4 md:gap-6">
               {entranceExams.map((exam, index) => (
-                <div key={exam.name} className="flex-[0_0_calc(33.333%-1rem)] min-w-0">
-                  <div className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 h-full">
-                    <div className={`h-32 bg-gradient-to-br ${
-                      index % 3 === 0 ? "from-mathaccent via-mathprimary to-mathsecondary" :
-                      index % 3 === 1 ? "from-mathprimary via-mathsecondary to-mathaccent" :
-                      "from-mathsecondary via-mathaccent to-mathprimary"
+                <div key={exam.name} className="flex-[0_0_100%] min-[640px]:flex-[0_0_calc(50%-0.75rem)] lg:flex-[0_0_calc(33.333%-1rem)] min-w-0">
+                  <div className="group bg-card border-2 border-blue-200 dark:border-blue-800 rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300 h-full">
+                    <div className={`h-32 md:h-40 bg-gradient-to-br ${
+                      index % 3 === 0 ? "from-blue-600 via-blue-700 to-blue-900" :
+                      index % 3 === 1 ? "from-blue-700 via-blue-800 to-blue-950" :
+                      "from-blue-800 via-blue-900 to-indigo-900"
                     } flex items-center justify-center relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-white/5"></div>
-                      <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2">{exam.name}</h3>
+                      <h3 className="text-xl md:text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{exam.name}</h3>
                     </div>
-                    <div className="p-4">
-                      <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
+                    <div className="p-4 md:p-5">
+                      <p className="text-muted-foreground text-sm md:text-base mb-4 leading-relaxed line-clamp-2">
                         {exam.description}
                       </p>
-                      <Button asChild size="sm" className="w-full bg-primary hover:bg-primary/90 hover:shadow-lg hover:scale-105 transition-all duration-300">
+                      <Button asChild size="sm" className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300">
                         <Link to={exam.link}>View Papers</Link>
                       </Button>
                     </div>
