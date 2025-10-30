@@ -70,16 +70,24 @@ const AuthPage = () => {
     try {
       const { error } = await signUp(registerEmail, registerPassword, {
         full_name: fullName,
-        username: username
+        username: username || undefined
       });
       
       if (error) {
-        toast.error(error.message);
+        if (error.message.includes('duplicate key') || error.message.includes('username')) {
+          toast.error("Username already taken. Please choose a different one.");
+        } else {
+          toast.error(error.message);
+        }
       } else {
         toast.success("Registration successful! Please check your email for verification.");
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to register");
+      if (error.message?.includes('duplicate key') || error.message?.includes('username')) {
+        toast.error("Username already taken. Please choose a different one.");
+      } else {
+        toast.error(error.message || "Failed to register");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -369,15 +377,15 @@ const AuthPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
+                      <Label htmlFor="username">Username (Optional)</Label>
                       <Input 
                         id="username" 
                         type="text" 
                         placeholder="johndoe" 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        required
                       />
+                      <p className="text-xs text-muted-foreground">You can set this later in your profile</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="regEmail">Email</Label>
