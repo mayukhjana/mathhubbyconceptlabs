@@ -12,6 +12,17 @@ const BoardsSection = () => {
     slidesToScroll: 1,
   });
 
+  // Auto-scroll every 5 seconds
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    const intervalId = setInterval(() => {
+      emblaApi.scrollNext();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [emblaApi]);
+
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
   }, [emblaApi]);
@@ -161,17 +172,17 @@ const BoardsSection = () => {
         
         <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex gap-6">
+            <div className="flex gap-4 md:gap-6">
               {boards.map((board, index) => (
-                <div key={board.name} className="flex-[0_0_calc(33.333%-1rem)] min-w-0">
-                  <div className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 h-full">
-                    <div className={`h-32 ${
+                <div key={board.name} className="flex-[0_0_100%] min-[640px]:flex-[0_0_calc(50%-0.75rem)] lg:flex-[0_0_calc(33.333%-1rem)] min-w-0">
+                  <div className="group bg-card border-2 border-primary/20 rounded-xl overflow-hidden hover:shadow-xl hover:scale-105 hover:border-primary/40 transition-all duration-300 h-full">
+                    <div className={`h-40 md:h-48 ${
                       board.image 
                         ? 'relative' 
                         : `bg-gradient-to-br ${
-                            index % 3 === 0 ? "from-mathprimary via-mathsecondary to-mathaccent" :
-                            index % 3 === 1 ? "from-mathsecondary via-mathaccent to-mathprimary" :
-                            "from-mathaccent via-mathprimary to-mathsecondary"
+                            index % 3 === 0 ? "from-blue-600 via-purple-600 to-pink-600" :
+                            index % 3 === 1 ? "from-purple-600 via-pink-600 to-blue-600" :
+                            "from-pink-600 via-blue-600 to-purple-600"
                           }`
                     } flex items-center justify-center overflow-hidden`}>
                       {board.image ? (
@@ -181,21 +192,21 @@ const BoardsSection = () => {
                             alt={board.name} 
                             className="absolute inset-0 w-full h-full object-cover"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-br from-mathprimary/20 via-mathsecondary/20 to-mathaccent/20"></div>
-                          <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2 drop-shadow-lg">{board.name}</h3>
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/40 to-transparent"></div>
+                          <h3 className="text-xl md:text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{board.name}</h3>
                         </>
                       ) : (
                         <>
-                          <div className="absolute inset-0 bg-white/5"></div>
-                          <h3 className="text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-2">{board.name}</h3>
+                          <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-transparent"></div>
+                          <h3 className="text-xl md:text-2xl font-bold text-white relative z-10 group-hover:scale-110 transition-transform duration-300 text-center px-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{board.name}</h3>
                         </>
                       )}
                     </div>
-                    <div className="p-4">
-                      <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
+                    <div className="p-4 md:p-5">
+                      <p className="text-muted-foreground text-sm md:text-base mb-4 leading-relaxed line-clamp-2">
                         {board.description}
                       </p>
-                      <Button asChild size="sm" className="w-full bg-primary hover:bg-primary/90 hover:shadow-lg hover:scale-105 transition-all duration-300">
+                      <Button asChild size="sm" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300">
                         <Link to={board.link}>View Papers</Link>
                       </Button>
                     </div>
