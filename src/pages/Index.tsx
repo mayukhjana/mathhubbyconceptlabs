@@ -14,13 +14,16 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <HeroSection />
-      <FeaturesSection />
-      <BoardsSection />
-      <EntranceExamsSection />
-      <CTASection />
-      <TestimonialsSection />
-      <FAQSection />
+      <main>
+        <h1 className="sr-only">MathHub Online - India's Leading Mathematics Practice Platform for ICSE, CBSE and West Bengal Board Students</h1>
+        <HeroSection />
+        <FeaturesSection />
+        <BoardsSection />
+        <EntranceExamsSection />
+        <CTASection />
+        <TestimonialsSection />
+        <FAQSection />
+      </main>
       <Footer />
       {/* Collapsed ElevenLabs AI Assistant */}
       <div className="fixed bottom-4 right-4 z-50 scale-75 origin-bottom-right">
