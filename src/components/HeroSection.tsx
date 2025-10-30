@@ -6,7 +6,7 @@ const HeroSection = () => {
   return <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-gradient-to-br from-background via-background to-accent/5 pt-20 pb-20">
       {/* Animated Math Symbols Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 w-full h-full opacity-[0.03] dark:opacity-[0.05]">
+        <div className="absolute top-0 w-full h-full opacity-[0.08] dark:opacity-[0.05]">
           <div className="absolute animate-float delay-0 left-[10%] top-[10%] text-6xl text-mathprimary">∫</div>
           <div className="absolute animate-float delay-200 left-[20%] top-[40%] text-5xl text-mathsecondary">π</div>
           <div className="absolute animate-float delay-400 left-[80%] top-[15%] text-7xl text-mathaccent">∑</div>
