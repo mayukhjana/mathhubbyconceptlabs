@@ -174,22 +174,22 @@ const AuthPage = () => {
                 
                 <TabsContent value="login">
                   <Tabs defaultValue="email" className="w-full">
-                    <div className="flex gap-2 mb-6 p-1 bg-muted rounded-lg">
+                    <TabsList className="w-full mb-6 bg-muted h-auto p-1">
                       <TabsTrigger 
                         value="email" 
-                        className="flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                        className="flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm"
                       >
                         <Mail className="mr-2 h-4 w-4" />
                         Email
                       </TabsTrigger>
                       <TabsTrigger 
                         value="phone" 
-                        className="flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                        className="flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm"
                       >
                         <Phone className="mr-2 h-4 w-4" />
                         Phone
                       </TabsTrigger>
-                    </div>
+                    </TabsList>
                     
                     <TabsContent value="email">
                       {isResettingPassword ? (
