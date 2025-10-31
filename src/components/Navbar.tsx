@@ -71,7 +71,7 @@ const Navbar = () => {
           </div>
         </Link>
         
-        <nav className="hidden lg:flex items-center space-x-1">
+        <nav className="hidden xl:flex items-center space-x-1">
           <Link to="/">
             <Button variant={isActive("/") ? "default" : "ghost"} className="flex items-center gap-2">
               <Home size={18} />
@@ -151,7 +151,7 @@ const Navbar = () => {
           </DropdownMenu>
         </nav>
         
-        <div className="hidden lg:flex items-center space-x-2">
+        <div className="hidden xl:flex items-center space-x-2">
           <Toggle pressed={theme === "dark"} onPressedChange={toggleTheme} aria-label="Toggle theme" className="mr-2">
             {theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
           </Toggle>
@@ -170,7 +170,7 @@ const Navbar = () => {
         </div>
         
         {/* Mobile/Tablet auth buttons and menu */}
-        <div className="lg:hidden flex items-center gap-1 sm:gap-2">
+        <div className="xl:hidden flex items-center gap-1 sm:gap-2">
           {!isAuthenticated && (
             <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm px-2 sm:px-3">
               <Link to="/auth" className="flex items-center gap-1">
@@ -181,7 +181,7 @@ const Navbar = () => {
             </Button>
           )}
           {isAuthenticated && <UserProfileMenu />}
-          <Button variant="ghost" size="icon" onClick={toggleMenu} className="lg:hidden h-8 w-8 sm:h-10 sm:w-10">
+          <Button variant="ghost" size="icon" onClick={toggleMenu} className="xl:hidden h-8 w-8 sm:h-10 sm:w-10">
             {isMenuOpen ? <X size={20} className="sm:hidden" /> : <Menu size={20} className="sm:hidden" />}
             {isMenuOpen ? <X size={24} className="hidden sm:block" /> : <Menu size={24} className="hidden sm:block" />}
           </Button>
@@ -189,7 +189,7 @@ const Navbar = () => {
       </div>
       
       {/* Mobile/Tablet menu */}
-      {isMenuOpen && <div className="lg:hidden absolute inset-x-0 top-full z-50 bg-background border-b shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
+      {isMenuOpen && <div className="xl:hidden absolute inset-x-0 top-full z-50 bg-background border-b shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="container mx-auto px-4 py-8 flex flex-col space-y-6">
             <Link to="/" onClick={closeMenu}>
               <Button variant={isActive("/") ? "default" : "ghost"} className="w-full justify-start text-lg">
