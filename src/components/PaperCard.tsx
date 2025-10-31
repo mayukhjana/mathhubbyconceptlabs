@@ -117,6 +117,14 @@ const PaperCard = ({
                 <span className="text-gray-600 dark:text-gray-400">Marks:</span>
                 <span className="font-medium">{examResult.obtainedMarks}/{examResult.totalMarks}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Correct:</span>
+                <span className="font-medium text-green-600 dark:text-green-400">{examResult.score}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Incorrect:</span>
+                <span className="font-medium text-red-600 dark:text-red-400">{examResult.totalQuestions - examResult.score}</span>
+              </div>
             </div>
           </div>
         )}
