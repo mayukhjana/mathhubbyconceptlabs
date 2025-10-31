@@ -258,44 +258,22 @@ export const useChat = () => {
       }
 
       try {
-        // First try with Gemini AI
-        const { data: geminiData, error: geminiError } = await supabase.functions.invoke('gemini-math-ai', {
+        // Call MathHub AI with Gemini Flash model
+        const { data, error } = await supabase.functions.invoke('mathhub-ai', {
           body: {
             question,
-            image: imageBase64
+            files: imageBase64 ? [{
+              name: image?.name || 'image.jpg',
+              content: imageBase64,
+              type: image?.type || 'image/jpeg'
+            }] : []
           }
         });
 
-        let answer;
-        if (geminiError) {
-          console.error("Error calling Gemini AI function:", geminiError);
-          
-          // Fallback to OpenAI
-          toast({
-            title: "Using backup AI model",
-            description: "The primary AI model is unavailable. Using backup model instead.",
-            variant: "default"
-          });
-          
-          const { data, error } = await supabase.functions.invoke('mathhub-ai', {
-            body: {
-              question,
-              model: 'gpt-4o-mini',
-              files: imageBase64 ? [{
-                name: image?.name || 'image.jpg',
-                content: imageBase64,
-                type: image?.type || 'image/jpeg'
-              }] : []
-            }
-          });
-
-          if (error) throw error;
-          if (!data || data.error) throw new Error(data?.error || "Failed to get an answer");
-          
-          answer = data.answer;
-        } else {
-          answer = geminiData.answer;
-        }
+        if (error) throw error;
+        if (!data || data.error) throw new Error(data?.error || "Failed to get an answer");
+        
+        const answer = data.answer;
 
         const assistantMessage: Message = {
           id: `assistant-${tempId}`,

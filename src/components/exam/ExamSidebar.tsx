@@ -127,16 +127,16 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
         size="sm" 
         className={cn(
           "fixed z-40 rounded-r-md border-l-0 top-16 left-0",
-          isMobile ? "p-2 h-12 w-12" : "p-1 h-8 w-8"
+          isMobile ? "p-2 h-14 w-14" : "p-1 h-8 w-8"
         )} 
         onClick={toggleSidebar}
       >
         {isOpen ? (
-          <ChevronLeft size={isMobile ? 24 : 16} />
+          <ChevronLeft size={isMobile ? 28 : 16} />
         ) : examCompleted ? (
-          <List size={isMobile ? 24 : 16} />
+          <List size={isMobile ? 28 : 16} />
         ) : (
-          <ChevronRight size={isMobile ? 24 : 16} />
+          <ChevronRight size={isMobile ? 28 : 16} />
         )}
       </Button>
       
