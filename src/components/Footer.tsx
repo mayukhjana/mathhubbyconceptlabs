@@ -1,14 +1,13 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import logo from "@/assets/logo.png";
 const Footer = () => {
   return <footer className="bg-mathdark text-white pt-12 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-mathprimary">
-                <GraduationCap size={24} />
-              </div>
+              <img src={logo} alt="MathHub Logo" className="w-10 h-10 rounded-lg" />
               <span className="text-xl font-display font-bold">MathHub</span>
             </div>
             <p className="text-gray-300 max-w-xs">

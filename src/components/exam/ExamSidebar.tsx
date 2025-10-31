@@ -45,10 +45,10 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isDesktop = !isMobile && !isTablet;
 
-  // Desktop sidebar is always open and non-collapsible
+  // Sidebar starts open on desktop, closed on mobile/tablet during exam
   useEffect(() => {
-    if (isDesktop) {
-      setIsOpen(true); // Always open on desktop
+    if (isDesktop && !examCompleted) {
+      setIsOpen(true); // Start open on desktop
     } else if (!examCompleted) {
       setIsOpen(false); // Start closed on mobile/tablet during exam
     }
@@ -121,19 +121,24 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
 
   return (
     <>
-      {/* Mobile/tablet button to toggle sidebar - hidden on desktop */}
-      {!isDesktop && (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={cn(
-            "fixed z-40 p-1 h-8 w-8 rounded-r-md border-l-0 top-16 left-0"
-          )} 
-          onClick={toggleSidebar}
-        >
-          {isOpen ? <ChevronLeft size={16} /> : examCompleted ? <List size={16} /> : <ChevronRight size={16} />}
-        </Button>
-      )}
+      {/* Toggle button - bigger on mobile, always visible */}
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className={cn(
+          "fixed z-40 rounded-r-md border-l-0 top-16 left-0",
+          isMobile ? "p-2 h-12 w-12" : "p-1 h-8 w-8"
+        )} 
+        onClick={toggleSidebar}
+      >
+        {isOpen ? (
+          <ChevronLeft size={isMobile ? 24 : 16} />
+        ) : examCompleted ? (
+          <List size={isMobile ? 24 : 16} />
+        ) : (
+          <ChevronRight size={isMobile ? 24 : 16} />
+        )}
+      </Button>
       
       <div 
         className={cn(
@@ -147,12 +152,6 @@ export const ExamSidebar: React.FC<ExamSidebarProps> = ({
           <h2 className="font-semibold text-sm truncate">
             {examCompleted ? "Questions Overview" : examTitle}
           </h2>
-          {/* Only show close button on mobile/tablet */}
-          {isOpen && !isDesktop && (
-            <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={toggleSidebar}>
-              <ChevronLeft size={16} />
-            </Button>
-          )}
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
