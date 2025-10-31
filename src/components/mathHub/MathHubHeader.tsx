@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Sparkles, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 interface MathHubHeaderProps {
   remainingQuestions: number;
@@ -12,7 +13,7 @@ const MathHubHeader: React.FC<MathHubHeaderProps> = ({ remainingQuestions, isPre
     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
       <div>
         <h1 className="text-3xl font-bold flex items-center">
-          <Sparkles className="mr-2 h-8 w-8 text-mathprimary" />
+          <img src={logo} alt="MathHub Logo" className="mr-2 h-8 w-8 rounded-lg" />
           MathHub AI
         </h1>
         <p className="text-muted-foreground mt-1">

@@ -284,7 +284,8 @@ export const useChat = () => {
         
         setMessages(prev => [...prev, assistantMessage]);
         
-        await saveAIResponse(question, answer, !!imageBase64);
+        // Chat history is already saved by the edge function, no need to save again here
+        // This prevents double-counting of questions
         
         setQuestion("");
         removeImage();
